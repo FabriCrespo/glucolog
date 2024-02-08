@@ -26,7 +26,7 @@ export const NAV_LINKS = [
       },
       {
       title: 'Información nutricional de alimentos',
-      icon: '/food.svg',
+      icon: '/fruitsandfood.svg',
       variant: 'green',
       description:
       'Accede a información nutricional detallada sobre alimentos según la tabla boliviana de composición de alimentos. Toma decisiones informadas para una dieta saludable.',
