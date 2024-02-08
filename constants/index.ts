@@ -1,10 +1,10 @@
 // NAVIGATION
 export const NAV_LINKS = [
-    { href: '/', key: 'home', label: 'Home' },
-    { href: '/', key: 'how_hilink_work', label: 'How Hilink Work?' },
-    { href: '/', key: 'services', label: 'Services' },
-    { href: '/', key: 'pricing ', label: 'Pricing ' },
-    { href: '/', key: 'contact_us', label: 'Contact Us' },
+    { href: '/', key: 'home', label: 'Home ' },
+    { href: '/', key: 'dashboard', label: 'Dashboard ' },
+    { href: '/', key: 'food_bank', label: 'Alimentos ' },
+    { href: '/', key: 'notifications', label: 'Recordatorios ' },
+    { href: '/', key: 'my_profile', label: 'Mi Perfil' },
   ];
   
   // CAMP SECTION
@@ -18,53 +18,35 @@ export const NAV_LINKS = [
   // FEATURES SECTION
   export const FEATURES = [
     {
-      title: 'Real maps can be offline',
-      icon: '/map.svg',
+      title: 'Registro y control de niveles de glucosa',
+      icon: '/glucose.svg',
       variant: 'green',
       description:
-        'We provide a solution for you to be able to use our application when climbing, yes offline maps you can use at any time there is no signal at the location',
-    },
-    {
-      title: 'Set an adventure schedule',
-      icon: '/calendar.svg',
+      'Registra y controla tus niveles de glucosa en sangre fácilmente desde nuestra aplicación. Mantén un seguimiento preciso para una mejor gestión de tu salud.',
+      },
+      {
+      title: 'Información nutricional de alimentos',
+      icon: '/food.svg',
       variant: 'green',
       description:
-        "Schedule an adventure with friends. On holidays, there are many interesting offers from Hilink. That way, there's no more discussion",
-    },
-    {
-      title: 'Technology using augment reality',
-      icon: '/tech.svg',
+      'Accede a información nutricional detallada sobre alimentos según la tabla boliviana de composición de alimentos. Toma decisiones informadas para una dieta saludable.',
+      },
+      {
+      title: 'Recordatorios para ejercicio y medicación',
+      icon: '/exercise.svg',
       variant: 'green',
       description:
-        'Technology uses augmented reality as a guide to your hiking trail in the forest to the top of the mountain. Already supported by the latest technology without an internet connection',
-    },
-    {
-      title: 'Many new locations every month',
-      icon: '/location.svg',
-      variant: 'orange',
+      'Establece recordatorios personalizados para realizar ejercicio y tomar medicamentos. Mantén tu rutina de salud en orden y nunca te olvides de cuidarte.',
+      },
+      {
+      title: 'Predicciones de niveles de glucosa',
+      icon: '/prediction.svg',
+      variant: 'green',
       description:
-        'Lots of new locations every month, because we have a worldwide community of climbers who share their best experiences with climbing',
-    },
-  ];
+      'Obtén predicciones inteligentes de tus niveles de glucosa en sangre utilizando tecnología de inteligencia artificial. Prepárate para lo que viene y toma el control de tu diabetes.',
+      },
+      ]
   
-  // FOOTER SECTION
-  export const FOOTER_LINKS = [
-    {
-      title: 'Learn More',
-      links: [
-        'About Hilink',
-        'Press Releases',
-        'Environment',
-        'Jobs',
-        'Privacy Policy',
-        'Contact Us',
-      ],
-    },
-    {
-      title: 'Our Community',
-      links: ['Climbing xixixi', 'Hiking hilink', 'Hilink kinthill'],
-    },
-  ];
   
   export const FOOTER_CONTACT_INFO = {
     title: 'Contact Us',
@@ -74,14 +56,6 @@ export const NAV_LINKS = [
     ],
   };
   
-  export const SOCIALS = {
-    title: 'Social',
-    links: [
-      '/facebook.svg',
-      '/instagram.svg',
-      '/twitter.svg',
-      '/youtube.svg',
-      '/wordpress.svg',
-    ],
-  };
+
+
   
