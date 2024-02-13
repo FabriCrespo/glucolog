@@ -67,7 +67,7 @@ export default function Home() {
   return (
     <section>
          <section className="max-container padding-container flex flex-col mt-10 gap-20 py-10 pb-32 md:gap-28 lg:py-20 xl:flex-row">
-      <div className="hero-map" />
+      <div className="relative hero-map " />
 
       <div className="relative z-20 flex flex-1 flex-col xl:w-1/2">
         <Image 
@@ -85,13 +85,16 @@ export default function Home() {
             type="button" 
             title="Registrarse" 
             variant="btn_green" 
+            link="/signup"
           />
           <Button 
             type="button" 
             title="Ya tiene cuenta?" 
             icon="/play.svg"
-            variant="btn_white_text" 
+            variant="btn_white_text"
+            link="/login"
           />
+
         </div>
       </div>
   
@@ -136,7 +139,7 @@ export default function Home() {
       <div className="get-app">
         <div className="z-20 flex w-full flex-1 flex-col items-start justify-center gap-12">
           <h2 className="bold-40 lg:bold-64 xl:max-w-[320px]">Descarga la app gratuita!</h2>
-          <p className="regular-16 text-gray-10">Disponible en iOS y Android</p>
+          <p className="regular-16 text-gray-10">Disponible en iOS yc:\Users\WINDOWS\Documents\travel_ui_ux\public\android.svg Android</p>
           <div className="flex w-full flex-col gap-3 whitespace-nowrap xl:flex-row">
             <Button 
               type="button"
