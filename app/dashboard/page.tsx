@@ -59,7 +59,7 @@ export default function dashboard() {
               className="absolute left-[-5px] top-[-38px] w-5 lg:w-[50px] xs:w-12"
             />
             <h1 className="bold-20 lg:bold-32 mt-5 ml-10 capitalize">
-              Registrar glucosa{" "}
+              Predicciones{" "}
             </h1>
           </div>
         </div>
