@@ -1,11 +1,16 @@
-"use client"
+"use client";
 import { useState } from 'react';
-import Button from "@/components/Button";
 import Image from "next/image";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from '@/app/firebase/config';
+import { useRouter } from 'next/navigation';
+import Button from '@/components/Button';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -15,14 +20,15 @@ export default function Login() {
     setPassword(e.target.value);
   };
 
-  const handleEmailLogin = () => {
-    // Lógica para iniciar sesión con correo electrónico
-    console.log('Iniciar sesión con correo electrónico:', email, password);
-  };
-
-  const handleGoogleLogin = () => {
-    // Lógica para iniciar sesión con Google
-    console.log('Iniciar sesión con Google');
+  const handleEmailLogin = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      console.log('Inicio de sesión exitoso');
+      router.push('/myprofile'); // Redirige a /myprofile
+    } catch (error) {
+      console.error('Error al iniciar sesión:', error);
+      setError('Error al iniciar sesión. Verifique su correo electrónico y contraseña.');
+    }
   };
 
   return (
@@ -52,9 +58,11 @@ export default function Login() {
           value={password}
           onChange={handlePasswordChange}
         />
+        {error && <p className="mt-4 text-red-500 text-center">{error}</p>}
         <div className="mt-6 flex flex-col items-center w-full">
-          <Button type="button" title="Iniciar Sesión" variant="btn_green"  />
-          <Button type="button" title="Iniciar Sesión con Gmail" variant="btn_google"  />
+          <Button
+            type="button"
+            onClick={handleEmailLogin} title={'Iniciar Sesión'} variant={'btn_dark_green'}          />
           <p className="mt-4 text-center text-sm text-gray-600">
             ¿No tiene cuenta?{' '}
             <a href="/signup" className="text-blue-500 underline">

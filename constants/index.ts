@@ -4,7 +4,7 @@ export const NAV_LINKS = [
     { href: '/dashboard', key: 'dashboard', label: 'Dashboard ' },
     { href: '/foodbank', key: 'food_bank', label: 'Alimentos ' },
     { href: '/', key: 'notifications', label: 'Recordatorios ' },
-    { href: '/', key: 'my_profile', label: 'Mi Perfil' },
+    { href: '/myprofile', key: 'my_profile', label: 'Mi Perfil' },
   ];
   
   // CAMP SECTION
