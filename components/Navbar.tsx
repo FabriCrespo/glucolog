@@ -8,14 +8,14 @@ import Link from "next/link";
 import Button from "./Button";
 import { useRouter } from "next/navigation";
 
-
 const Navbar = () => {
-  const [user, setUser] = useState<User | null>(null); // Especifica el tipo User | null
+  const [user, setUser] = useState<User | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
 
   const handleSignOut = async () => {
     auth.signOut();
-    router.push('/')
+    router.push('/');
   }
 
   useEffect(() => {
@@ -31,30 +31,39 @@ const Navbar = () => {
         <Image src="/LogoOG.png" alt="logo" width={74} height={29} />
       </Link>
 
-      {user ? (
-        <>
-          <ul className="hidden h-full gap-12 lg:flex">
-            {NAV_LINKS.map((link) => (
-              <Link
-                href={link.href}
-                key={link.key}
-                className="regular-16 text-gray-50 flexCenter cursor-pointer pb-1.5 transition-all hover:font-bold"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </ul>
+      {/* Icono del menú "burger" visible solo en móviles */}
+      <Image
+        src="/menu.svg"
+        alt="menu"
+        width={32}
+        height={32}
+        className="inline-block cursor-pointer lg:hidden"
+        onClick={() => setMenuOpen(!menuOpen)}
+      />
 
-          <div className="lg:flexCenter hidden">
-            <Button
-              type="button"
-              title="Cerrar Sesión"
-              icon="/user.svg"
-              variant="btn_dark_green"
-              onClick={handleSignOut} // Cerrar sesión al hacer clic en el botón
-            />
-          </div>
-        </>
+      {/* Menú de navegación para pantallas grandes */}
+      <ul className={`hidden lg:flex h-full gap-12 ${menuOpen ? 'block' : ''}`}>
+        {NAV_LINKS.map((link) => (
+          <Link
+            href={link.href}
+            key={link.key}
+            className="regular-16 text-gray-50 flexCenter cursor-pointer pb-1.5 transition-all hover:font-bold"
+          >
+            {link.label}
+          </Link>
+        ))}
+      </ul>
+
+      {user ? (
+        <div className="lg:flexCenter hidden">
+          <Button
+            type="button"
+            title="Cerrar Sesión"
+            icon="/user.svg"
+            variant="btn_dark_green"
+            onClick={handleSignOut}
+          />
+        </div>
       ) : (
         <div className="lg:flexCenter hidden">
           <Button
@@ -67,13 +76,44 @@ const Navbar = () => {
         </div>
       )}
 
-      <Image
-        src="menu.svg"
-        alt="menu"
-        width={32}
-        height={32}
-        className="inline-block cursor-pointer lg:hidden"
-      />
+      {/* Menú desplegable para pantallas pequeñas */}
+      {menuOpen && (
+        <ul className="absolute right-0 p-3 top-24 w-full bg-white flex flex-col items-center space-y-4 lg:hidden shadow-md ">
+          {NAV_LINKS.map((link) => (
+            <Link
+              href={link.href}
+              key={link.key}
+              className="regular-16 text-black flexCenter cursor-pointer py-2 transition-all hover:font-bold"
+              onClick={() => setMenuOpen(false)}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <div className="flexCenter">
+            {user ? (
+              <Button
+                type="button"
+                title="Cerrar Sesión"
+                icon="/user.svg"
+                variant="btn_dark_green"
+                onClick={() => {
+                  handleSignOut();
+                  setMenuOpen(false);
+                }}
+              />
+            ) : (
+              <Button
+                type="button"
+                title="Iniciar Sesión"
+                icon="/user.svg"
+                variant="btn_dark_green"
+                link="/login"
+                onClick={() => setMenuOpen(false)}
+              />
+            )}
+          </div>
+        </ul>
+      )}
     </nav>
   );
 };

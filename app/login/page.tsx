@@ -1,7 +1,7 @@
 "use client";
 import { useState } from 'react';
 import Image from "next/image";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from '@/app/firebase/config';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/Button';
@@ -10,6 +10,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [resetMessage, setResetMessage] = useState<string | null>(null); // Para el mensaje de restablecimiento
   const router = useRouter();
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,10 +25,22 @@ export default function Login() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       console.log('Inicio de sesión exitoso');
-      router.push('/myprofile'); // Redirige a /myprofile
+      router.push('/myprofile'); 
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
       setError('Error al iniciar sesión. Verifique su correo electrónico y contraseña.');
+    }
+  };
+
+  const handleResetPassword = async () => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setResetMessage('Correo de restablecimiento de contraseña enviado.');
+      setError(null); // Limpiar error si había
+    } catch (error) {
+      console.error('Error al enviar correo de restablecimiento:', error);
+      setError('Error al enviar el correo de restablecimiento. Verifique su correo.');
+      setResetMessage(null); // Limpiar mensaje de éxito si había
     }
   };
 
@@ -67,6 +80,15 @@ export default function Login() {
             ¿No tiene cuenta?{' '}
             <a href="/signup" className="text-blue-500 underline">
               Regístrese
+            </a>
+          </p>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            <a
+              href="#"
+              onClick={handleResetPassword}
+              className="text-blue-500 underline"
+            >
+              ¿Olvidó su contraseña?
             </a>
           </p>
         </div>

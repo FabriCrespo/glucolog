@@ -1,11 +1,13 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import {getAuth} from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore';
+import { getDatabase, ref, get, child } from "firebase/database";
 
 
 const firebaseConfig = {
     apiKey: "AIzaSyBiZ3Niu-9s6Zrzt72pGahku7vi_iZM9jM",
     authDomain: "glucolog-f2a0a.firebaseapp.com",
+    databaseURL: "https://glucolog-f2a0a-default-rtdb.firebaseio.com/",
     projectId: "glucolog-f2a0a",
     storageBucket: "glucolog-f2a0a.appspot.com",
     messagingSenderId: "937776763925",
@@ -16,5 +18,6 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
 
 const auth = getAuth(app)
 const db = getFirestore(app);
+const database = getDatabase(app);
 
-export {app, auth,db}
+export {app, auth,db, database }
