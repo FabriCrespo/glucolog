@@ -4,7 +4,6 @@ import { get, ref } from "firebase/database";
 import { database } from "../firebase/config";
 import Image from "next/image";
 
-// Definir la interfaz para los datos de un alimento
 interface FoodItem {
   Codigo: string;
   Nombre: string;
@@ -32,12 +31,9 @@ const FoodDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [foodData, setFoodData] = useState<FoodItem[]>([]);
-  const [gi, setGi] = useState<number>(0);
-  const [carbs, setCarbs] = useState<number>(0);
-  const [result, setResult] = useState<number | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedCarbClassification, setSelectedCarbClassification] =
-    useState<string>("");
+  const [gramAmount, setGramAmount] = useState(100);
+  const [sugarAmount, setSugarAmount] = useState(0);
+  const [glycemicLoad, setGlycemicLoad] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -82,142 +78,85 @@ const FoodDashboard = () => {
     setSearchTerm(e.target.value);
   };
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCategory(e.target.value);
-  };
-
-  const handleCarbClassificationChange = (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    setSelectedCarbClassification(e.target.value);
-  };
-
-  const filteredFoodData = foodData.filter(
-    (item) =>
-      item.Nombre.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (selectedCategory === "" || item.Categoria === selectedCategory) &&
-      (selectedCarbClassification === "" ||
-        item.ClasificacionCarbohidratos === selectedCarbClassification)
+  const filteredFoodData = foodData.filter((item) =>
+    item.Nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleFoodClick = (food: FoodItem) => {
     setSelectedFood(food);
   };
-
-  const calculateGlycemicLoad = () => {
-    if (selectedFood && gi > 0 && carbs > 0) {
-      const glycemicLoad = (gi * carbs) / 100;
-      setResult(glycemicLoad);
-    } else {
-      setResult(null);
-    }
+  const calculateSugar = (food: FoodItem) => {
+    const totalCarbs = food.CarbohidratosNetos;
+    const sugarContent = (gramAmount / 100) * totalCarbs;
+    setSugarAmount(sugarContent);
   };
 
+  const calculateGlycemicLoad = (food: FoodItem) => {
+    const glycemicIndex = 50; // Puedes ajustar el valor del índice glucémico
+    const glycemicLoadValue =
+      (glycemicIndex * food.CarbohidratosNetos * gramAmount) / 100;
+    setGlycemicLoad(glycemicLoadValue);
+  };
+
+  const handleGramAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    setGramAmount(value);
+    if (selectedFood) {
+      calculateSugar(selectedFood);
+      calculateGlycemicLoad(selectedFood);
+    }
+  };
   return (
-    <section className="flex flex-col h-screen p-8">
-      <div className="flex flex-grow space-x-8">
-        {/* Barra de búsqueda y filtros */}
-        <div className="flex flex-col w-1/4 max-w-xs space-y-8">
-          <input
-            type="text"
-            placeholder="Buscar alimento..."
-            value={searchTerm}
-            onChange={handleSearch}
-            className="w-full p-2 mb-4 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+    <section className="flex flex-col items-center p-10 bg-white min-h-screen text-gray-90">
+      {/* Título */}
+      <div className="relative">
+        <Image
+          src="/nutricion.svg"
+          alt="camp"
+          width={50}
+          height={50}
+          className="absolute left-[-15px] top-2 w-5 lg:w-[50px] xs:w-12"
+        />
+        <h1 className="bold-20 lg:bold-32 m-5 ml-10 capitalize text-green-50 ">
+          {" "}
+          Tabla Nutricional de Alimentos
+        </h1>
+      </div>
 
-          <div className="mb-4">
-            <label
-              htmlFor="category"
-              className="block mb-2 text-lg font-medium text-gray-600"
-            >
-              Categoría
-            </label>
-            <select
-              id="category"
-              value={selectedCategory}
-              onChange={handleCategoryChange}
-              className="w-full p-2 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Todas</option>
-              <option value="11. VERDURAS, HORTALIZAS_nY OTROS VEGETALES">
-                Verduras, Hortalizas y Otros Vegetales
-              </option>
-              <option value="20. ADEREZOS, SALSAS Y SOPAS">
-                Aderezos, Salsas y Sopas
-              </option>
-              <option value="12. FRUTAS Y JUGOS DE FRUTAS">
-                Frutas y Jugos de Frutas
-              </option>
-              <option value="13. CEREALES GRANOS SECOS, HARINAS,\nPASTAS, CEREALES DE DESAYUNO\nY OTRAS HARINAS ">
-                Cereales, Granos Secos, Harinas, Pastas, Cereales de Desayuno y
-                Otras Harinas
-              </option>
-              <option value="19. COMIDAS INFANTILES    ">
-                Comidas Infantiles
-              </option>
-              <option value="17. BEBIDAS DIVERSAS">Bebidas Diversas</option>
-              <option value="14. GALLETAS, PANES, TORTILLAS\nY SIMILARES ">
-                Galletas, Panes, Tortillas y Similares
-              </option>
-              <option value="01. PRODUCTOS LÁCTEOS Y SIMILARES">
-                Productos Lácteos y Similares
-              </option>
-              <option value="08. MARISCOS Y PESCADOS">
-                Mariscos y Pescados
-              </option>
-              <option value="05. CARNE DE VACUNO ">Carne de Vacuno</option>
-              <option value="03. CARNE DE AVES">Carne de Aves</option>
-              <option value="18. POSTRES ELABORADOS">Postres Elaborados</option>
-              <option value="07. EMBUTIDOS Y SIMILARES">
-                Embutidos y Similares
-              </option>
-              <option value="09. LEGUMINOSAS, GRANOS SECOS\nY DERIVADOS ">
-                Leguminosas, Granos Secos y Derivados
-              </option>
-              <option value="15. AZÚCARES, MIELES, DULCES\nY GOLOSINAS ">
-                Azúcares, Mieles, Dulces y Golosinas
-              </option>
-              <option value="10. NUECES Y SEMILLAS">Nueces y Semillas</option>
-              <option value="16. ACEITES Y GRASAS">Aceites y Grasas</option>
-              <option value="04. CARNE DE CERDO ">Carne de Cerdo</option>
-              <option value="Sin Categoría">Sin Categoría</option>
-              <option value="06. CARNE DE ANIMALES DE CAZA ">
-                Carne de Animales de Caza
-              </option>
-              <option value="02. HUEVOS">Huevos</option>
-            </select>
-          </div>
-
-          <div className="mb-4">
-            <label
-              htmlFor="carbClassification"
-              className="block mb-2 text-lg font-medium text-gray-600"
-            >
-              Clasificación de Carbohidratos
-            </label>
-            <select
-              id="carbClassification"
-              value={selectedCarbClassification}
-              onChange={handleCarbClassificationChange}
-              className="w-full p-2 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Todas</option>
-              <option value="Alto en Carbohidratos">Alto</option>
-              <option value="Moderado en Carbohidratos">Moderado</option>
-              <option value="Bajo en Carbohidratos">Bajo</option>
-            </select>
-          </div>
+      {/* Barra de búsqueda */}
+      <div className="w-full max-w-5xl m-4">
+        <input
+          type="text"
+          placeholder="Buscar alimento..."
+          value={searchTerm}
+          onChange={handleSearch}
+          className="w-full p-4 mb-4 text-lg border border-gray-30 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-50"
+        />
+      </div>
+      <div className="flex gap-4">
+        {/* Lista de alimentos */}
+        <div className="w-full max-w-lg overflow-y-auto h-72 bg-white border border-gray-30 rounded-lg shadow-lg p-4 mb-4">
+          <ul className="space-y-3">
+            {filteredFoodData.map((food) => (
+              <li
+                key={food.Codigo}
+                onClick={() => handleFoodClick(food)}
+                className="cursor-pointer hover:bg-green-50 hover:text-white p-3 rounded-lg transition-colors duration-200"
+              >
+                {food.Nombre}
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* Información Nutricional */}
-        <div className="flex-grow-0 max-w-4xl w-full p-4 border h-[30rem] border-gray-300 rounded-lg shadow-md bg-white overflow-auto">
+        <div className="w-full max-w-lg bg-white border border-gray-30 rounded-lg shadow-lg p-6">
           {selectedFood ? (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold mb-4">
-                  {selectedFood.Nombre}
-                </h2>
+            <div className="grid grid-cols-1 gap-4">
+              <h2 className="text-2xl font-semibold text-green-50">
+                {selectedFood.Nombre}
+              </h2>
+              <div className="flex flex-col space-y-2">
                 <p>
                   <strong>Agua:</strong> {selectedFood.Agua} %
                 </p>
@@ -236,8 +175,6 @@ const FoodDashboard = () => {
                 <p>
                   <strong>Fibra:</strong> {selectedFood.Fibra} g
                 </p>
-              </div>
-              <div className="space-y-2">
                 <p>
                   <strong>Calcio:</strong> {selectedFood.Calcio} mg
                 </p>
@@ -256,87 +193,17 @@ const FoodDashboard = () => {
                 <p>
                   <strong>Vitamina B12:</strong> {selectedFood.VitaminaB12} mcg
                 </p>
-                <p>
-                  <strong>Ácido Fólico:</strong> {selectedFood.AcidoFolico} mcg
-                </p>
-                <p>
-                  <strong>Folato Equiv. FD:</strong>{" "}
-                  {selectedFood.FolatoEquivFD} mcg
-                </p>
-                <p>
-                  <strong>Fracción Comestible:</strong>{" "}
-                  {selectedFood.FraccionComestible} %
-                </p>
-                <p>
-                  <strong>Categoría:</strong> {selectedFood.Categoria}
-                </p>
-                <p>
-                  <strong>Carbohidratos Netos:</strong>{" "}
-                  {selectedFood.CarbohidratosNetos} g
-                </p>
-                <p>
-                  <strong>Clasificación Carbohidratos:</strong>{" "}
-                  {selectedFood.ClasificacionCarbohidratos}
-                </p>
               </div>
             </div>
           ) : (
-            <p className="text-lg text-gray-500">
+            <p className="text-gray-50 text-center">
               Selecciona un alimento para ver la información nutricional.
             </p>
           )}
         </div>
-
-        {/* Lista de Alimentos */}
-        {/* Lista de Alimentos */}
-        <div className="w-[70%] max-w-xs border border-gray-300 rounded-lg shadow-md bg-white h-[30rem] overflow-y-auto">
-          <ul className="p-4 space-y-2">
-            {filteredFoodData.map((food) => (
-              <li
-                key={food.Codigo}
-                onClick={() => handleFoodClick(food)}
-                className="cursor-pointer hover:bg-gray-100 p-2 rounded-lg"
-              >
-                {food.Nombre}
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
 
-      {/* Calculadora de carga glucémica */}
-      <div className="mt-8">
-        <h2 className="text-xl font-bold mb-4">
-          Calculadora de Carga Glucémica
-        </h2>
-        <div className="flex space-x-4">
-          <input
-            type="number"
-            placeholder="Índice Glucémico"
-            value={gi}
-            onChange={(e) => setGi(parseFloat(e.target.value))}
-            className="w-1/2 p-2 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="number"
-            placeholder="Carbohidratos (g)"
-            value={carbs}
-            onChange={(e) => setCarbs(parseFloat(e.target.value))}
-            className="w-1/2 p-2 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <button
-          onClick={calculateGlycemicLoad}
-          className="mt-4 p-2 w-full bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600"
-        >
-          Calcular Carga Glucémica
-        </button>
-        {result !== null && (
-          <p className="mt-4 text-lg font-semibold">
-            Carga Glucémica: {result.toFixed(2)}
-          </p>
-        )}
-      </div>
+     
     </section>
   );
 };

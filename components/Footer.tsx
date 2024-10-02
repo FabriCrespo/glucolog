@@ -1,11 +1,9 @@
-import Image from 'next/image'
-import Link from 'next/link'
 import React from 'react'
 
 const Footer = () => {
   return (
-    <footer className="flexCenter mb-24">
-      <div className="padding-container max-container flex w-full flex-col gap-14">
+    <footer className="flexCenter m-3">
+      <div className="padding-container max-container flex w-full flex-col m-3 gap-3">
 
         <div className="border bg-gray-20" />
         <p className="regular-14 w-full text-center text-gray-30">2024  Glucolog</p>
@@ -14,8 +12,4 @@ const Footer = () => {
   )
 }
 
-type FooterColumnProps = {
-  title: string;
-  children: React.ReactNode;
-}
 export default Footer

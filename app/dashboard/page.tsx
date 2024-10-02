@@ -219,7 +219,7 @@ const pieChartData = {
 };
 
   return (
-    <section className="max-container padding-container flex flex-col gap-20  py-10 pb-32 md:gap-28 lg:py-20 xl:flex-row">
+    <section className="max-container padding-container flex flex-col  md:gap-28 lg:py-5 xl:flex-row">
       <div className="bg-green-200 w-full h-full border rounded-2xl shadow-lg p-6 flex flex-col">
         <div className="flex flex-col md:flex-row gap-6 flex-1 overflow-hidden">
           <div className="bg-white lg:w-1/3 xl:w-1/3 xs:w-full h-auto border rounded-lg p-4 flex-shrink-0">
