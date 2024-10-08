@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { get, ref } from "firebase/database";
+import { get, ref, update } from "firebase/database";
 import { database } from "../firebase/config";
 import Image from "next/image";
 
@@ -25,15 +25,17 @@ interface FoodItem {
   Categoria: string;
   CarbohidratosNetos: number;
   ClasificacionCarbohidratos: string;
+  IndiceGlucemico?: number;
+  GramHCO?: number;
 }
 
 const FoodDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [foodData, setFoodData] = useState<FoodItem[]>([]);
-  const [gramAmount, setGramAmount] = useState(100);
-  const [sugarAmount, setSugarAmount] = useState(0);
-  const [glycemicLoad, setGlycemicLoad] = useState(0);
+  const [portionSize, setPortionSize] = useState<number>(100);
+  const [glycemicLoad, setGlycemicLoad] = useState<number | null>(null);
+  const [showWithGlycemicIndex, setShowWithGlycemicIndex] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,6 +68,8 @@ const FoodDashboard = () => {
           Categoria: data[key]["Categoría"],
           CarbohidratosNetos: parseFloat(data[key]["Carbohidratos Netos"]),
           ClasificacionCarbohidratos: data[key]["Clasificación Carbohidratos"],
+          IndiceGlucemico: data[key].IndiceGlucemico || null,
+          GramHCO: data[key].GramHCO || null,
         }));
         setFoodData(foodItems);
       }
@@ -78,70 +82,89 @@ const FoodDashboard = () => {
     setSearchTerm(e.target.value);
   };
 
-  const filteredFoodData = foodData.filter((item) =>
-    item.Nombre.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleCheckboxChange = () => {
+    setShowWithGlycemicIndex(!showWithGlycemicIndex);
+  };
+
+  const filteredFoodData = foodData.filter((item) => {
+    const matchesSearch = item.Nombre.toLowerCase().includes(
+      searchTerm.toLowerCase()
+    );
+    const matchesGlycemicIndex = showWithGlycemicIndex
+      ? item.IndiceGlucemico !== null
+      : true;
+    return matchesSearch && matchesGlycemicIndex;
+  });
 
   const handleFoodClick = (food: FoodItem) => {
     setSelectedFood(food);
-  };
-  const calculateSugar = (food: FoodItem) => {
-    const totalCarbs = food.CarbohidratosNetos;
-    const sugarContent = (gramAmount / 100) * totalCarbs;
-    setSugarAmount(sugarContent);
+    setGlycemicLoad(null);
   };
 
-  const calculateGlycemicLoad = (food: FoodItem) => {
-    const glycemicIndex = 50; // Puedes ajustar el valor del índice glucémico
-    const glycemicLoadValue =
-      (glycemicIndex * food.CarbohidratosNetos * gramAmount) / 100;
-    setGlycemicLoad(glycemicLoadValue);
-  };
-
-  const handleGramAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
-    setGramAmount(value);
-    if (selectedFood) {
-      calculateSugar(selectedFood);
-      calculateGlycemicLoad(selectedFood);
+  const calculateGlycemicLoad = () => {
+    if (
+      selectedFood &&
+      selectedFood.IndiceGlucemico &&
+      selectedFood.GramHCO &&
+      portionSize
+    ) {
+      const glycemicLoad =
+        (selectedFood.IndiceGlucemico *
+          (selectedFood.GramHCO / 100) *
+          portionSize) /
+        100;
+      setGlycemicLoad(glycemicLoad);
     }
   };
+
   return (
-    <section className="flex flex-col items-center p-10 bg-white min-h-screen text-gray-90">
+    <section className="flex flex-col items-center p-10 bg-white min-h-screen text-gray-900">
       {/* Título */}
-      <div className="relative">
+      <div className="relative mb-6">
         <Image
           src="/nutricion.svg"
           alt="camp"
           width={50}
           height={50}
-          className="absolute left-[-15px] top-2 w-5 lg:w-[50px] xs:w-12"
+          className="absolute left-[-20px] top-1 w-8 lg:w-[50px]"
         />
-        <h1 className="bold-20 lg:bold-32 m-5 ml-10 capitalize text-green-50 ">
-          {" "}
+        <h1 className="text-2xl lg:text-4xl font-bold ml-10 capitalize text-green-600">
           Tabla Nutricional de Alimentos
         </h1>
       </div>
 
       {/* Barra de búsqueda */}
-      <div className="w-full max-w-5xl m-4">
+      <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-4 mb-6">
         <input
           type="text"
           placeholder="Buscar alimento..."
           value={searchTerm}
           onChange={handleSearch}
-          className="w-full p-4 mb-4 text-lg border border-gray-30 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-50"
+          className="w-full lg:w-2/3 p-4 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
         />
+        {/* Checkbox para filtrar por índice glucémico */}
+        <div className="flex items-center space-x-3 lg:w-1/3">
+          <input
+            type="checkbox"
+            checked={showWithGlycemicIndex}
+            onChange={handleCheckboxChange}
+            className="w-5 h-5"
+          />
+          <label className="text-lg text-gray-700">
+            Mostrar solo con Índice Glucémico
+          </label>
+        </div>
       </div>
-      <div className="flex gap-4">
+
+      <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Lista de alimentos */}
-        <div className="w-full max-w-lg overflow-y-auto h-72 bg-white border border-gray-30 rounded-lg shadow-lg p-4 mb-4">
+        <div className="col-span-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4 overflow-y-auto h-96">
           <ul className="space-y-3">
             {filteredFoodData.map((food) => (
               <li
                 key={food.Codigo}
                 onClick={() => handleFoodClick(food)}
-                className="cursor-pointer hover:bg-green-50 hover:text-white p-3 rounded-lg transition-colors duration-200"
+                className="cursor-pointer hover:bg-green-600 hover:text-white p-3 rounded-lg transition-colors duration-200"
               >
                 {food.Nombre}
               </li>
@@ -150,13 +173,13 @@ const FoodDashboard = () => {
         </div>
 
         {/* Información Nutricional */}
-        <div className="w-full max-w-lg bg-white border border-gray-30 rounded-lg shadow-lg p-6">
+        <div className="col-span-1 lg:col-span-2 bg-white border border-gray-200 rounded-lg shadow-lg p-6">
           {selectedFood ? (
             <div className="grid grid-cols-1 gap-4">
-              <h2 className="text-2xl font-semibold text-green-50">
+              <h2 className="text-2xl font-semibold text-green-600">
                 {selectedFood.Nombre}
               </h2>
-              <div className="flex flex-col space-y-2">
+              <div className="grid grid-cols-2 gap-4 text-gray-700">
                 <p>
                   <strong>Agua:</strong> {selectedFood.Agua} %
                 </p>
@@ -193,17 +216,59 @@ const FoodDashboard = () => {
                 <p>
                   <strong>Vitamina B12:</strong> {selectedFood.VitaminaB12} mcg
                 </p>
+                <p>
+                  <strong>Índice Glucémico:</strong>{" "}
+                  {selectedFood.IndiceGlucemico || "No disponible"}
+                </p>
+                <p>
+                  <strong>Gramos de HCO:</strong>{" "}
+                  {selectedFood.GramHCO || "No disponible"}
+                </p>
               </div>
             </div>
           ) : (
-            <p className="text-gray-50 text-center">
+            <p className="text-gray-500 text-center">
               Selecciona un alimento para ver la información nutricional.
             </p>
           )}
         </div>
       </div>
 
-     
+      {/* Calculadora de Carga Glucémica */}
+      {selectedFood && selectedFood.IndiceGlucemico && selectedFood.GramHCO && (
+        <div className="w-full max-w-3xl mt-6 bg-gray-100 p-6 rounded-lg shadow">
+          <h3 className="text-xl font-semibold text-green-600">
+            Calculadora de Carga Glucémica
+          </h3>
+          <p className="text-gray-700 mt-2">
+            La carga glucémica se calcula con base en el índice glucémico y los
+            gramos de HCO por porción de alimento en gramos.
+          </p>
+          <div className="mt-4">
+            <label className="block mb-2 font-medium text-gray-900">
+              Ingresa la cantidad en gramos:
+            </label>
+            <input
+              type="number"
+              value={portionSize}
+              onChange={(e) => setPortionSize(parseFloat(e.target.value))}
+              className="w-full p-2 border border-gray-300 rounded-lg"
+            />
+            <button
+              onClick={calculateGlycemicLoad}
+              className="mt-4 w-full p-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              Calcular Carga Glucémica
+            </button>
+          </div>
+          {glycemicLoad !== null && (
+            <p className="mt-4 text-lg font-bold text-green-600">
+              Carga Glucémica: {glycemicLoad}
+            </p>
+          )}
+         
+        </div>
+      )}
     </section>
   );
 };
