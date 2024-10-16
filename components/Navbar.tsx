@@ -14,7 +14,7 @@ const Navbar = () => {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    auth.signOut();
+    await auth.signOut();
     router.push('/');
   }
 
@@ -24,6 +24,15 @@ const Navbar = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  const handleLinkClick = (href: string) => {
+    if (!user && href !== '/') {
+      router.push('/login');
+    } else {
+      router.push(href);
+    }
+    if (menuOpen) setMenuOpen(false);
+  };
 
   return (
     <nav className="flexBetween max-container padding-container relative z-30 py-5">
@@ -44,13 +53,14 @@ const Navbar = () => {
       {/* Menú de navegación para pantallas grandes */}
       <ul className={`hidden lg:flex h-full gap-12 ${menuOpen ? 'block' : ''}`}>
         {NAV_LINKS.map((link) => (
-          <Link
-            href={link.href}
-            key={link.key}
-            className="regular-16 text-gray-50 flexCenter cursor-pointer pb-1.5 transition-all hover:font-bold"
-          >
-            {link.label}
-          </Link>
+          <li key={link.key}>
+            <button
+              onClick={() => handleLinkClick(link.href)}
+              className="regular-16 text-gray-50 flexCenter cursor-pointer pb-1.5 transition-all hover:font-bold"
+            >
+              {link.label}
+            </button>
+          </li>
         ))}
       </ul>
 
@@ -80,14 +90,14 @@ const Navbar = () => {
       {menuOpen && (
         <ul className="absolute right-0 p-3 top-24 w-full bg-white flex flex-col items-center space-y-4 lg:hidden shadow-md ">
           {NAV_LINKS.map((link) => (
-            <Link
-              href={link.href}
-              key={link.key}
-              className="regular-16 text-black flexCenter cursor-pointer py-2 transition-all hover:font-bold"
-              onClick={() => setMenuOpen(false)}
-            >
-              {link.label}
-            </Link>
+            <li key={link.key}>
+              <button
+                onClick={() => handleLinkClick(link.href)}
+                className="regular-16 text-black flexCenter cursor-pointer py-2 transition-all hover:font-bold"
+              >
+                {link.label}
+              </button>
+            </li>
           ))}
           <div className="flexCenter">
             {user ? (

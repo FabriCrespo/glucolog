@@ -14,13 +14,14 @@ const SignUp = () => {
   const [diabetesType, setDiabetesType] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState(''); // Añadir un estado para errores
   const router = useRouter();
 
   const [createUserWithEmailAndPassword, , error] = useCreateUserWithEmailAndPassword(auth);
 
   const handleSignUp = async () => {
     if (password !== confirmPassword) {
-      alert("Las contraseñas no coinciden");
+      setErrorMessage("Las contraseñas no coinciden");
       return;
     }
     try {
@@ -32,27 +33,34 @@ const SignUp = () => {
 
       const user = userCredential.user;
 
-      // Guardar datos adicionales en Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        firstName,
-        lastName,
-        email,
-        gender,
-        diabetesType
-      });
-
-      console.log("Usuario registrado y datos guardados en Firestore");
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
-      setFirstName('');
-      setLastName('');
-      setGender('');
-      setDiabetesType('');
-      router.push('/myprofile')
-
+      if (user && user.uid) {
+        // Guardar datos adicionales en Firestore
+        await setDoc(doc(db, "users", user.uid), {
+          firstName,
+          lastName,
+          email,
+          gender,
+          diabetesType
+        });
+        console.log("Usuario registrado y datos guardados en Firestore");
+        
+        // Resetear los campos del formulario
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        setFirstName('');
+        setLastName('');
+        setGender('');
+        setDiabetesType('');
+        
+        // Redirigir al perfil
+        router.push('/myprofile');
+      } else {
+        throw new Error("Usuario no válido.");
+      }
     } catch (e) {
-      console.log(e);
+      console.error("Error en el registro o Firestore:", e);
+      setErrorMessage("Error al registrar el usuario. Por favor, inténtalo de nuevo.");
     }
   };
 
@@ -131,6 +139,11 @@ const SignUp = () => {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
+        {errorMessage && (
+          <p className="mt-4 text-center text-sm text-red-500">
+            {errorMessage}
+          </p>
+        )}
         <div className="mt-6 flex flex-col items-center w-full">
           <button 
             onClick={handleSignUp}

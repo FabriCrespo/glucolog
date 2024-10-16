@@ -126,7 +126,7 @@ const FoodDashboard = () => {
           alt="camp"
           width={50}
           height={50}
-          className="absolute left-[-20px] top-1 w-8 lg:w-[50px]"
+          className="absolute left-[-20px] top-[-15] w-8 lg:w-[50px]"
         />
         <h1 className="text-2xl lg:text-4xl font-bold ml-10 capitalize text-green-600">
           Tabla Nutricional de Alimentos

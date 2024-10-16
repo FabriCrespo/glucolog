@@ -11,10 +11,14 @@
   "dependencies": {
     "chart.js": "^4.4.4",
     "chartjs-plugin-annotation": "^3.0.1",
+    "date-arithmetic": "^4.1.0",
+    "date-fns": "^4.1.0",
     "firebase": "^10.12.4",
     "firebase-hooks": "^0.0.1",
     "micromatch": "^4.0.8",
-    "next": "^14.2.13",
+    "moment": "^2.30.1",
+    "moment-timezone": "^0.5.46",
+    "next": "^14.2.14",
     "next-auth": "^4.24.6",
     "react": "^18",
     "react-chartjs-2": "^5.2.0",
@@ -24,6 +28,7 @@
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
+    "@types/react-big-calendar": "^1.8.12",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
     "postcss": "^8",
