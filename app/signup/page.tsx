@@ -5,6 +5,8 @@ import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { auth, db } from '@/app/firebase/config';
 import { doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import { FirebaseError } from 'firebase/app';
+import { sendEmailVerification } from "firebase/auth"; // Importar el método para enviar verificación
 
 const SignUp = () => {
   const [firstName, setFirstName] = useState('');
@@ -26,13 +28,13 @@ const SignUp = () => {
     }
     try {
       const userCredential = await createUserWithEmailAndPassword(email, password);
-      
+  
       if (!userCredential) {
         throw new Error("Error en la creación del usuario");
       }
-
+  
       const user = userCredential.user;
-
+  
       if (user && user.uid) {
         // Guardar datos adicionales en Firestore
         await setDoc(doc(db, "users", user.uid), {
@@ -42,8 +44,10 @@ const SignUp = () => {
           gender,
           diabetesType
         });
-        console.log("Usuario registrado y datos guardados en Firestore");
-        
+  
+        // Enviar correo de verificación
+        await sendEmailVerification(user);
+  
         // Resetear los campos del formulario
         setEmail('');
         setPassword('');
@@ -52,18 +56,28 @@ const SignUp = () => {
         setLastName('');
         setGender('');
         setDiabetesType('');
+  
+        // Mostrar un mensaje al usuario
+        setErrorMessage("Se ha enviado un correo de verificación. Por favor, verifica tu correo antes de iniciar sesión.");
         
-        // Redirigir al perfil
-        router.push('/myprofile');
+        // Redirigir al perfil - puedes cambiar esto si no quieres redirigir inmediatamente
+        // router.push('/myprofile'); // Descomentar si deseas redirigir
       } else {
         throw new Error("Usuario no válido.");
       }
-    } catch (e) {
-      console.error("Error en el registro o Firestore:", e);
-      setErrorMessage("Error al registrar el usuario. Por favor, inténtalo de nuevo.");
+    } catch (e: unknown) {
+      if (e instanceof FirebaseError) {
+        if (e.code === "auth/email-already-in-use") {
+          setErrorMessage("El correo electrónico ya está en uso. Por favor, utiliza otro o inicia sesión.");
+        } else {
+          setErrorMessage("Error al registrar el usuario. Por favor, inténtalo de nuevo.");
+        }
+      } else {
+        setErrorMessage("El correo electrónico ya está en uso. Por favor, utiliza otro o inicia sesión.");
+      }
     }
   };
-
+  
   return (
     <section className="flex justify-center items-center h-screen bg-gray-100">
       <div className="bg-white w-2/3 md:w-1/2 lg:w-2/5 xl:w-1/3 p-8 rounded-lg shadow-lg">

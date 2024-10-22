@@ -7,11 +7,15 @@ import { onAuthStateChanged } from 'firebase/auth';
 const MyProfile = () => {
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Get user data from Firestore
+        await user.reload(); // Recargar los datos del usuario para obtener el estado de verificación
+        setIsVerified(user.emailVerified); // Verificar si el correo está verificado
+
+        // Obtener datos del usuario de Firestore
         const userDoc = doc(db, 'users', user.uid);
         const docSnap = await getDoc(userDoc);
 
@@ -22,7 +26,7 @@ const MyProfile = () => {
         }
         setLoading(false);
       } else {
-        // Redirect to login page if not authenticated
+        // Redirigir a la página de inicio de sesión si no está autenticado
         window.location.href = '/login';
       }
     });
@@ -31,11 +35,28 @@ const MyProfile = () => {
   }, []);
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <p>Cargando...</p>;
   }
 
   if (!userData) {
-    return <p>No user data available</p>;
+    return <p>No hay datos de usuario disponibles</p>;
+  }
+
+  if (!isVerified) {
+    return (
+      <section className="flex justify-center items-center h-screen bg-gray-100">
+        <div className="bg-white w-2/3 md:w-1/2 lg:w-2/5 xl:w-1/3 p-8 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold">
+            ¡Bienvenido de vuelta, {userData.firstName}!
+          </h2>
+          <p className="text-red-500">
+            Por favor, verifica tu correo electrónico para acceder a todas las funcionalidades.
+          </p>
+          <p>Revisa tu bandeja de entrada o tu carpeta de spam.</p>
+          {/* Aquí puedes añadir un botón para reenviar el correo de verificación si lo deseas */}
+        </div>
+      </section>
+    );
   }
 
   return (
@@ -44,7 +65,7 @@ const MyProfile = () => {
         <h2 className="text-2xl font-bold">
           ¡Bienvenido de vuelta, {userData.firstName}!
         </h2>
-        {/* Display other user details here */}
+        {/* Mostrar otros detalles del usuario aquí */}
         <p><strong>Email:</strong> {userData.email}</p>
         <p><strong>Tipo de Diabetes:</strong> {userData.diabetesType}</p>
         <p><strong>Sexo:</strong> {userData.gender}</p>

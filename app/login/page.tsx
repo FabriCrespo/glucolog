@@ -4,7 +4,6 @@ import Image from "next/image";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from '@/app/firebase/config';
 import { useRouter } from 'next/navigation';
-import Button from '@/components/Button';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -22,21 +21,47 @@ export default function Login() {
   };
 
   const handleEmailLogin = async () => {
+    // Validar que el correo y la contraseña no estén vacíos
+    if (!email) {
+      setError("Por favor, ingrese un correo electrónico.");
+      return;
+    }
+
+    if (!password) {
+      setError("Por favor, ingrese una contraseña.");
+      return;
+    }
+
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log('Inicio de sesión exitoso');
-      router.push('/myprofile'); 
-    } catch (error) {
-      console.error('Error al iniciar sesión:', error);
-      setError('Error al iniciar sesión. Verifique su correo electrónico y contraseña.');
+      // Intentar iniciar sesión
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Verifica que userCredential no sea null y redirigir al perfil
+      if (userCredential) {
+        console.log('Inicio de sesión exitoso');
+        router.push('/myprofile'); // Redirigir solo si hay inicio de sesión exitoso
+      }
+    } catch (error: any) {
+      // Manejar errores específicos de Firebase
+      if (error.code === "auth/wrong-password") {
+        setError("Contraseña incorrecta. Por favor, inténtelo de nuevo.");
+      } else if (error.code === "auth/user-not-found") {
+        setError("No se encontró ninguna cuenta con este correo. Regístrese o verifique el correo ingresado.");
+      } else if (error.code === "auth/invalid-email") {
+        setError("El correo electrónico ingresado no es válido.");
+      } else {
+        setError("Error al iniciar sesión. Verifique su correo electrónico y contraseña.");
+      }
+
+      // Asegurarse de que no se redirija cuando hay un error
+      console.log('Error al iniciar sesión:', error);
     }
   };
 
   const handleResetPassword = async () => {
     try {
       await sendPasswordResetEmail(auth, email);
-      setResetMessage('Correo de restablecimiento de contraseña enviado.');
-      setError(null); // Limpiar error si había
+      setError('Se ha enviado un correo para restablecer su contraseña.'); // Mensaje en español
     } catch (error) {
       console.error('Error al enviar correo de restablecimiento:', error);
       setError('Error al enviar el correo de restablecimiento. Verifique su correo.');
@@ -73,9 +98,13 @@ export default function Login() {
         />
         {error && <p className="mt-4 text-red-500 text-center">{error}</p>}
         <div className="mt-6 flex flex-col items-center w-full">
-          <Button
+          <button
             type="button"
-            onClick={handleEmailLogin} title={'Iniciar Sesión'} variant={'btn_dark_green'}          />
+            onClick={handleEmailLogin}
+            className="bg-green-500 text-white p-3 rounded-md w-full transition duration-300 ease-in-out hover:bg-green-600"
+          >
+            Iniciar Sesión
+          </button>
           <p className="mt-4 text-center text-sm text-gray-600">
             ¿No tiene cuenta?{' '}
             <a href="/signup" className="text-blue-500 underline">
