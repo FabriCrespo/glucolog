@@ -13,6 +13,7 @@ interface Event {
   title: string;
   date: string;
   type: string;
+  dateTime: string; // Añadido
   details?: string;
   dose?: string;
   time?: string;
@@ -81,25 +82,27 @@ const Schedule: React.FC = () => {
   const handleSaveEvent = async () => {
     if (newEventDate && auth.currentUser) {
       try {
-        // Crea un nuevo evento con los datos ingresados
+        const eventDateTime = dayjs(
+          `${newEventDate.format("YYYY-MM-DD")} ${newEventData.time}`
+        ).toISOString();
+  
         const newEvent: Event = {
           id: Math.random().toString(),
           title: newEventData.title,
           date: newEventDate.format("YYYY-MM-DD"),
+          dateTime: eventDateTime,
           type: newEventData.type,
           details: newEventData.details,
           dose: newEventData.dose,
           time: newEventData.time,
           state: false,
         };
-
-        // Agrega el evento a Firestore en la colección del usuario actual
+  
         await addDoc(
           collection(db, "users", auth.currentUser.uid, "events"),
           newEvent
         );
-
-        // Actualiza el estado local de eventos, cargando todos los eventos desde Firestore
+  
         await fetchEvents();
         handleCloseEventModal();
       } catch (error) {
@@ -107,6 +110,7 @@ const Schedule: React.FC = () => {
       }
     }
   };
+  
 
   // Función para cargar eventos desde Firestore
   // Función para cargar eventos desde Firestore

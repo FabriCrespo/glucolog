@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { get, ref } from "firebase/database";
 import { auth, database } from "../firebase/config"; // Asegúrate de importar auth
 import Image from "next/image";
+import "./animations.css";
 
 interface FoodItem {
   Codigo: string;
@@ -36,16 +37,19 @@ const FoodDashboard = () => {
   const [portionSize, setPortionSize] = useState<number>(100);
   const [glycemicLoad, setGlycemicLoad] = useState<number | null>(null);
   const [showWithGlycemicIndex, setShowWithGlycemicIndex] = useState(false);
-  const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false); // Estado para la verificación del correo
+  const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
+  const [glycemicLoadCategory, setGlycemicLoadCategory] = useState<
+    string | null
+  >(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       const user = auth.currentUser;
 
       if (user) {
-        // Verificar el estado del correo electrónico
-        await user.reload(); // Recargar el usuario para obtener la información actualizada
-        setIsEmailVerified(user.emailVerified); // Actualizar el estado de verificación
+        await user.reload();
+        setIsEmailVerified(user.emailVerified);
 
         const foodRef = ref(
           database,
@@ -72,10 +76,13 @@ const FoodDashboard = () => {
             VitaminaB12: parseFloat(data[key]["Vitamina B12 (mcg)"]),
             AcidoFolico: parseFloat(data[key]["Acido Folico (mcg)"]),
             FolatoEquivFD: parseFloat(data[key]["Folato Equiv. FD"]),
-            FraccionComestible: parseFloat(data[key]["Fraccion Comestible (%)"]),
+            FraccionComestible: parseFloat(
+              data[key]["Fraccion Comestible (%)"]
+            ),
             Categoria: data[key]["Categoría"],
             CarbohidratosNetos: parseFloat(data[key]["Carbohidratos Netos"]),
-            ClasificacionCarbohidratos: data[key]["Clasificación Carbohidratos"],
+            ClasificacionCarbohidratos:
+              data[key]["Clasificación Carbohidratos"],
             IndiceGlucemico: data[key].IndiceGlucemico || null,
             GramHCO: data[key].GramHCO || null,
           }));
@@ -87,6 +94,16 @@ const FoodDashboard = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (glycemicLoadCategory) {
+      setIsVisible(true);
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+        setTimeout(() => setGlycemicLoadCategory(null), 500); // Espera para completar la animación de salida
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [glycemicLoadCategory, setGlycemicLoadCategory]);
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
@@ -123,6 +140,9 @@ const FoodDashboard = () => {
           portionSize) /
         100;
       setGlycemicLoad(glycemicLoad);
+      if (glycemicLoad <= 10) setGlycemicLoadCategory("Baja");
+      else if (glycemicLoad <= 19) setGlycemicLoadCategory("Media");
+      else setGlycemicLoadCategory("Alta");
     }
   };
 
@@ -166,7 +186,7 @@ const FoodDashboard = () => {
             checked={showWithGlycemicIndex}
             onChange={handleCheckboxChange}
             className="w-5 h-5"
-            disabled={!isEmailVerified} // Deshabilitar si no está verificado
+            disabled={!isEmailVerified}
           />
           <label className="text-lg text-gray-700">
             Mostrar solo con Índice Glucémico
@@ -176,7 +196,7 @@ const FoodDashboard = () => {
 
       <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Lista de alimentos */}
-        <div className="col-span-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4 overflow-y-auto h-96">
+        <div className="col-span-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4 overflow-y-auto h-[600px]">
           <ul className="space-y-3">
             {filteredFoodData.map((food) => (
               <li
@@ -247,12 +267,12 @@ const FoodDashboard = () => {
                     className="p-2 border border-gray-300 rounded"
                     placeholder="Tamaño de porción (g)"
                     min={100}
-                    disabled={!isEmailVerified} 
+                    disabled={!isEmailVerified}
                   />
                   <button
                     onClick={calculateGlycemicLoad}
                     className="mt-2 bg-green-600 text-white py-2 rounded"
-                    disabled={!isEmailVerified} 
+                    disabled={!isEmailVerified}
                   >
                     Calcular Carga Glucémica
                   </button>
@@ -265,10 +285,30 @@ const FoodDashboard = () => {
               )}
             </div>
           ) : (
-            <p className="text-lg text-gray-700">Selecciona un alimento para ver sus detalles.</p>
+            <p className="text-lg text-gray-700">
+              Selecciona un alimento para ver sus detalles.
+            </p>
           )}
         </div>
       </div>
+      {/* Modal de Clasificación */}
+      {glycemicLoadCategory && (
+        <div
+          className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${
+            isVisible ? "animate-fadeIn" : "animate-fadeOut"
+          }`}
+        >
+          <div
+            className={`bg-white p-8 rounded-lg shadow-lg text-center transform transition-transform ${
+              isVisible ? "scale-100 opacity-100" : "scale-90 opacity-0"
+            }`}
+          >
+            <h3 className="text-2xl font-bold text-green-600">
+              Clasificación: {glycemicLoadCategory}
+            </h3>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

@@ -7,6 +7,7 @@ import {
   query,
   where,
   getDocs,
+  orderBy,
   Timestamp,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
@@ -65,25 +66,39 @@ async function registerGlucose(
 }
 
 // Obtener los datos de glucosa de los últimos 7 días
-async function fetchGlucoseRecords(userID: string) {
+async function fetchGlucoseRecords(userID: string, range: string = "7 días") {
   const recordsRef = collection(db, "glucoseRecords", userID, "records");
   const today = new Date();
-  const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+  let dateRange: Date;
 
-  const q = query(recordsRef);
+  switch (range) {
+    case "7 días":
+      dateRange = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case "1 mes":
+      dateRange = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
+    case "3 meses":
+      dateRange = new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000);
+      break;
+    case "1 año":
+      dateRange = new Date(today.getTime() - 365 * 24 * 60 * 60 * 1000);
+      break;
+    default:
+      dateRange = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+  }
 
+  // Modificar la consulta para ordenar por 'timeStamp'
+  const q = query(recordsRef, orderBy("timeStamp", "desc"));
   const querySnapshot = await getDocs(q);
   const records = querySnapshot.docs.map((doc) => doc.data());
 
-  // Filtrar los registros de los últimos 7 días
-  const filteredRecords = records.filter((record) => {
+  // Filtrar registros según el rango de fechas seleccionado
+  return records.filter((record) => {
     const recordDate = new Date(record.date);
-    return recordDate >= sevenDaysAgo && recordDate <= today;
+    return recordDate >= dateRange && recordDate <= today;
   });
-
-  return filteredRecords;
 }
-
 const Dashboard = () => {
   const [glucoseLevel, setGlucoseLevel] = useState<number | "">("");
   const [ateSomething, setAteSomething] = useState<boolean>(false);
@@ -92,6 +107,7 @@ const Dashboard = () => {
   const [records, setRecords] = useState<any[]>([]);
   const [userID, setUserID] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState("");
   const [showLineChart, setShowLineChart] = useState(true);
   const [showBarChart, setShowBarChart] = useState(true);
   const [showPieChart, setShowPieChart] = useState(true);
@@ -111,7 +127,7 @@ const Dashboard = () => {
       setAteSomething(false);
       setFoodEaten("");
       setFoodMeal("");
-      const data = await fetchGlucoseRecords(userID);
+      const data = await fetchGlucoseRecords(userID, dateRange);
       setRecords(data);
     }
   };
@@ -120,7 +136,7 @@ const Dashboard = () => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserID(user.uid);
-        const data = await fetchGlucoseRecords(user.uid);
+        const data = await fetchGlucoseRecords(user.uid, dateRange);
         setRecords(data);
         setLoading(false);
       } else {
@@ -129,45 +145,78 @@ const Dashboard = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [dateRange]);
 
-  if (loading) {
-    return <p>Loading...</p>;
-  }
+  if (loading) return <p>Loading...</p>;
 
   // Datos para los gráficos
   const dates = records.map((record) => record.date);
-  const glucoseLevels = records.map((record) => record.glucoseLevel);
-  const ateOrNot = records.map((record) =>
-    record.ateSomething ? "Comió" : "No Comió"
-  );
+  const glucoseLevelsAte = records
+    .filter((record) => record.ateSomething)
+    .map((record) => record.glucoseLevel);
+  const glucoseLevelsNotAte = records
+    .filter((record) => !record.ateSomething)
+    .map((record) => record.glucoseLevel);
 
-  // Gráfico de Línea
   const lineChartData = {
     labels: dates,
     datasets: [
       {
         label: "Nivel de Glucosa (Comió)",
-        data: records
-          .filter((record) => record.ateSomething)
-          .map((record) => record.glucoseLevel),
-        borderColor: "rgba(255, 99, 132, 1)",
-        backgroundColor: "rgba(255, 99, 132, 0.2)",
+        data: glucoseLevelsAte,
+        borderColor: "rgba(75, 192, 192, 1)",
+        backgroundColor: (context: {
+          chart: {
+            ctx: {
+              createLinearGradient: (
+                arg0: number,
+                arg1: number,
+                arg2: number,
+                arg3: number
+              ) => any;
+            };
+          };
+        }) => {
+          const gradient = context.chart.ctx.createLinearGradient(0, 0, 0, 200);
+          gradient.addColorStop(0, "rgba(75, 192, 192, 0.4)");
+          gradient.addColorStop(1, "rgba(75, 192, 192, 0)");
+          return gradient;
+        },
         fill: true,
+        pointBackgroundColor: "rgba(75, 192, 192, 1)",
+        pointBorderColor: "#fff",
+        tension: 0.3,
       },
       {
         label: "Nivel de Glucosa (No Comió)",
-        data: records
-          .filter((record) => !record.ateSomething)
-          .map((record) => record.glucoseLevel),
-        borderColor: "rgba(54, 162, 235, 1)",
-        backgroundColor: "rgba(54, 162, 235, 0.2)",
+        data: glucoseLevelsNotAte,
+        borderColor: "rgba(255, 99, 132, 1)",
+        backgroundColor: (context: {
+          chart: {
+            ctx: {
+              createLinearGradient: (
+                arg0: number,
+                arg1: number,
+                arg2: number,
+                arg3: number
+              ) => any;
+            };
+          };
+        }) => {
+          const gradient = context.chart.ctx.createLinearGradient(0, 0, 0, 200);
+          gradient.addColorStop(0, "rgba(255, 99, 132, 0.4)");
+          gradient.addColorStop(1, "rgba(255, 99, 132, 0)");
+          return gradient;
+        },
         fill: true,
+        pointBackgroundColor: "rgba(255, 99, 132, 1)",
+        pointBorderColor: "#fff",
+        tension: 0.3,
       },
     ],
   };
 
-  // Gráfico de Barras
+  // Gráfico de Barras Mejorado
   const timePeriods = records.map((record) => {
     const dateTimeString = `${record.date} ${record.time}`;
     const hour = new Date(dateTimeString).getHours();
@@ -187,70 +236,17 @@ const Dashboard = () => {
         backgroundColor: "rgba(153, 102, 255, 0.6)",
         borderColor: "rgba(153, 102, 255, 1)",
         borderWidth: 1,
+        stack: "Stack 0",
       },
       {
         label: "Glucosa (No Comió)",
         data: records
           .filter((record) => !record.ateSomething)
           .map((record) => record.glucoseLevel),
-        backgroundColor: "rgba(75, 192, 192, 0.6)",
-        borderColor: "rgba(75, 192, 192, 1)",
+        backgroundColor: "rgba(54, 162, 235, 0.6)",
+        borderColor: "rgba(54, 162, 235, 1)",
         borderWidth: 1,
-      },
-    ],
-  };
-
-  // Gráfico de Torta
-  const lowLevelsAte = glucoseLevels.filter(
-    (level, index) => level < 70 && records[index].ateSomething
-  ).length;
-  const normalLevelsAte = glucoseLevels.filter(
-    (level, index) => level >= 70 && level <= 140 && records[index].ateSomething
-  ).length;
-  const highLevelsAte = glucoseLevels.filter(
-    (level, index) => level > 140 && records[index].ateSomething
-  ).length;
-
-  const lowLevelsNotAte = glucoseLevels.filter(
-    (level, index) => level < 70 && !records[index].ateSomething
-  ).length;
-  const normalLevelsNotAte = glucoseLevels.filter(
-    (level, index) =>
-      level >= 70 && level <= 140 && !records[index].ateSomething
-  ).length;
-  const highLevelsNotAte = glucoseLevels.filter(
-    (level, index) => level > 140 && !records[index].ateSomething
-  ).length;
-
-  const pieChartData = {
-    labels: [
-      "Bajo (Comió)",
-      "Normal (Comió)",
-      "Alto (Comió)",
-      "Bajo (No Comió)",
-      "Normal (No Comió)",
-      "Alto (No Comió)",
-    ],
-    datasets: [
-      {
-        label: "Distribución de Niveles de Glucosa",
-        data: [
-          lowLevelsAte,
-          normalLevelsAte,
-          highLevelsAte,
-          lowLevelsNotAte,
-          normalLevelsNotAte,
-          highLevelsNotAte,
-        ],
-        backgroundColor: [
-          "#FF6384",
-          "#36A2EB",
-          "#FFCE56",
-          "#FF9AA2",
-          "#85C1E9",
-          "#F7DC6F",
-        ],
-        hoverOffset: 4,
+        stack: "Stack 0",
       },
     ],
   };
@@ -335,6 +331,28 @@ const Dashboard = () => {
               >
                 Registrar
               </button>
+              <div>
+                <div>
+                  <select
+                    value={dateRange}
+                    onChange={async (e) => {
+                      setDateRange(e.target.value);
+                      if (userID) {
+                        const data = await fetchGlucoseRecords(
+                          userID,
+                          e.target.value
+                        );
+                        setRecords(data);
+                      }
+                    }}
+                  >
+                    <option value="7 días">Últimos 7 días</option>
+                    <option value="1 mes">Último mes</option>
+                    <option value="3 meses">Últimos 3 meses</option>
+                    <option value="1 año">Último año</option>
+                  </select>
+                </div>
+              </div>
             </form>
           </div>
 
@@ -353,13 +371,13 @@ const Dashboard = () => {
                       Comió Algo
                     </th>
                     <th className="px-4 py-2 border-b border-green-600">
-                      Comida{" "}
+                      Comida
                     </th>
                     <th className="px-4 py-2 border-b border-green-600">
-                      Que Comió{" "}
+                      Qué Comió
                     </th>
                     <th className="px-4 py-2 border-b border-green-600">
-                      Nivel de Glucosa{" "}
+                      Nivel de Glucosa
                     </th>
                   </tr>
                 </thead>
@@ -373,12 +391,13 @@ const Dashboard = () => {
                         {record.date}
                       </td>
                       <td className="px-4 py-2 border-b border-green-600">
-                      {record.ateSomething ? "Sí" : "No"}                      </td>
+                        {record.ateSomething ? "Sí" : "No"}
+                      </td>
                       <td className="px-4 py-2 border-b border-green-600">
                         {record.foodMeal || "N/A"}
                       </td>
                       <td className="px-4 py-2 border-b border-green-600">
-                      {record.foodEaten || "N/A"}
+                        {record.foodEaten || "N/A"}
                       </td>
                       <td className="px-4 py-2 border-b border-green-600">
                         {record.glucoseLevel}
@@ -445,21 +464,13 @@ const Dashboard = () => {
             {showBarChart && (
               <div className="bg-white p-4 shadow-lg rounded-lg flex-1 min-w-0">
                 <h2 className="text-center font-bold mb-4">
-                  Distribución por Horas
+                  Distribución por Horas del Día
                 </h2>
                 <Bar data={barChartData} />
               </div>
             )}
-
-            {showPieChart && (
-              <div className="bg-white p-4 shadow-lg rounded-lg flex-1 min-w-0">
-                <h2 className="text-center font-bold mb-4">
-                  Distribución de Niveles
-                </h2>
-                <Pie data={pieChartData} />
-              </div>
-            )}
           </div>
+
           <div className="bg-white mt-8 p-6 border rounded-2xl shadow-lg">
             <div className="relative">
               <Image
