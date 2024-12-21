@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
-import { get, ref } from "firebase/database";
-import { auth, database } from "../firebase/config"; // Asegúrate de importar auth
+import { useEffect, useState, useMemo } from "react";
+import { get, ref, DatabaseReference } from "firebase/database";
+import { auth, database } from "../firebase/config";
 import Image from "next/image";
 import "./animations.css";
 
@@ -30,80 +30,103 @@ interface FoodItem {
   GramHCO?: number;
 }
 
+interface GlycemicLoadInfo {
+  value: number;
+  category: 'Baja' | 'Media' | 'Alta';
+}
+
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-700"></div>
+  </div>
+);
+
 const FoodDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [foodData, setFoodData] = useState<FoodItem[]>([]);
   const [portionSize, setPortionSize] = useState<number>(100);
-  const [glycemicLoad, setGlycemicLoad] = useState<number | null>(null);
+  const [glycemicLoad, setGlycemicLoad] = useState<GlycemicLoadInfo | null>(null);
   const [showWithGlycemicIndex, setShowWithGlycemicIndex] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
-  const [glycemicLoadCategory, setGlycemicLoadCategory] = useState<
-    string | null
-  >(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      const user = auth.currentUser;
+      try {
+        setLoading(true);
+        setError(null);
+        const user = auth.currentUser;
 
-      if (user) {
+        if (!user) {
+          throw new Error("Usuario no autenticado");
+        }
+
         await user.reload();
         setIsEmailVerified(user.emailVerified);
 
-        const foodRef = ref(
+        const foodRef: DatabaseReference = ref(
           database,
           "/1rmN4Dh2X41q4VeLns1-hU4-RcZ8iYu24dlAjT7mCRh4/AlimentosDB"
         );
         const snapshot = await get(foodRef);
 
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          const foodItems: FoodItem[] = Object.keys(data).map((key) => ({
-            Codigo: key,
-            Nombre: data[key].Nombre,
-            Agua: parseFloat(data[key]["Agua (%)"]),
-            Calorias: parseFloat(data[key].Calorias),
-            Proteina: parseFloat(data[key]["Proteina (g)"]),
-            Grasa: parseFloat(data[key]["Grasa Total (g)"]),
-            Carbohidratos: parseFloat(data[key]["Carbohidratos (g)"]),
-            Fibra: parseFloat(data[key]["Fibra Dietética (g)"]),
-            Calcio: parseFloat(data[key]["Calcio (mg)"]),
-            Potasio: parseFloat(data[key]["Potasio (mg)"]),
-            Zinc: parseFloat(data[key]["Zinc (mg)"]),
-            Magnesio: parseFloat(data[key]["Magnesio (mg)"]),
-            VitaminaB6: parseFloat(data[key]["Vitamina B6 (mg)"]),
-            VitaminaB12: parseFloat(data[key]["Vitamina B12 (mcg)"]),
-            AcidoFolico: parseFloat(data[key]["Acido Folico (mcg)"]),
-            FolatoEquivFD: parseFloat(data[key]["Folato Equiv. FD"]),
-            FraccionComestible: parseFloat(
-              data[key]["Fraccion Comestible (%)"]
-            ),
-            Categoria: data[key]["Categoría"],
-            CarbohidratosNetos: parseFloat(data[key]["Carbohidratos Netos"]),
-            ClasificacionCarbohidratos:
-              data[key]["Clasificación Carbohidratos"],
-            IndiceGlucemico: data[key].IndiceGlucemico || null,
-            GramHCO: data[key].GramHCO || null,
-          }));
-          setFoodData(foodItems);
+        if (!snapshot.exists()) {
+          throw new Error("No se encontraron datos de alimentos");
         }
+
+        const data = snapshot.val();
+        const foodItems: FoodItem[] = Object.keys(data).map((key) => ({
+          Codigo: key,
+          Nombre: data[key].Nombre,
+          Agua: parseFloat(data[key]["Agua (%)"]) || 0,
+          Calorias: parseFloat(data[key].Calorias) || 0,
+          Proteina: parseFloat(data[key]["Proteina (g)"]) || 0,
+          Grasa: parseFloat(data[key]["Grasa Total (g)"]) || 0,
+          Carbohidratos: parseFloat(data[key]["Carbohidratos (g)"]) || 0,
+          Fibra: parseFloat(data[key]["Fibra Dietética (g)"]) || 0,
+          Calcio: parseFloat(data[key]["Calcio (mg)"]) || 0,
+          Potasio: parseFloat(data[key]["Potasio (mg)"]) || 0,
+          Zinc: parseFloat(data[key]["Zinc (mg)"]) || 0,
+          Magnesio: parseFloat(data[key]["Magnesio (mg)"]) || 0,
+          VitaminaB6: parseFloat(data[key]["Vitamina B6 (mg)"]) || 0,
+          VitaminaB12: parseFloat(data[key]["Vitamina B12 (mcg)"]) || 0,
+          AcidoFolico: parseFloat(data[key]["Acido Folico (mcg)"]) || 0,
+          FolatoEquivFD: parseFloat(data[key]["Folato Equiv. FD"]) || 0,
+          FraccionComestible: parseFloat(data[key]["Fraccion Comestible (%)"]) || 0,
+          Categoria: data[key]["Categoría"] || "",
+          CarbohidratosNetos: parseFloat(data[key]["Carbohidratos Netos"]) || 0,
+          ClasificacionCarbohidratos: data[key]["Clasificación Carbohidratos"] || "",
+          IndiceGlucemico: data[key].IndiceGlucemico || null,
+          GramHCO: data[key].GramHCO || null,
+        }));
+        setFoodData(foodItems);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error al cargar los datos");
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
   }, []);
 
-  useEffect(() => {
-    if (glycemicLoadCategory) {
-      setIsVisible(true);
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-        setTimeout(() => setGlycemicLoadCategory(null), 500); // Espera para completar la animación de salida
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [glycemicLoadCategory, setGlycemicLoadCategory]);
+  // Memoize filtered food data
+  const filteredFoodData = useMemo(() => {
+    return foodData.filter((item) => {
+      const matchesSearch = item.Nombre.toLowerCase().includes(
+        searchTerm.toLowerCase()
+      );
+      const matchesGlycemicIndex = showWithGlycemicIndex
+        ? item.IndiceGlucemico !== null
+        : true;
+      return matchesSearch && matchesGlycemicIndex;
+    });
+  }, [foodData, searchTerm, showWithGlycemicIndex]);
+
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
@@ -112,16 +135,6 @@ const FoodDashboard = () => {
     setShowWithGlycemicIndex(!showWithGlycemicIndex);
   };
 
-  const filteredFoodData = foodData.filter((item) => {
-    const matchesSearch = item.Nombre.toLowerCase().includes(
-      searchTerm.toLowerCase()
-    );
-    const matchesGlycemicIndex = showWithGlycemicIndex
-      ? item.IndiceGlucemico !== null
-      : true;
-    return matchesSearch && matchesGlycemicIndex;
-  });
-
   const handleFoodClick = (food: FoodItem) => {
     setSelectedFood(food);
     setGlycemicLoad(null);
@@ -129,22 +142,37 @@ const FoodDashboard = () => {
 
   const calculateGlycemicLoad = () => {
     if (
-      selectedFood &&
-      selectedFood.IndiceGlucemico &&
-      selectedFood.GramHCO &&
-      portionSize
+      selectedFood?.IndiceGlucemico &&
+      selectedFood?.GramHCO &&
+      portionSize > 0
     ) {
-      const glycemicLoad =
+      const value =
         (selectedFood.IndiceGlucemico *
           (selectedFood.GramHCO / 100) *
           portionSize) /
         100;
-      setGlycemicLoad(glycemicLoad);
-      if (glycemicLoad <= 10) setGlycemicLoadCategory("Baja");
-      else if (glycemicLoad <= 19) setGlycemicLoadCategory("Media");
-      else setGlycemicLoadCategory("Alta");
+      
+      const category = value <= 10 ? 'Baja' : value <= 19 ? 'Media' : 'Alta';
+      
+      setGlycemicLoad({ value, category });
+      setIsVisible(true);
+      
+      // Auto-hide the modal after 2 seconds
+      setTimeout(() => {
+        setIsVisible(false);
+      }, 2000);
     }
   };
+
+  if (loading) return <LoadingSpinner />;
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-red-600 text-xl font-semibold">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <section className="flex flex-col items-center p-10 bg-white min-h-screen text-gray-900">
@@ -164,9 +192,10 @@ const FoodDashboard = () => {
 
       {/* Verificación de Correo Electrónico */}
       {!isEmailVerified && (
-        <p className="text-red-500 mb-4">
-          Por favor, verifica tu correo electrónico para acceder a esta sección.
-        </p>
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+          <strong className="font-bold">Atención: </strong>
+          <span className="block sm:inline">Por favor, verifica tu correo electrónico para acceder a esta sección.</span>
+        </div>
       )}
 
       {/* Barra de búsqueda */}
@@ -177,9 +206,8 @@ const FoodDashboard = () => {
           value={searchTerm}
           onChange={handleSearch}
           className="w-full lg:w-2/3 p-4 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
-          disabled={!isEmailVerified} // Deshabilitar si no está verificado
+          disabled={!isEmailVerified}
         />
-        {/* Checkbox para filtrar por índice glucémico */}
         <div className="flex items-center space-x-3 lg:w-1/3">
           <input
             type="checkbox"
@@ -197,20 +225,41 @@ const FoodDashboard = () => {
       <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Lista de alimentos */}
         <div className="col-span-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4 overflow-y-auto h-[600px]">
-          <ul className="space-y-3">
-            {filteredFoodData.map((food) => (
-              <li
-                key={food.Codigo}
-                onClick={() => handleFoodClick(food)}
-                className={`cursor-pointer hover:bg-green-600 hover:text-white p-3 rounded-lg transition-colors duration-200 ${
-                  !isEmailVerified ? "cursor-not-allowed opacity-50" : ""
-                }`}
-                style={{ pointerEvents: isEmailVerified ? "auto" : "none" }}
-              >
-                {food.Nombre}
-              </li>
-            ))}
-          </ul>
+          {filteredFoodData.length === 0 ? (
+            <p className="text-center text-gray-500 mt-4">No se encontraron alimentos</p>
+          ) : (
+            <ul className="space-y-3">
+              {filteredFoodData.map((food) => (
+                <li
+                  key={food.Codigo}
+                  onClick={() => handleFoodClick(food)}
+                  className={`cursor-pointer hover:bg-green-600 hover:text-white p-3 rounded-lg transition-colors duration-200 ${
+                    !isEmailVerified ? "cursor-not-allowed opacity-50" : ""
+                  }`}
+                  style={{ pointerEvents: isEmailVerified ? "auto" : "none" }}
+                >
+                  <div className="flex items-center gap-2">
+                    {food.IndiceGlucemico && (
+                      <div 
+                        className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                          food.IndiceGlucemico < 55 ? 'bg-green-500' :
+                          food.IndiceGlucemico <= 69 ? 'bg-yellow-500' :
+                          'bg-red-500'
+                        }`}
+                        title={`IG: ${food.IndiceGlucemico}`}
+                      />
+                    )}
+                    <span className="flex-1">{food.Nombre}</span>
+                    {food.IndiceGlucemico && (
+                      <span className="text-sm text-gray-500 group-hover:text-white">
+                        IG: {food.IndiceGlucemico}
+                      </span>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* Información Nutricional */}
@@ -222,77 +271,91 @@ const FoodDashboard = () => {
               </h2>
               <div className="grid grid-cols-2 gap-4 text-gray-700">
                 <p>
-                  <strong>Agua:</strong> {selectedFood.Agua} %
+                  <strong>Agua:</strong> {selectedFood.Agua.toFixed(1)} %
                 </p>
                 <p>
-                  <strong>Calorías:</strong> {selectedFood.Calorias} kcal
+                  <strong>Calorías:</strong> {selectedFood.Calorias.toFixed(1)} kcal
                 </p>
                 <p>
-                  <strong>Proteína:</strong> {selectedFood.Proteina} g
+                  <strong>Proteína:</strong> {selectedFood.Proteina.toFixed(1)} g
                 </p>
                 <p>
-                  <strong>Grasa:</strong> {selectedFood.Grasa} g
+                  <strong>Grasa:</strong> {selectedFood.Grasa.toFixed(1)} g
                 </p>
                 <p>
-                  <strong>Carbohidratos:</strong> {selectedFood.Carbohidratos} g
+                  <strong>Carbohidratos:</strong> {selectedFood.Carbohidratos.toFixed(1)} g
                 </p>
                 <p>
-                  <strong>Fibra:</strong> {selectedFood.Fibra} g
+                  <strong>Fibra:</strong> {selectedFood.Fibra.toFixed(1)} g
                 </p>
                 <p>
-                  <strong>Calcio:</strong> {selectedFood.Calcio} mg
+                  <strong>Calcio:</strong> {selectedFood.Calcio.toFixed(1)} mg
                 </p>
                 <p>
-                  <strong>Potasio:</strong> {selectedFood.Potasio} mg
+                  <strong>Potasio:</strong> {selectedFood.Potasio.toFixed(1)} mg
                 </p>
                 <p>
-                  <strong>Zinc:</strong> {selectedFood.Zinc} mg
+                  <strong>Zinc:</strong> {selectedFood.Zinc.toFixed(2)} mg
                 </p>
                 <p>
-                  <strong>Magnesio:</strong> {selectedFood.Magnesio} mg
+                  <strong>Magnesio:</strong> {selectedFood.Magnesio.toFixed(1)} mg
                 </p>
                 <p>
                   <strong>Índice Glucémico:</strong>{" "}
-                  {selectedFood.IndiceGlucemico ?? "No disponible"}
+                  {selectedFood.IndiceGlucemico?.toFixed(1) ?? "No disponible"}
                 </p>
               </div>
 
               {/* Calculo de Carga Glucémica */}
               {selectedFood.IndiceGlucemico && (
                 <div className="flex flex-col mt-4">
-                  <input
-                    type="number"
-                    value={portionSize}
-                    onChange={(e) => setPortionSize(Number(e.target.value))}
-                    className="p-2 border border-gray-300 rounded"
-                    placeholder="Tamaño de porción (g)"
-                    min={100}
-                    disabled={!isEmailVerified}
-                  />
+                  <div className="flex flex-col space-y-2">
+                    <label htmlFor="portionSize" className="text-sm text-gray-600">
+                      Tamaño de porción (g)
+                    </label>
+                    <input
+                      id="portionSize"
+                      type="number"
+                      value={portionSize}
+                      onChange={(e) => setPortionSize(Math.max(0, Number(e.target.value)))}
+                      className="p-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                      placeholder="Tamaño de porción (g)"
+                      min="0"
+                      disabled={!isEmailVerified}
+                    />
+                  </div>
                   <button
                     onClick={calculateGlycemicLoad}
-                    className="mt-2 bg-green-600 text-white py-2 rounded"
-                    disabled={!isEmailVerified}
+                    className="mt-4 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!isEmailVerified || portionSize <= 0}
                   >
                     Calcular Carga Glucémica
                   </button>
-                  {glycemicLoad !== null && (
-                    <p className="mt-2 text-lg font-semibold">
-                      Carga Glucémica: {glycemicLoad.toFixed(2)}
-                    </p>
+                  {glycemicLoad && (
+                    <div className="mt-4 p-4 bg-green-50 rounded-lg">
+                      <p className="text-lg font-semibold text-green-800">
+                        Carga Glucémica: {glycemicLoad.value.toFixed(2)}
+                      </p>
+                      <p className="text-sm text-green-600">
+                        Clasificación: {glycemicLoad.category}
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
             </div>
           ) : (
-            <p className="text-lg text-gray-700">
-              Selecciona un alimento para ver sus detalles.
-            </p>
+            <div className="flex items-center justify-center h-full">
+              <p className="text-lg text-gray-500">
+                Selecciona un alimento para ver sus detalles
+              </p>
+            </div>
           )}
         </div>
       </div>
+
       {/* Modal de Clasificación */}
-      {glycemicLoadCategory && (
+      {glycemicLoad && isVisible && (
         <div
           className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${
             isVisible ? "animate-fadeIn" : "animate-fadeOut"
@@ -304,7 +367,7 @@ const FoodDashboard = () => {
             }`}
           >
             <h3 className="text-2xl font-bold text-green-600">
-              Clasificación: {glycemicLoadCategory}
+              Clasificación: {glycemicLoad.category}
             </h3>
           </div>
         </div>
