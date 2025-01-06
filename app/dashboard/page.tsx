@@ -47,8 +47,8 @@ interface GlucoseRecord {
   time: string;
   timeStamp: Timestamp;
   ateSomething: boolean;
-  foodMeal?: string;
-  foodEaten?: string;
+  foodMeal?: string | null;
+  foodEaten?: string | null;
 }
 
 // Función de Registro
@@ -71,7 +71,7 @@ async function registerGlucose(
       timeStamp: Timestamp.now(),
       ateSomething: ateSomething,
       foodMeal: foodMeal,
-      foodEaten: foodEaten || "", // Solo se almacena si hay valor
+      foodEaten: foodEaten,
     });
   } catch (e) {
     console.error("Error al añadir el registro: ", e);
@@ -135,15 +135,13 @@ const Dashboard = () => {
   const [ateSomething, setAteSomething] = useState<boolean>(false);
   const [foodEaten, setFoodEaten] = useState<string>("");
   const [foodMeal, setFoodMeal] = useState<string>("");
+
   const [records, setRecords] = useState<GlucoseRecord[]>([]);
   const [userID, setUserID] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState("7 días");
-  const [showLineChart, setShowLineChart] = useState(true);
-  const [showBarChart, setShowBarChart] = useState(true);
-  const [showPieChart, setShowPieChart] = useState(true);
   const [prediction, setPrediction] = useState<number | null>(null);
   const [predictionConfidence, setPredictionConfidence] = useState<number>(0);
   const [fetchingRecords, setFetchingRecords] = useState(false);
@@ -188,21 +186,33 @@ const Dashboard = () => {
     try {
       if (!userID) throw new Error("Usuario no autenticado");
       if (glucoseLevel === "") throw new Error("Nivel de glucosa requerido");
-      if (ateSomething && !foodEaten) throw new Error("Ingrese lo que comió");
 
       const newRecord = {
         glucoseLevel: Number(glucoseLevel),
         date: new Date().toISOString().split("T")[0],
         time: new Date().toTimeString().split(" ")[0],
         timeStamp: Timestamp.now(),
-        ateSomething: ateSomething,
-        foodMeal: foodMeal,
-        foodEaten: ateSomething ? foodEaten : undefined,
+        ateSomething,
+        ...(ateSomething ? { 
+          foodMeal: foodMeal || null,
+          foodEaten: foodEaten || null 
+        } : {
+          foodMeal: null,
+          foodEaten: null
+        })
       };
 
       await addDoc(collection(db, "glucoseRecords", userID, "records"), newRecord);
 
-      await getPrediction(newRecord);
+      if (ateSomething) {
+        await getPrediction({
+          ...newRecord,
+          date: newRecord.date,
+          time: newRecord.time,
+          glucoseLevel: newRecord.glucoseLevel,
+          foodMeal: newRecord.foodMeal
+        });
+      }
 
       setGlucoseLevel("");
       setAteSomething(false);
@@ -212,13 +222,8 @@ const Dashboard = () => {
       const data = await fetchGlucoseRecords(userID, dateRange);
       setRecords(data);
 
-      // Calcular predicción basada en los últimos registros
-      if (data.length > 0) {
-        const recentLevels = data.slice(0, 7).map((r) => r.glucoseLevel);
-        const avgLevel = recentLevels.reduce((a, b) => a + b, 0) / recentLevels.length;
-        setPrediction(Math.round(avgLevel));
-      }
     } catch (err) {
+      console.error("Error al registrar:", err);
       setError(err instanceof Error ? err.message : "Error al registrar glucosa");
     } finally {
       setSubmitting(false);
@@ -260,7 +265,7 @@ const Dashboard = () => {
       datasets: [
         {
           label: 'Desayuno',
-          data: sortedRecords.map(record => 
+          data: sortedRecords.map(record =>
             record.foodMeal === 'desayuno' ? record.glucoseLevel : null
           ),
           borderColor: 'rgba(147, 51, 234, 1)', // purple
@@ -274,7 +279,7 @@ const Dashboard = () => {
         },
         {
           label: 'Almuerzo',
-          data: sortedRecords.map(record => 
+          data: sortedRecords.map(record =>
             record.foodMeal === 'almuerzo' ? record.glucoseLevel : null
           ),
           borderColor: 'rgba(59, 130, 246, 1)', // blue
@@ -288,7 +293,7 @@ const Dashboard = () => {
         },
         {
           label: 'Cena',
-          data: sortedRecords.map(record => 
+          data: sortedRecords.map(record =>
             record.foodMeal === 'cena' ? record.glucoseLevel : null
           ),
           borderColor: 'rgba(236, 72, 153, 1)', // pink
@@ -302,7 +307,7 @@ const Dashboard = () => {
         },
         {
           label: 'Otro',
-          data: sortedRecords.map(record => 
+          data: sortedRecords.map(record =>
             record.foodMeal === 'Otro' ? record.glucoseLevel : null
           ),
           borderColor: 'rgba(245, 158, 11, 1)', // amber
@@ -316,7 +321,7 @@ const Dashboard = () => {
         },
         {
           label: 'Sin Comida',
-          data: sortedRecords.map(record => 
+          data: sortedRecords.map(record =>
             !record.ateSomething ? record.glucoseLevel : null
           ),
           borderColor: 'rgba(75, 85, 99, 1)', // gray
@@ -337,7 +342,7 @@ const Dashboard = () => {
     const mealImpact = mealTypes.map(meal => {
       const mealRecords = records.filter(r => r.foodMeal === meal);
       if (mealRecords.length === 0) return { avg: 0, min: 0, max: 0 };
-      
+
       const levels = mealRecords.map(r => r.glucoseLevel);
       return {
         avg: levels.reduce((a, b) => a + b, 0) / levels.length,
@@ -393,8 +398,8 @@ const Dashboard = () => {
           label: 'Con Comida',
           data: Object.values(timeGroups).map(group => {
             const withFood = group.filter(r => r.ateSomething);
-            return withFood.length > 0 
-              ? withFood.reduce((sum, r) => sum + r.glucoseLevel, 0) / withFood.length 
+            return withFood.length > 0
+              ? withFood.reduce((sum, r) => sum + r.glucoseLevel, 0) / withFood.length
               : 0;
           }),
           backgroundColor: 'rgba(52, 211, 153, 0.7)',
@@ -406,8 +411,8 @@ const Dashboard = () => {
           label: 'Sin Comida',
           data: Object.values(timeGroups).map(group => {
             const withoutFood = group.filter(r => !r.ateSomething);
-            return withoutFood.length > 0 
-              ? withoutFood.reduce((sum, r) => sum + r.glucoseLevel, 0) / withoutFood.length 
+            return withoutFood.length > 0
+              ? withoutFood.reduce((sum, r) => sum + r.glucoseLevel, 0) / withoutFood.length
               : 0;
           }),
           backgroundColor: 'rgba(239, 68, 68, 0.7)',
@@ -552,51 +557,58 @@ const Dashboard = () => {
                   type="number"
                   className="w-full h-10 border border-green-50 rounded-md text-center"
                   value={glucoseLevel}
-                  onChange={(e) =>
-                    setGlucoseLevel(Math.max(0, Number(e.target.value)))
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setGlucoseLevel(value === "" ? "" : Math.max(0, Number(value)));
+                  }}
                   min="0"
                   required
+                  placeholder="Ingrese nivel de glucosa"
                 />
                 <label className="ml-2 font-bold">mg/dl</label>
               </div>
               <div className="flex items-center">
                 <input
                   type="checkbox"
-                  className="mr-2"
+                  className="mr-2 w-4 h-4"
                   checked={ateSomething}
-                  onChange={() => setAteSomething(!ateSomething)}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setAteSomething(checked);
+                    if (!checked) {
+                      setFoodMeal("");
+                      setFoodEaten("");
+                    }
+                  }}
                 />
                 <label>¿Comió algo antes de la medición?</label>
               </div>
 
               {ateSomething && (
-                <div>
-                  <select
-                    className="w-full h-10 border border-green-50 rounded-md text-center"
-                    value={foodMeal}
-                    onChange={(e) => setFoodMeal(e.target.value)}
-                  >
-                    <option value="" disabled>
-                      Seleccione una opción
-                    </option>
-                    <option value="desayuno">Desayuno</option>
-                    <option value="almuerzo">Almuerzo</option>
-                    <option value="cena">Cena</option>
-                    <option value="Otro">Otro</option>
-                  </select>
-                </div>
-              )}
-              {ateSomething && (
-                <div>
-                  <input
-                    type="text"
-                    className="w-full h-10 border border-green-50 rounded-md text-center"
-                    value={foodEaten}
-                    onChange={(e) => setFoodEaten(e.target.value)}
-                    placeholder="Ingrese lo que comió"
-                  />
-                </div>
+                <>
+                  <div>
+                    <select
+                      className="w-full h-10 border border-green-50 rounded-md text-center"
+                      value={foodMeal}
+                      onChange={(e) => setFoodMeal(e.target.value)}
+                    >
+                      <option value="">Seleccione tipo de comida</option>
+                      <option value="desayuno">Desayuno</option>
+                      <option value="almuerzo">Almuerzo</option>
+                      <option value="cena">Cena</option>
+                      <option value="Otro">Otro</option>
+                    </select>
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      className="w-full h-10 border border-green-50 rounded-md text-center"
+                      value={foodEaten}
+                      onChange={(e) => setFoodEaten(e.target.value)}
+                      placeholder="¿Qué comió?"
+                    />
+                  </div>
+                </>
               )}
 
               <button
@@ -613,35 +625,33 @@ const Dashboard = () => {
                   "Registrar"
                 )}
               </button>
-              <div>
-                <div>
-                  <select
-                    value={dateRange}
-                    onChange={async (e) => {
-                      setDateRange(e.target.value);
-                      if (userID) {
-                        setFetchingRecords(true);
-                        try {
-                          const data = await fetchGlucoseRecords(
-                            userID,
-                            e.target.value
-                          );
-                          setRecords(data);
-                        } catch (err) {
-                          setError(err instanceof Error ? err.message : "Error al cargar registros");
-                        } finally {
-                          setFetchingRecords(false);
-                        }
+
+              <div className="mt-4">
+                <select
+                  className="w-full h-10 border border-green-50 rounded-md text-center"
+                  value={dateRange}
+                  onChange={async (e) => {
+                    setDateRange(e.target.value);
+                    if (userID) {
+                      setFetchingRecords(true);
+                      try {
+                        const data = await fetchGlucoseRecords(userID, e.target.value);
+                        setRecords(data);
+                      } catch (err) {
+                        setError(err instanceof Error ? err.message : "Error al cargar registros");
+                      } finally {
+                        setFetchingRecords(false);
                       }
-                    }}
-                  >
-                    <option value="7 días">Últimos 7 días</option>
-                    <option value="1 mes">Último mes</option>
-                    <option value="3 meses">Últimos 3 meses</option>
-                    <option value="1 año">Último año</option>
-                  </select>
-                </div>
+                    }
+                  }}
+                >
+                  <option value="7 días">Últimos 7 días</option>
+                  <option value="1 mes">Último mes</option>
+                  <option value="3 meses">Últimos 3 meses</option>
+                  <option value="1 año">Último año</option>
+                </select>
               </div>
+
               {error && (
                 <p className="text-red-500 text-center mt-2">{error}</p>
               )}
@@ -774,8 +784,8 @@ const Dashboard = () => {
                   <div className="p-4 bg-purple-50 rounded-lg">
                     <h3 className="font-semibold text-purple-800">Mejor Momento</h3>
                     <p className="text-purple-600 mt-2">
-                      Tus niveles de glucosa son más estables durante la 
-                      {records.length > 0 ? 
+                      Tus niveles de glucosa son más estables durante la
+                      {records.length > 0 ? (
                         (() => {
                           const timeGroups = {
                             mañana: records.filter(r => {
@@ -791,23 +801,23 @@ const Dashboard = () => {
                               return hour >= 18 || hour < 6;
                             })
                           };
-                          
+
                           const variations = Object.entries(timeGroups).map(([time, group]) => ({
                             time,
                             variation: group.length > 1 ? 
                               Math.max(...group.map(r => r.glucoseLevel)) - Math.min(...group.map(r => r.glucoseLevel)) : 
                               Infinity
                           }));
-                          
+
                           return ` ${variations.reduce((a, b) => a.variation < b.variation ? a : b).time}`;
-                        })() 
-                        : ' mañana'}
+                        })()
+                      ) : ' mañana'}
                     </p>
                   </div>
                   <div className="p-4 bg-blue-50 rounded-lg">
                     <h3 className="font-semibold text-blue-800">Comida con Menor Impacto</h3>
                     <p className="text-blue-600 mt-2">
-                      {records.length > 0 ? 
+                      {records.length > 0 ? (
                         (() => {
                           const mealImpact = ['desayuno', 'almuerzo', 'cena'].map(meal => {
                             const mealRecords = records.filter(r => r.foodMeal === meal);
@@ -819,80 +829,31 @@ const Dashboard = () => {
                           });
                           const bestMeal = mealImpact.reduce((a, b) => a.avg < b.avg ? a : b);
                           return `El ${bestMeal.meal} suele tener el menor impacto en tu glucosa`;
-                        })() 
-                        : 'Registra más comidas para ver este insight'}
+                        })()
+                      ) : 'Registra más comidas para ver este insight'}
                     </p>
                   </div>
                   <div className="p-4 bg-pink-50 rounded-lg">
                     <h3 className="font-semibold text-pink-800">Tendencia General</h3>
                     <p className="text-pink-600 mt-2">
-                      {records.length > 0 ? 
+                      {records.length > 0 ? (
                         (() => {
                           const recentAvg = records.slice(0, Math.min(5, records.length))
                             .reduce((sum, r) => sum + r.glucoseLevel, 0) / Math.min(5, records.length);
                           const olderAvg = records.slice(-Math.min(5, records.length))
                             .reduce((sum, r) => sum + r.glucoseLevel, 0) / Math.min(5, records.length);
-                          
+
                           if (recentAvg < olderAvg) return "Tus niveles de glucosa muestran una tendencia a la baja";
                           if (recentAvg > olderAvg) return "Tus niveles de glucosa muestran una tendencia al alza";
                           return "Tus niveles de glucosa se mantienen estables";
-                        })() 
-                        : 'Registra más mediciones para ver la tendencia'}
+                        })()
+                      ) : 'Registra más mediciones para ver la tendencia'}
                     </p>
                   </div>
                 </div>
               </div>
             </div>
           )}
-        </div>
-
-        <div className="bg-white mt-8 p-6 border rounded-2xl shadow-lg">
-          <div className="relative">
-            <Image
-              src="/prediction.svg"
-              alt="predictions"
-              width={50}
-              height={50}
-              className="absolute left-[-15px] top-[-20px] w-5 lg:w-[50px] xs:w-12"
-            />
-            <h1 className="bold-20 lg:bold-32 mt-3 ml-10 capitalize">
-              Predicción
-            </h1>
-          </div>
-          <div className="mt-4 text-center">
-            {prediction !== null ? (
-              <div className="space-y-2">
-                <p className="font-semibold text-lg">
-                  Tu siguiente nivel de glucosa será aproximadamente{" "}
-                  <strong className="text-green-600">{prediction} mg/dl</strong>
-                </p>
-                <div className="flex items-center justify-center gap-2">
-                  <span className="text-sm text-gray-600">
-                    Confianza de la predicción:
-                  </span>
-                  <div className="w-32 h-2 bg-gray-200 rounded-full">
-                    <div 
-                      className="h-full bg-green-500 rounded-full"
-                      style={{ width: `${predictionConfidence * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-sm text-gray-600">
-                    {Math.round(predictionConfidence * 100)}%
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <p className="text-gray-600">
-                No hay suficientes datos para generar una predicción precisa.
-                Continúa registrando tus niveles de glucosa para obtener mejores predicciones.
-              </p>
-            )}
-          </div>
-          <p className="mt-4 text-sm text-gray-500">
-            Esta predicción se basa en tus datos históricos y patrones de glucosa.
-            Los resultados pueden variar dependiendo de diversos factores como dieta,
-            actividad física y otros aspectos de tu estilo de vida.
-          </p>
         </div>
       </div>
     </section>
