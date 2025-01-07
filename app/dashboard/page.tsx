@@ -51,6 +51,11 @@ interface GlucoseRecord {
   foodEaten?: string | null;
 }
 
+interface GlucosePrediction {
+  predicted_glucose: number;
+  confidence: number;
+}
+
 // Función de Registro
 async function registerGlucose(
   userID: string,
@@ -124,6 +129,19 @@ async function fetchGlucoseRecords(
   }
 }
 
+// Función para obtener todos los registros históricos
+async function fetchAllGlucoseRecords(userID: string): Promise<GlucoseRecord[]> {
+  try {
+    const recordsRef = collection(db, "glucoseRecords", userID, "records");
+    const q = query(recordsRef, orderBy("timeStamp", "desc"));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((doc) => doc.data() as GlucoseRecord);
+  } catch (error) {
+    console.error("Error fetching all glucose records:", error);
+    throw error;
+  }
+}
+
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-screen">
     <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-700"></div>
@@ -137,18 +155,110 @@ const Dashboard = () => {
   const [foodMeal, setFoodMeal] = useState<string>("");
 
   const [records, setRecords] = useState<GlucoseRecord[]>([]);
+  const [allRecords, setAllRecords] = useState<GlucoseRecord[]>([]);
   const [userID, setUserID] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState("7 días");
-  const [prediction, setPrediction] = useState<number | null>(null);
+  const [prediction, setPrediction] = useState<GlucosePrediction | null>(null);
   const [predictionConfidence, setPredictionConfidence] = useState<number>(0);
   const [fetchingRecords, setFetchingRecords] = useState(false);
 
-  const getPrediction = async (glucoseRecord: any) => {
+  // Implementación local del modelo de predicción
+  const localPredict = (records: GlucoseRecord[]): number => {
+    if (records.length < 2) return 0;
+    
+    // Calcular la media móvil de los últimos registros
+    const lastValues = records.slice(0, 5).map(r => r.glucoseLevel);
+    const average = lastValues.reduce((a, b) => a + b, 0) / lastValues.length;
+    
+    // Calcular la tendencia
+    const trend = records[0].glucoseLevel - records[1].glucoseLevel;
+    
+    // Predecir el próximo valor basado en la media y la tendencia
+    return average + trend;
+  };
+
+  const localGetConfidence = (records: GlucoseRecord[]): number => {
+    if (records.length < 5) return 0;
+    if (records.length < 10) return 50;
+    if (records.length < 20) return 70;
+    return 85;
+  };
+
+  const updatePrediction = (records: GlucoseRecord[]) => {
+    if (records.length < 5) {
+      setPrediction(null);
+      return;
+    }
+
+    const predictedValue = localPredict(records);
+    const confidence = localGetConfidence(records);
+
+    setPrediction({
+      predicted_glucose: predictedValue,
+      confidence: confidence
+    });
+  };
+
+  // Efecto para actualizar predicciones cuando cambian los registros
+  useEffect(() => {
+    if (allRecords.length >= 5) {
+      updatePrediction(allRecords);
+    }
+  }, [allRecords]);
+
+  const checkMLServer = async () => {
     try {
-      const date = new Date(glucoseRecord.date.split('/').reverse().join('-'));
+      const response = await fetch('http://localhost:8000/health');
+      if (response.ok) {
+        return true;
+      }
+    } catch (error) {
+      console.error('ML Server not available:', error);
+    }
+    return false;
+  };
+
+  const trainModel = async (records: GlucoseRecord[]) => {
+    if (!(await checkMLServer())) {
+      console.log('ML Server not available, skipping training');
+      return;
+    }
+
+    try {
+      const trainingData = records.map(record => ({
+        hour: parseInt(record.time.split(':')[0]),
+        day_of_week: new Date(record.date).getDay(),
+        meal_type: record.foodMeal || 'none',
+        last_glucose: record.glucoseLevel
+      }));
+
+      const response = await fetch('http://localhost:8000/train', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(trainingData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error en el entrenamiento del modelo');
+      }
+    } catch (error) {
+      console.error('Error al entrenar modelo:', error);
+    }
+  };
+
+  const getPrediction = async (glucoseRecord: any) => {
+    if (!(await checkMLServer())) {
+      console.log('ML Server not available, skipping prediction');
+      return;
+    }
+
+    try {
+      const date = new Date(glucoseRecord.date);
       const hour = parseInt(glucoseRecord.time.split(':')[0]);
 
       const response = await fetch('http://localhost:8000/predict', {
@@ -169,14 +279,76 @@ const Dashboard = () => {
       }
 
       const data = await response.json();
-      setPrediction(Math.round(data.predicted_glucose));
-      setPredictionConfidence(data.confidence);
+      setPrediction(data);
     } catch (error) {
       console.error('Error al predecir:', error);
       setPrediction(null);
-      setPredictionConfidence(0);
     }
   };
+
+  // Efecto para cargar datos históricos y entrenar el modelo
+  useEffect(() => {
+    const loadHistoricalData = async (userId: string) => {
+      try {
+        const historicalData = await fetchAllGlucoseRecords(userId);
+        setAllRecords(historicalData);
+        
+        if (historicalData.length >= 5) {
+          await trainModel(historicalData);
+          await getPrediction(historicalData[0]);
+        }
+      } catch (error) {
+        console.error("Error loading historical data:", error);
+      }
+    };
+
+    if (userID) {
+      loadHistoricalData(userID);
+    }
+  }, [userID]);
+
+  // Efecto separado para la visualización de datos según el rango seleccionado
+  useEffect(() => {
+    const loadDisplayData = async () => {
+      if (!userID) return;
+      
+      try {
+        const displayData = await fetchGlucoseRecords(userID, dateRange);
+        setRecords(displayData);
+      } catch (error) {
+        console.error("Error loading display data:", error);
+        setError(error instanceof Error ? error.message : "Error al cargar registros");
+      }
+    };
+
+    loadDisplayData();
+  }, [dateRange, userID]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setError(null);
+      try {
+        if (user) {
+          setUserID(user.uid);
+        } else {
+          window.location.href = "/login";
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error al cargar registros");
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [dateRange]);
+
+  useEffect(() => {
+    const checkServer = async () => {
+      await checkMLServer();
+    };
+    checkServer();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,23 +376,18 @@ const Dashboard = () => {
 
       await addDoc(collection(db, "glucoseRecords", userID, "records"), newRecord);
 
-      if (ateSomething) {
-        await getPrediction({
-          ...newRecord,
-          date: newRecord.date,
-          time: newRecord.time,
-          glucoseLevel: newRecord.glucoseLevel,
-          foodMeal: newRecord.foodMeal
-        });
-      }
+      // Actualizar todos los registros históricos
+      const updatedHistoricalData = await fetchAllGlucoseRecords(userID);
+      setAllRecords(updatedHistoricalData);
+
+      // Actualizar los registros visualizados según el rango seleccionado
+      const displayData = await fetchGlucoseRecords(userID, dateRange);
+      setRecords(displayData);
 
       setGlucoseLevel("");
       setAteSomething(false);
       setFoodEaten("");
       setFoodMeal("");
-
-      const data = await fetchGlucoseRecords(userID, dateRange);
-      setRecords(data);
 
     } catch (err) {
       console.error("Error al registrar:", err);
@@ -229,27 +396,6 @@ const Dashboard = () => {
       setSubmitting(false);
     }
   };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setError(null);
-      try {
-        if (user) {
-          setUserID(user.uid);
-          const data = await fetchGlucoseRecords(user.uid, dateRange);
-          setRecords(data);
-        } else {
-          window.location.href = "/login";
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error al cargar registros");
-      } finally {
-        setLoading(false);
-      }
-    });
-
-    return () => unsubscribe();
-  }, [dateRange]);
 
   const chartData = useMemo(() => {
     // Ordenar registros por fecha
@@ -850,6 +996,38 @@ const Dashboard = () => {
                       ) : 'Registra más mediciones para ver la tendencia'}
                     </p>
                   </div>
+                </div>
+              </div>
+              {/* Add Prediction Section after Insights */}
+              <div className="bg-white p-6 rounded-xl shadow-md mt-8">
+                <h2 className="text-xl font-bold mb-4 text-gray-800">
+                  Predicción de Glucosa
+                </h2>
+                <div className="p-4 bg-green-50 rounded-lg">
+                  {allRecords.length < 5 ? (
+                    <p className="text-gray-600">
+                      Se necesitan al menos 5 registros para generar predicciones precisas. 
+                      Actualmente tienes {allRecords.length} {allRecords.length === 1 ? 'registro' : 'registros'}.
+                    </p>
+                  ) : prediction ? (
+                    <>
+                      <h3 className="font-semibold text-green-800">Próximo Nivel de Glucosa</h3>
+                      <p className="text-green-600 mt-2">
+                        Se predice que tu próximo nivel de glucosa será aproximadamente{' '}
+                        <span className="font-bold">{Math.round(prediction.predicted_glucose)} mg/dl</span>
+                      </p>
+                      <p className="text-green-500 text-sm mt-1">
+                        Confianza del modelo: {Math.round(prediction.confidence)}%
+                      </p>
+                      <p className="text-gray-500 text-sm mt-2">
+                        Predicción basada en {allRecords.length} registros históricos
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-gray-600">
+                      Actualizando predicciones...
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
