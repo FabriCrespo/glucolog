@@ -999,36 +999,88 @@ const Dashboard = () => {
                 </div>
               </div>
               {/* Add Prediction Section after Insights */}
-              <div className="bg-white p-6 rounded-xl shadow-md mt-8">
-                <h2 className="text-xl font-bold mb-4 text-gray-800">
+              <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-xl shadow-md">
+                <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
                   Predicción de Glucosa
                 </h2>
-                <div className="p-4 bg-green-50 rounded-lg">
-                  {allRecords.length < 5 ? (
-                    <p className="text-gray-600">
-                      Se necesitan al menos 5 registros para generar predicciones precisas. 
-                      Actualmente tienes {allRecords.length} {allRecords.length === 1 ? 'registro' : 'registros'}.
-                    </p>
-                  ) : prediction ? (
-                    <>
-                      <h3 className="font-semibold text-green-800">Próximo Nivel de Glucosa</h3>
-                      <p className="text-green-600 mt-2">
-                        Se predice que tu próximo nivel de glucosa será aproximadamente{' '}
-                        <span className="font-bold">{Math.round(prediction.predicted_glucose)} mg/dl</span>
-                      </p>
-                      <p className="text-green-500 text-sm mt-1">
-                        Confianza del modelo: {Math.round(prediction.confidence)}%
-                      </p>
-                      <p className="text-gray-500 text-sm mt-2">
-                        Predicción basada en {allRecords.length} registros históricos
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-gray-600">
-                      Actualizando predicciones...
-                    </p>
-                  )}
-                </div>
+                
+                {prediction ? (
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className={`p-4 rounded-lg ${
+                        prediction.predicted_glucose < 70 ? 'bg-red-100 border-l-4 border-red-500' :
+                        prediction.predicted_glucose > 180 ? 'bg-yellow-100 border-l-4 border-yellow-500' :
+                        'bg-emerald-100 border-l-4 border-emerald-500'
+                      }`}>
+                        <h3 className="font-semibold text-gray-800">Próximo Nivel Estimado</h3>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-3xl font-bold">
+                            {Math.round(prediction.predicted_glucose)}
+                          </span>
+                          <span className="text-gray-600">mg/dl</span>
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-white rounded-lg border border-gray-200">
+                        <h3 className="font-semibold text-gray-800">Confianza de la Predicción</h3>
+                        <div className="mt-2">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div 
+                              className="bg-emerald-600 h-2.5 rounded-full transition-all duration-500" 
+                              style={{ width: `${prediction.confidence}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-gray-600 mt-1 block">
+                            {prediction.confidence}% de confianza
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-white rounded-lg border border-gray-200">
+                      <h3 className="font-semibold text-gray-800 mb-3">Recomendaciones</h3>
+                      {prediction.predicted_glucose < 70 ? (
+                        <div className="space-y-2 text-red-700">
+                          <p>⚠️ Nivel de glucosa bajo predicho</p>
+                          <ul className="list-disc pl-5 space-y-1 text-sm">
+                            <li>Consume carbohidratos de rápida absorción</li>
+                            <li>Ten a mano caramelos o jugo de frutas</li>
+                            <li>Considera tomar un snack si planeas actividad física</li>
+                          </ul>
+                        </div>
+                      ) : prediction.predicted_glucose > 180 ? (
+                        <div className="space-y-2 text-yellow-700">
+                          <p>⚠️ Nivel de glucosa alto predicho</p>
+                          <ul className="list-disc pl-5 space-y-1 text-sm">
+                            <li>Bebe agua para mantenerte hidratado</li>
+                            <li>Considera una caminata suave</li>
+                            <li>Revisa tu próxima comida planificada</li>
+                          </ul>
+                        </div>
+                      ) : (
+                        <div className="space-y-2 text-emerald-700">
+                          <p>✅ Nivel de glucosa normal predicho</p>
+                          <ul className="list-disc pl-5 space-y-1 text-sm">
+                            <li>Mantén tu rutina actual</li>
+                            <li>Continúa con tus hábitos saludables</li>
+                            <li>Registra tu próxima medición según lo programado</li>
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p className="text-lg">No hay suficientes datos para generar una predicción</p>
+                    <p className="mt-2">Registra al menos 5 mediciones para ver predicciones</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
