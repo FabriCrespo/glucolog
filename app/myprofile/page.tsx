@@ -4,7 +4,8 @@ import { auth, db, storage } from '@/app/firebase/config';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { onAuthStateChanged, sendEmailVerification } from 'firebase/auth';
-import { FiEdit } from 'react-icons/fi';
+import { FiEdit, FiCamera } from 'react-icons/fi';
+import { motion } from 'framer-motion';
 
 interface UserData {
   firstName: string;
@@ -26,6 +27,7 @@ const MyProfile = () => {
   const [isVerified, setIsVerified] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
+  const [previewURL, setPreviewURL] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -37,7 +39,9 @@ const MyProfile = () => {
         const docSnap = await getDoc(userDoc);
 
         if (docSnap.exists()) {
-          setUserData(docSnap.data() as UserData);
+          const data = docSnap.data() as UserData;
+          setUserData(data);
+          setPreviewURL(data.photoURL || null);
         } else {
           console.log('No such document!');
         }
@@ -59,27 +63,38 @@ const MyProfile = () => {
 
   const handleSaveData = async () => {
     if (auth.currentUser && userData) {
-      if (photo) {
-        const photoRef = ref(storage, `profilePictures/${auth.currentUser.uid}`);
-        await uploadBytes(photoRef, photo);
-        const photoURL = await getDownloadURL(photoRef);
-        setUserData((prevData) => prevData ? { ...prevData, photoURL } : null);
+      try {
+        if (photo) {
+          const photoRef = ref(storage, `profilePictures/${auth.currentUser.uid}`);
+          await uploadBytes(photoRef, photo);
+          const photoURL = await getDownloadURL(photoRef);
+          setUserData((prevData) => prevData ? { ...prevData, photoURL } : null);
+          await setDoc(doc(db, 'users', auth.currentUser.uid), { ...userData, photoURL }, { merge: true });
+        } else {
+          await setDoc(doc(db, 'users', auth.currentUser.uid), userData, { merge: true });
+        }
+        setIsEditing(false);
+      } catch (error) {
+        console.error('Error al guardar:', error);
       }
-
-      const userDoc = doc(db, 'users', auth.currentUser.uid);
-      await setDoc(userDoc, userData, { merge: true });
-      setIsEditing(false);
     }
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setPhoto(e.target.files[0]);
+      const file = e.target.files[0];
+      setPhoto(file);
+      const url = URL.createObjectURL(file);
+      setPreviewURL(url);
     }
   };
 
   if (loading) {
-    return <p className="text-center text-lg text-gray-600">Cargando...</p>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-green-50 to-blue-50">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-green-500"></div>
+      </div>
+    );
   }
 
   if (!userData) {
@@ -88,101 +103,192 @@ const MyProfile = () => {
 
   if (!isVerified) {
     return (
-      <section className="flex justify-center items-center h-screen bg-gray-100">
-        <div className="bg-white w-2/3 md:w-1/2 lg:w-2/5 xl:w-1/3 p-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
-          <h2 className="text-2xl font-bold text-center">¡Bienvenido de vuelta, {userData.firstName}!</h2>
-          <p className="text-red-500 text-center">Por favor, verifica tu correo electrónico para acceder a todas las funcionalidades.</p>
-          <button
-            onClick={handleResendVerification}
-            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg w-full"
+      <motion.section 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex justify-center items-center min-h-screen bg-gradient-to-r from-green-50 to-blue-50"
+      >
+        <div className="bg-white w-2/3 md:w-1/2 lg:w-2/5 xl:w-1/3 p-8 rounded-2xl shadow-xl">
+          <motion.div
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.5 }}
           >
-            Reenviar correo de verificación
-          </button>
+            <h2 className="text-2xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-blue-500">
+              ¡Bienvenido de vuelta, {userData.firstName}!
+            </h2>
+            <p className="text-red-500 text-center mt-4">
+              Por favor, verifica tu correo electrónico para acceder a todas las funcionalidades.
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleResendVerification}
+              className="mt-6 bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl w-full font-medium shadow-lg transition-all duration-300"
+            >
+              Reenviar correo de verificación
+            </motion.button>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
     );
   }
 
   return (
-    <div className="flex flex-col md:flex-row bg-white w-11/12 md:w-2/3 lg:w-3/5 mx-auto p-8 space-y-8 md:space-y-0 md:space-x-8 rounded-lg shadow-lg">
-      {/* Left side: Photo and Welcome Message */}
-      <div className="flex flex-col items-center md:w-1/3">
-        <div className="relative">
-          {userData.photoURL ? (
-            <img src={userData.photoURL} alt="Foto de perfil" className="w-36 h-36 md:w-48 md:h-48 rounded-full border-4 border-green-500 shadow-lg object-cover" />
-          ) : (
-            <p>No hay foto de perfil</p>
-          )}
-          <label htmlFor="photo-upload" className="absolute bottom-2 right-2 bg-green-500 p-2 rounded-full cursor-pointer shadow-md transition-transform hover:scale-110">
-            <FiEdit className="text-white" />
-            <input type="file" id="photo-upload" onChange={handlePhotoChange} className="hidden" />
-          </label>
-        </div>
-        <h2 className="text-2xl font-bold text-center mt-4">¡Bienvenido, {userData.firstName}!</h2>
-      </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen py-12 px-4 bg-gradient-to-r from-green-50 to-blue-50"
+    >
+      <div className="relative max-w-4xl mx-auto">
+        {/* Decorative elements */}
+        <div className="absolute -top-10 -left-10 w-32 h-32 bg-green-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-10 left-20 w-32 h-32 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
 
-      {/* Right side: User Information */}
-      <div className="flex flex-col md:w-2/3 space-y-4">
-        {isEditing ? (
-          <>
-            <label className="block text-sm font-semibold">Edad:
-              <input
-                type="number"
-                value={userData.age || ''}
-                onChange={(e) => setUserData({ ...userData, age: parseInt(e.target.value) })}
-                className="border p-2 rounded-md w-full mt-1"
-              />
-            </label>
-            <label className="block text-sm font-semibold">Peso (kg):
-              <input
-                type="number"
-                value={userData.weight || ''}
-                onChange={(e) => setUserData({ ...userData, weight: parseFloat(e.target.value) })}
-                className="border p-2 rounded-md w-full mt-1"
-              />
-            </label>
-            <label className="block text-sm font-semibold">Altura (cm):
-              <input
-                type="number"
-                value={userData.height || ''}
-                onChange={(e) => setUserData({ ...userData, height: parseInt(e.target.value) })}
-                className="border p-2 rounded-md w-full mt-1"
-              />
-            </label>
-            <label className="block text-sm font-semibold">Teléfono:
-              <input
-                type="text"
-                value={userData.phone || ''}
-                onChange={(e) => setUserData({ ...userData, phone: e.target.value })}
-                className="border p-2 rounded-md w-full mt-1"
-              />
-            </label>
-            <label className="block text-sm font-semibold">Dirección:
-              <input
-                type="text"
-                value={userData.address || ''}
-                onChange={(e) => setUserData({ ...userData, address: e.target.value })}
-                className="border p-2 rounded-md w-full mt-1"
-              />
-            </label>
-            <button onClick={handleSaveData} className="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg w-full">
-              Guardar Información
-            </button>
-          </>
-        ) : (
-          <>
-            <p className="text-lg"><strong>Edad:</strong> {userData.age}</p>
-            <p className="text-lg"><strong>Peso:</strong> {userData.weight} kg</p>
-            <p className="text-lg"><strong>Altura:</strong> {userData.height} cm</p>
-            <p className="text-lg"><strong>Teléfono:</strong> {userData.phone}</p>
-            <p className="text-lg"><strong>Dirección:</strong> {userData.address}</p>
-            <button onClick={() => setIsEditing(true)} className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg w-full">
-              Editar Información
-            </button>
-          </>
-        )}
+        <motion.div 
+          className="relative bg-white backdrop-blur-lg bg-opacity-90 p-8 rounded-3xl shadow-2xl overflow-hidden"
+          initial={{ y: 20 }}
+          animate={{ y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Decorative shapes */}
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-32 h-32 bg-green-100 rounded-full"></div>
+          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 bg-blue-100 rounded-full"></div>
+
+          <div className="flex flex-col md:flex-row gap-12 relative">
+            {/* Left side: Photo and Welcome Message */}
+            <motion.div 
+              className="flex flex-col items-center md:w-1/3"
+              initial={{ x: -20 }}
+              animate={{ x: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="relative group">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="relative w-48 h-48 rounded-2xl overflow-hidden border-4 border-green-400 shadow-xl"
+                >
+                  {previewURL ? (
+                    <img 
+                      src={previewURL} 
+                      alt="Foto de perfil" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-green-200 to-blue-200 flex items-center justify-center">
+                      <FiCamera className="text-4xl text-white" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                    <label htmlFor="photo-upload" className="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-white p-3 rounded-full shadow-lg">
+                        <FiEdit className="text-xl text-green-500" />
+                      </div>
+                      <input type="file" id="photo-upload" onChange={handlePhotoChange} className="hidden" accept="image/*" />
+                    </label>
+                  </div>
+                </motion.div>
+              </div>
+              <motion.h2 
+                className="text-2xl font-bold mt-6 bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-blue-500"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+              >
+                ¡Hola, {userData.firstName}!
+              </motion.h2>
+            </motion.div>
+
+            {/* Right side: User Information */}
+            <motion.div 
+              className="flex flex-col md:w-2/3 space-y-6"
+              initial={{ x: 20 }}
+              animate={{ x: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              {isEditing ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="space-y-4"
+                >
+                  {[
+                    { label: 'Edad', key: 'age', type: 'number' },
+                    { label: 'Peso (kg)', key: 'weight', type: 'number' },
+                    { label: 'Altura (cm)', key: 'height', type: 'number' },
+                    { label: 'Teléfono', key: 'phone', type: 'text' },
+                    { label: 'Dirección', key: 'address', type: 'text' },
+                  ].map((field) => (
+                    <motion.div
+                      key={field.key}
+                      whileHover={{ scale: 1.02 }}
+                      className="relative"
+                    >
+                      <label className="block text-sm font-medium text-gray-700">
+                        {field.label}
+                        <input
+                          type={field.type}
+                          value={userData[field.key as keyof UserData] || ''}
+                          onChange={(e) => setUserData({ 
+                            ...userData, 
+                            [field.key]: field.type === 'number' ? Number(e.target.value) : e.target.value 
+                          })}
+                          className="mt-1 block w-full px-4 py-3 bg-white border border-green-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                        />
+                      </label>
+                    </motion.div>
+                  ))}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleSaveData}
+                    className="mt-6 w-full py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    Guardar Cambios
+                  </motion.button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="space-y-4"
+                >
+                  {[
+                    { label: 'Edad', value: userData.age, unit: 'años' },
+                    { label: 'Peso', value: userData.weight, unit: 'kg' },
+                    { label: 'Altura', value: userData.height, unit: 'cm' },
+                    { label: 'Teléfono', value: userData.phone },
+                    { label: 'Dirección', value: userData.address },
+                  ].map((item, index) => (
+                    <motion.div
+                      key={item.label}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl"
+                    >
+                      <p className="text-sm font-medium text-gray-500">{item.label}</p>
+                      <p className="text-lg font-semibold text-gray-800">
+                        {item.value || 'No especificado'} {item.unit}
+                      </p>
+                    </motion.div>
+                  ))}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setIsEditing(true)}
+                    className="mt-6 w-full py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    Editar Información
+                  </motion.button>
+                </motion.div>
+              )}
+            </motion.div>
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
