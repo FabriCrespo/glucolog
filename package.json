@@ -20,6 +20,7 @@
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "firebase": "^10.12.4",
+    "firebase-admin": "^13.1.0",
     "firebase-hooks": "^0.0.1",
     "framer-motion": "^11.17.0",
     "micromatch": "^4.0.8",
