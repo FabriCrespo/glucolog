@@ -6,11 +6,17 @@ import dayjs from "dayjs";
 import Image from "next/image";
 import "../schedule/page.css";
 import { db, auth } from "../firebase/config";
-import { collection, addDoc, getDocs, doc, updateDoc } from "firebase/firestore";
-import dynamic from 'next/dynamic';
+import {
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
+import dynamic from "next/dynamic";
 
 const BarChart = dynamic(
-  () => import('react-chartjs-2').then(mod => mod.Bar),
+  () => import("react-chartjs-2").then((mod) => mod.Bar),
   { ssr: false }
 );
 
@@ -22,7 +28,7 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
+} from "chart.js";
 
 ChartJS.register(
   CategoryScale,
@@ -47,7 +53,7 @@ interface Event {
   activityType?: string;
   plannedDuration?: number;
   actualDuration?: number;
-  intensity?: 'baja' | 'media' | 'alta';
+  intensity?: "baja" | "media" | "alta";
   time: string;
   completed: boolean;
   completedAt?: string;
@@ -85,8 +91,11 @@ const Schedule: React.FC = () => {
     completedExercises: 0,
     totalDuration: 0,
     exercisesByType: {} as Record<string, number>,
-    medicationsByType: {} as Record<string, number>
+    medicationsByType: {} as Record<string, number>,
   });
+  const [showEventsList, setShowEventsList] = useState(false);
+  const [selectedDayEvents, setSelectedDayEvents] = useState<Event[]>([]);
+  const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(null);
 
   const startDay = currentDate.startOf("month").startOf("week");
   const endDay = currentDate.endOf("month").endOf("week");
@@ -106,33 +115,38 @@ const Schedule: React.FC = () => {
   const getEventsForDay = (date: dayjs.Dayjs) =>
     events.filter((event) => dayjs(event.date).isSame(date, "day"));
 
-  const handleEventClick = (event: Event) => {
+  const handleEventClick = (event: Event, e: React.MouseEvent) => {
+    e.stopPropagation(); // Evitar que el clic se propague al día
     setSelectedEvent(event);
   };
 
   const handleCompleteEvent = async (event: Event) => {
     if (auth.currentUser && !event.completed && event.id) {
       try {
-        const eventRef = doc(db, "users", auth.currentUser.uid, "events", event.id);
+        const eventRef = doc(
+          db,
+          "users",
+          auth.currentUser.uid,
+          "events",
+          event.id
+        );
         const completionData = {
           completed: true,
           completedAt: new Date().toISOString(),
           ...(event.type === "exercise" && {
-            actualDuration: actualDuration || event.plannedDuration
-          })
+            actualDuration: actualDuration || event.plannedDuration,
+          }),
         };
-        
+
         await updateDoc(eventRef, completionData);
-        
+
         // Update local state
-        setEvents(prevEvents => 
-          prevEvents.map(e => 
-            e.id === event.id 
-              ? { ...e, ...completionData }
-              : e
+        setEvents((prevEvents) =>
+          prevEvents.map((e) =>
+            e.id === event.id ? { ...e, ...completionData } : e
           )
         );
-        
+
         setSelectedEvent(null);
         setShowSuccessModal(true);
         setTimeout(() => setShowSuccessModal(false), 2000);
@@ -145,9 +159,15 @@ const Schedule: React.FC = () => {
   const handleUpdateDuration = async (event: Event, duration: number) => {
     if (auth.currentUser) {
       try {
-        const eventRef = doc(db, "users", auth.currentUser.uid, "events", event.id);
+        const eventRef = doc(
+          db,
+          "users",
+          auth.currentUser.uid,
+          "events",
+          event.id
+        );
         await updateDoc(eventRef, {
-          actualDuration: duration
+          actualDuration: duration,
         });
         await fetchEvents();
       } catch (error) {
@@ -157,13 +177,20 @@ const Schedule: React.FC = () => {
   };
 
   const handleDateClick = (date: dayjs.Dayjs) => {
-    if (date.isBefore(dayjs(), "day")) {
+    const events = getEventsForDay(date);
+    setSelectedDate(date);
+    setSelectedDayEvents(events);
+    setShowEventsList(true);
+  };
+
+  const handleAddNewEvent = () => {
+    if (selectedDate && selectedDate.isBefore(dayjs(), "day")) {
       setIsAlertVisible(true);
       return;
     }
-
-    setNewEventDate(date);
+    setNewEventDate(selectedDate);
     setIsAddingEvent(true);
+    setShowEventsList(false);
   };
 
   const handleCloseAlertModal = () => setIsAlertVisible(false);
@@ -186,51 +213,61 @@ const Schedule: React.FC = () => {
       notes: "",
       state: false,
     });
+    // Limpiar también el newEventDate
+    setNewEventDate(null);
   };
 
   const handleSaveEvent = async () => {
-    if (newEventDate && auth.currentUser) {
-      try {
-        const eventDateTime = dayjs(
-          `${newEventDate.format("YYYY-MM-DD")} ${newEventData.time}`
-        ).toISOString();
+    if (!newEventDate || !auth.currentUser) {
+      return;
+    }
 
-        const eventData = {
-          title: newEventData.title,
-          date: newEventDate.format("YYYY-MM-DD"),
-          dateTime: eventDateTime,
-          type: newEventData.type,
-          details: newEventData.details,
-          dose: newEventData.dose,
-          frequency: newEventData.frequency,
-          medicationType: newEventData.medicationType,
-          instructions: newEventData.instructions,
-          activityType: newEventData.activityType,
-          plannedDuration: newEventData.plannedDuration,
-          intensity: newEventData.intensity,
-          time: newEventData.time,
-          completed: newEventData.completed,
-          notes: newEventData.notes,
-          state: false,
-        };
+    if (!newEventData.title || !newEventData.time) {
+      alert("Por favor completa el título y la hora del evento");
+      return;
+    }
 
-        // Add the document and get its reference
-        const docRef = await addDoc(
-          collection(db, "users", auth.currentUser.uid, "events"),
-          eventData
-        );
+    try {
+      const eventDateTime = dayjs(
+        `${newEventDate.format("YYYY-MM-DD")} ${newEventData.time}`
+      ).toISOString();
 
-        // Update the events list with the new event including its ID
-        const newEvent: Event = {
-          id: docRef.id,
-          ...eventData
-        };
+      const eventData = {
+        title: newEventData.title,
+        date: newEventDate.format("YYYY-MM-DD"),
+        dateTime: eventDateTime,
+        type: newEventData.type,
+        details: newEventData.details,
+        dose: newEventData.dose,
+        frequency: newEventData.frequency,
+        medicationType: newEventData.medicationType,
+        instructions: newEventData.instructions,
+        activityType: newEventData.activityType,
+        plannedDuration: newEventData.plannedDuration,
+        intensity: newEventData.intensity,
+        time: newEventData.time,
+        completed: newEventData.completed,
+        notes: newEventData.notes,
+        state: false,
+      };
 
-        setEvents(prevEvents => [...prevEvents, newEvent]);
-        handleCloseEventModal();
-      } catch (error) {
-        console.error("Error guardando el evento en Firestore:", error);
-      }
+      const docRef = await addDoc(
+        collection(db, "users", auth.currentUser.uid, "events"),
+        eventData
+      );
+
+      const newEvent: Event = {
+        id: docRef.id,
+        ...eventData,
+      };
+
+      setEvents((prevEvents) => [...prevEvents, newEvent]);
+      handleCloseEventModal();
+      setShowSuccessModal(true);
+      setTimeout(() => setShowSuccessModal(false), 2000);
+    } catch (error) {
+      console.error("Error guardando el evento en Firestore:", error);
+      alert("Error al guardar el evento. Por favor intenta de nuevo.");
     }
   };
 
@@ -241,10 +278,13 @@ const Schedule: React.FC = () => {
         const eventsSnapshot = await getDocs(
           collection(db, "users", auth.currentUser.uid, "events")
         );
-        const eventsList = eventsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Event));
+        const eventsList = eventsSnapshot.docs.map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...doc.data(),
+            } as Event)
+        );
         setEvents(eventsList);
       } catch (error) {
         console.error("Error cargando los eventos desde Firestore:", error);
@@ -262,25 +302,29 @@ const Schedule: React.FC = () => {
       completedExercises: 0,
       totalDuration: 0,
       exercisesByType: {} as Record<string, number>,
-      medicationsByType: {} as Record<string, number>
+      medicationsByType: {} as Record<string, number>,
     };
 
-    const currentMonthStart = currentDate.startOf('month');
-    const currentMonthEnd = currentDate.endOf('month');
+    const currentMonthStart = currentDate.startOf("month");
+    const currentMonthEnd = currentDate.endOf("month");
 
-    events.forEach(event => {
+    events.forEach((event) => {
       const eventDate = dayjs(event.date);
-      if (event.completed && 
-          eventDate.isAfter(currentMonthStart) && 
-          eventDate.isBefore(currentMonthEnd)) {
-        if (event.type === 'medication') {
+      if (
+        event.completed &&
+        eventDate.isAfter(currentMonthStart) &&
+        eventDate.isBefore(currentMonthEnd)
+      ) {
+        if (event.type === "medication") {
           stats.completedMedications++;
-          const type = event.medicationType || 'otros';
-          stats.medicationsByType[type] = (stats.medicationsByType[type] || 0) + 1;
+          const type = event.medicationType || "otros";
+          stats.medicationsByType[type] =
+            (stats.medicationsByType[type] || 0) + 1;
         } else {
           stats.completedExercises++;
-          stats.totalDuration += event.actualDuration || event.plannedDuration || 0;
-          const type = event.activityType || 'otros';
+          stats.totalDuration +=
+            event.actualDuration || event.plannedDuration || 0;
+          const type = event.activityType || "otros";
           stats.exercisesByType[type] = (stats.exercisesByType[type] || 0) + 1;
         }
       }
@@ -293,43 +337,58 @@ const Schedule: React.FC = () => {
     labels: Object.keys(monthlyStats.exercisesByType),
     datasets: [
       {
-        label: 'Ejercicios Completados por Tipo',
+        label: "Ejercicios Completados por Tipo",
         data: Object.values(monthlyStats.exercisesByType),
-        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-        borderColor: 'rgba(54, 162, 235, 1)',
+        backgroundColor: "rgba(54, 162, 235, 0.5)",
+        borderColor: "rgba(54, 162, 235, 1)",
         borderWidth: 1,
       },
     ],
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: "top" as const,
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+          },
+        },
+      },
+    },
   };
 
   const medicationChartData = {
     labels: Object.keys(monthlyStats.medicationsByType),
     datasets: [
       {
-        label: 'Medicamentos Tomados por Tipo',
+        label: "Medicamentos Tomados por Tipo",
         data: Object.values(monthlyStats.medicationsByType),
-        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: "rgba(75, 192, 192, 0.5)",
+        borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
       },
     ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top' as const,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: "top" as const,
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+          },
+        },
       },
     },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          stepSize: 1
-        }
-      }
-    }
   };
 
   const getEventStatusColor = (event: Event) => {
@@ -338,7 +397,7 @@ const Schedule: React.FC = () => {
     }
     const eventDate = dayjs(event.date);
     const today = dayjs();
-    if (eventDate.isBefore(today, 'day')) {
+    if (eventDate.isBefore(today, "day")) {
       return "bg-red-100 border-red-200 text-red-800";
     }
     return "bg-blue-100 border-blue-200 text-blue-800";
@@ -350,7 +409,7 @@ const Schedule: React.FC = () => {
     }
     const eventDate = dayjs(event.date);
     const today = dayjs();
-    if (eventDate.isBefore(today, 'day')) {
+    if (eventDate.isBefore(today, "day")) {
       return "Vencido";
     }
     return "Pendiente";
@@ -440,7 +499,7 @@ const Schedule: React.FC = () => {
                   {getEventsForDay(dayItem).map((event, idx) => (
                     <div
                       key={idx}
-                      onClick={() => handleEventClick(event)}
+                      onClick={(e) => handleEventClick(event, e)}
                       className="cursor-pointer flex items-center space-x-1"
                     >
                       {event.type === "medication" ? (
@@ -467,40 +526,66 @@ const Schedule: React.FC = () => {
 
         {/* Agregar la sección de estadísticas después del calendario */}
         <div className="mt-8 bg-white p-6 rounded-xl shadow-lg">
-          <h2 className="text-2xl font-semibold mb-6 text-green-800">Estadísticas del Mes</h2>
-          
+          <h2 className="text-2xl font-semibold mb-6 text-green-800">
+            Estadísticas del Mes
+          </h2>
+
           <div className="grid grid-cols-3 gap-6 mb-8">
             <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-              <h3 className="text-lg font-medium text-green-800">Medicaciones</h3>
-              <p className="text-3xl font-bold text-green-600">{monthlyStats.completedMedications}</p>
+              <h3 className="text-lg font-medium text-green-800">
+                Medicaciones
+              </h3>
+              <p className="text-3xl font-bold text-green-600">
+                {monthlyStats.completedMedications}
+              </p>
               <p className="text-sm text-green-700">completadas este mes</p>
             </div>
-            
+
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
               <h3 className="text-lg font-medium text-blue-800">Ejercicios</h3>
-              <p className="text-3xl font-bold text-blue-600">{monthlyStats.completedExercises}</p>
+              <p className="text-3xl font-bold text-blue-600">
+                {monthlyStats.completedExercises}
+              </p>
               <p className="text-sm text-blue-700">completados este mes</p>
             </div>
-            
+
             <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
-              <h3 className="text-lg font-medium text-purple-800">Tiempo Total</h3>
-              <p className="text-3xl font-bold text-purple-600">{monthlyStats.totalDuration}</p>
+              <h3 className="text-lg font-medium text-purple-800">
+                Tiempo Total
+              </h3>
+              <p className="text-3xl font-bold text-purple-600">
+                {monthlyStats.totalDuration}
+              </p>
               <p className="text-sm text-purple-700">minutos de ejercicio</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
             <div className="bg-white p-4 rounded-lg border border-blue-100">
-              <h3 className="text-xl font-semibold mb-4 text-blue-800">Ejercicios por Tipo</h3>
+              <h3 className="text-xl font-semibold mb-4 text-blue-800">
+                Ejercicios por Tipo
+              </h3>
               <div className="h-[300px]">
-                {BarChart && <BarChart data={exerciseChartData} options={chartOptions} />}
+                {BarChart && (
+                  <BarChart
+                    data={exerciseChartData}
+                    options={exerciseChartData.options}
+                  />
+                )}
               </div>
             </div>
-            
+
             <div className="bg-white p-4 rounded-lg border border-green-100">
-              <h3 className="text-xl font-semibold mb-4 text-green-800">Medicamentos por Tipo</h3>
+              <h3 className="text-xl font-semibold mb-4 text-green-800">
+                Medicamentos por Tipo
+              </h3>
               <div className="h-[300px]">
-                {BarChart && <BarChart data={medicationChartData} options={chartOptions} />}
+                {BarChart && (
+                  <BarChart
+                    data={medicationChartData}
+                    options={medicationChartData.options}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -511,15 +596,22 @@ const Schedule: React.FC = () => {
           <div className="fixed inset-0 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-xl shadow-lg transform animate-bounce">
               <div className="flex items-center gap-3 text-green-600">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth="2" 
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
+                <svg
+                  className="w-8 h-8"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <span className="text-xl font-semibold">¡Evento Completado!</span>
+                <span className="text-xl font-semibold">
+                  ¡Evento Completado!
+                </span>
               </div>
             </div>
           </div>
@@ -549,12 +641,18 @@ const Schedule: React.FC = () => {
                 <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
                   {newEventData.type === "medication" ? (
                     <>
-                      <FontAwesomeIcon icon={faPills} className="text-green-500 text-2xl" />
+                      <FontAwesomeIcon
+                        icon={faPills}
+                        className="text-green-500 text-2xl"
+                      />
                       Nueva Medicación
                     </>
                   ) : (
                     <>
-                      <FontAwesomeIcon icon={faDumbbell} className="text-blue-500 text-2xl" />
+                      <FontAwesomeIcon
+                        icon={faDumbbell}
+                        className="text-blue-500 text-2xl"
+                      />
                       Nueva Actividad Física
                     </>
                   )}
@@ -563,8 +661,18 @@ const Schedule: React.FC = () => {
                   onClick={handleCloseEventModal}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -578,7 +686,9 @@ const Schedule: React.FC = () => {
                         ? "bg-green-500 text-white shadow-lg shadow-green-200"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
-                    onClick={() => setNewEventData({ ...newEventData, type: "medication" })}
+                    onClick={() =>
+                      setNewEventData({ ...newEventData, type: "medication" })
+                    }
                   >
                     <FontAwesomeIcon icon={faPills} className="text-xl" />
                     Medicación
@@ -589,7 +699,9 @@ const Schedule: React.FC = () => {
                         ? "bg-green-500 text-white shadow-lg shadow-green-200"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
-                    onClick={() => setNewEventData({ ...newEventData, type: "exercise" })}
+                    onClick={() =>
+                      setNewEventData({ ...newEventData, type: "exercise" })
+                    }
                   >
                     <FontAwesomeIcon icon={faDumbbell} className="text-xl" />
                     Actividad Física
@@ -599,15 +711,25 @@ const Schedule: React.FC = () => {
                 {/* Título común */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Título del {newEventData.type === "medication" ? "Medicamento" : "Ejercicio"}
+                    Título del{" "}
+                    {newEventData.type === "medication"
+                      ? "Medicamento"
+                      : "Ejercicio"}
                   </label>
                   <input
                     type="text"
-                    placeholder={newEventData.type === "medication" ? "ej. Insulina" : "ej. Caminata"}
+                    placeholder={
+                      newEventData.type === "medication"
+                        ? "ej. Insulina"
+                        : "ej. Caminata"
+                    }
                     className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                     value={newEventData.title}
                     onChange={(e) =>
-                      setNewEventData({ ...newEventData, title: e.target.value })
+                      setNewEventData({
+                        ...newEventData,
+                        title: e.target.value,
+                      })
                     }
                   />
                 </div>
@@ -624,7 +746,10 @@ const Schedule: React.FC = () => {
                           className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white transition-all duration-200"
                           value={newEventData.medicationType}
                           onChange={(e) =>
-                            setNewEventData({ ...newEventData, medicationType: e.target.value })
+                            setNewEventData({
+                              ...newEventData,
+                              medicationType: e.target.value,
+                            })
                           }
                         >
                           <option value="">Seleccionar tipo</option>
@@ -644,7 +769,10 @@ const Schedule: React.FC = () => {
                           className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                           value={newEventData.dose}
                           onChange={(e) =>
-                            setNewEventData({ ...newEventData, dose: e.target.value })
+                            setNewEventData({
+                              ...newEventData,
+                              dose: e.target.value,
+                            })
                           }
                         />
                       </div>
@@ -658,7 +786,10 @@ const Schedule: React.FC = () => {
                         className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white transition-all duration-200"
                         value={newEventData.frequency}
                         onChange={(e) =>
-                          setNewEventData({ ...newEventData, frequency: e.target.value })
+                          setNewEventData({
+                            ...newEventData,
+                            frequency: e.target.value,
+                          })
                         }
                       >
                         <option value="">Seleccionar frecuencia</option>
@@ -678,7 +809,10 @@ const Schedule: React.FC = () => {
                         className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
                         value={newEventData.instructions}
                         onChange={(e) =>
-                          setNewEventData({ ...newEventData, instructions: e.target.value })
+                          setNewEventData({
+                            ...newEventData,
+                            instructions: e.target.value,
+                          })
                         }
                         rows={3}
                       />
@@ -695,7 +829,10 @@ const Schedule: React.FC = () => {
                           className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white transition-all duration-200"
                           value={newEventData.activityType}
                           onChange={(e) =>
-                            setNewEventData({ ...newEventData, activityType: e.target.value })
+                            setNewEventData({
+                              ...newEventData,
+                              activityType: e.target.value,
+                            })
                           }
                         >
                           <option value="">Seleccionar actividad</option>
@@ -743,10 +880,14 @@ const Schedule: React.FC = () => {
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                             }`}
                             onClick={() =>
-                              setNewEventData({ ...newEventData, intensity: intensity as any })
+                              setNewEventData({
+                                ...newEventData,
+                                intensity: intensity as any,
+                              })
                             }
                           >
-                            {intensity.charAt(0).toUpperCase() + intensity.slice(1)}
+                            {intensity.charAt(0).toUpperCase() +
+                              intensity.slice(1)}
                           </button>
                         ))}
                       </div>
@@ -765,7 +906,10 @@ const Schedule: React.FC = () => {
                       className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                       value={newEventData.time}
                       onChange={(e) =>
-                        setNewEventData({ ...newEventData, time: e.target.value })
+                        setNewEventData({
+                          ...newEventData,
+                          time: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -791,7 +935,10 @@ const Schedule: React.FC = () => {
                     className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
                     value={newEventData.notes}
                     onChange={(e) =>
-                      setNewEventData({ ...newEventData, notes: e.target.value })
+                      setNewEventData({
+                        ...newEventData,
+                        notes: e.target.value,
+                      })
                     }
                     rows={3}
                   />
@@ -814,7 +961,110 @@ const Schedule: React.FC = () => {
               </div>
             </div>
           </div>
-        )} 
+        )}
+
+        {showEventsList && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-xl shadow-lg w-[500px] max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6 border-b border-green-100 pb-4">
+                <div>
+                  <h3 className="text-xl font-semibold">
+                    Eventos del {selectedDate?.format("DD/MM/YYYY")}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {selectedDayEvents.length} eventos encontrados
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowEventsList(false)}
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <button
+                onClick={handleAddNewEvent}
+                className="w-full mb-4 py-3 px-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium flex items-center justify-center gap-2"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Agregar Nuevo Evento
+              </button>
+
+              {selectedDayEvents.length > 0 ? (
+                <div className="space-y-3">
+                  {selectedDayEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      onClick={() => {
+                        setSelectedEvent(event);
+                        setShowEventsList(false);
+                      }}
+                      className={`p-4 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md ${
+                        event.type === "medication"
+                          ? "border-green-200 hover:border-green-300"
+                          : "border-blue-200 hover:border-blue-300"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {event.type === "medication" ? (
+                          <FontAwesomeIcon
+                            icon={faPills}
+                            className="text-green-500 text-xl"
+                          />
+                        ) : (
+                          <FontAwesomeIcon
+                            icon={faDumbbell}
+                            className="text-blue-500 text-xl"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <h4 className="font-medium">{event.title}</h4>
+                          <p className="text-sm text-gray-600">{event.time}</p>
+                        </div>
+                        <div
+                          className={`px-3 py-1 rounded-full text-sm ${getEventStatusColor(
+                            event
+                          )}`}
+                        >
+                          {getEventStatusText(event)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No hay eventos para este día
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {selectedEvent && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -822,9 +1072,15 @@ const Schedule: React.FC = () => {
               <div className="flex justify-between items-center mb-6 border-b border-green-100 pb-4">
                 <h3 className="text-xl font-semibold flex items-center gap-2">
                   {selectedEvent.type === "medication" ? (
-                    <FontAwesomeIcon icon={faPills} className="text-green-500" />
+                    <FontAwesomeIcon
+                      icon={faPills}
+                      className="text-green-500"
+                    />
                   ) : (
-                    <FontAwesomeIcon icon={faDumbbell} className="text-blue-500" />
+                    <FontAwesomeIcon
+                      icon={faDumbbell}
+                      className="text-blue-500"
+                    />
                   )}
                   {selectedEvent.title}
                 </h3>
@@ -832,19 +1088,37 @@ const Schedule: React.FC = () => {
                   onClick={() => setSelectedEvent(null)}
                   className="text-gray-500 hover:text-gray-700 transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
 
               <div className="space-y-4">
-                <div className={`p-3 rounded-lg border ${getEventStatusColor(selectedEvent)}`}>
+                <div
+                  className={`p-3 rounded-lg border ${getEventStatusColor(
+                    selectedEvent
+                  )}`}
+                >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium">{getEventStatusText(selectedEvent)}</span>
+                    <span className="font-medium">
+                      {getEventStatusText(selectedEvent)}
+                    </span>
                     {selectedEvent.completed && (
                       <span className="text-sm">
-                        {dayjs(selectedEvent.completedAt!).format('DD/MM/YYYY HH:mm')}
+                        {dayjs(selectedEvent.completedAt!).format(
+                          "DD/MM/YYYY HH:mm"
+                        )}
                       </span>
                     )}
                   </div>
@@ -854,7 +1128,9 @@ const Schedule: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-600">Fecha</p>
-                      <p className="font-medium">{dayjs(selectedEvent.date).format('DD/MM/YYYY')}</p>
+                      <p className="font-medium">
+                        {dayjs(selectedEvent.date).format("DD/MM/YYYY")}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Hora</p>
@@ -866,24 +1142,34 @@ const Schedule: React.FC = () => {
                     <>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <p className="text-sm text-gray-600">Tipo de Medicamento</p>
-                          <p className="font-medium capitalize">{selectedEvent.medicationType || 'No especificado'}</p>
+                          <p className="text-sm text-gray-600">
+                            Tipo de Medicamento
+                          </p>
+                          <p className="font-medium capitalize">
+                            {selectedEvent.medicationType || "No especificado"}
+                          </p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Dosis</p>
-                          <p className="font-medium">{selectedEvent.dose || 'No especificada'}</p>
+                          <p className="font-medium">
+                            {selectedEvent.dose || "No especificada"}
+                          </p>
                         </div>
                       </div>
                       {selectedEvent.frequency && (
                         <div>
                           <p className="text-sm text-gray-600">Frecuencia</p>
-                          <p className="font-medium capitalize">{selectedEvent.frequency}</p>
+                          <p className="font-medium capitalize">
+                            {selectedEvent.frequency}
+                          </p>
                         </div>
                       )}
                       {selectedEvent.instructions && (
                         <div>
                           <p className="text-sm text-gray-600">Instrucciones</p>
-                          <p className="font-medium">{selectedEvent.instructions}</p>
+                          <p className="font-medium">
+                            {selectedEvent.instructions}
+                          </p>
                         </div>
                       )}
                     </>
@@ -891,25 +1177,40 @@ const Schedule: React.FC = () => {
                     <>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <p className="text-sm text-gray-600">Tipo de Actividad</p>
-                          <p className="font-medium capitalize">{selectedEvent.activityType || 'No especificado'}</p>
+                          <p className="text-sm text-gray-600">
+                            Tipo de Actividad
+                          </p>
+                          <p className="font-medium capitalize">
+                            {selectedEvent.activityType || "No especificado"}
+                          </p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Intensidad</p>
-                          <p className="font-medium capitalize">{selectedEvent.intensity || 'No especificada'}</p>
+                          <p className="font-medium capitalize">
+                            {selectedEvent.intensity || "No especificada"}
+                          </p>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <p className="text-sm text-gray-600">Duración Planeada</p>
-                          <p className="font-medium">{selectedEvent.plannedDuration} minutos</p>
+                          <p className="text-sm text-gray-600">
+                            Duración Planeada
+                          </p>
+                          <p className="font-medium">
+                            {selectedEvent.plannedDuration} minutos
+                          </p>
                         </div>
-                        {selectedEvent.completed && selectedEvent.actualDuration && (
-                          <div>
-                            <p className="text-sm text-gray-600">Duración Real</p>
-                            <p className="font-medium">{selectedEvent.actualDuration} minutos</p>
-                          </div>
-                        )}
+                        {selectedEvent.completed &&
+                          selectedEvent.actualDuration && (
+                            <div>
+                              <p className="text-sm text-gray-600">
+                                Duración Real
+                              </p>
+                              <p className="font-medium">
+                                {selectedEvent.actualDuration} minutos
+                              </p>
+                            </div>
+                          )}
                       </div>
                     </>
                   )}
@@ -933,18 +1234,32 @@ const Schedule: React.FC = () => {
                           type="number"
                           className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           value={actualDuration}
-                          onChange={(e) => setActualDuration(Math.max(0, parseInt(e.target.value) || 0))}
+                          onChange={(e) =>
+                            setActualDuration(
+                              Math.max(0, parseInt(e.target.value) || 0)
+                            )
+                          }
                           min="0"
                         />
                       </div>
                     )}
-                    
+
                     <button
                       onClick={() => handleCompleteEvent(selectedEvent)}
                       className="w-full py-3 px-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium flex items-center justify-center gap-2"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       Marcar como Completado
                     </button>

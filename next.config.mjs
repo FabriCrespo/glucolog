@@ -1,4 +1,13 @@
 const nextConfig = {
+  experimental: {
+    appDir: true,
+  },
+  reactStrictMode: true,
+  output: 'standalone',
+  webpack: (config) => {
+    config.output.clean = true;
+    return config;
+  },
   async headers() {
     return [
       {
