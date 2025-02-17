@@ -1,17 +1,29 @@
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
-  },
   reactStrictMode: true,
   output: 'standalone',
-  webpack: (config) => {
-    config.output.clean = true;
+  
+  webpack: (config, { isServer }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@tensorflow/tfjs-node': false,
+    };
+
+    if (!isServer) {
+      config.resolve.fallback = {
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+
     return config;
   },
+
   async headers() {
     return [
       {
-        source: '/secure-route/(.*)',
+        source: '/secure-route/(.*)', 
         headers: [
           {
             key: 'Cross-Origin-Opener-Policy',

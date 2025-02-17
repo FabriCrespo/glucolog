@@ -1,0 +1,30 @@
+# Dependency directories
+node_modules
+
+# Testing directories
+__tests__
+test
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Version control
+.git
+.gitignore
+
+# Miscellaneous
+.DS_Store
+.idea
+.vscode
+*.swp
+*.swo
