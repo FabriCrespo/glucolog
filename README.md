@@ -16,28 +16,28 @@ Diabetes management doesn't have to be boring or scary. We're here to make your 
 ## 📸 Peek Inside Glucolog! 
 
 ### Home Page 🏡
-![Home Page](screenshots/Home.png)
+![Home Page](screenshots/home-page.png)
 **Your Warm Welcome**: 
 - Cute, intuitive design
 - Instant access to your health world
 - Secure login with a smile 😊
 
 ### Dashboard 📊
-![Dashboard](screenshots/Dashboard.png)
+![Dashboard](screenshots/dashboard.png)
 **Your Health Command Center**:
 - Colorful, easy-to-read graphs
 - Real-time glucose insights
 - Celebrate every health win! 🎉
 
 ### Food Bank 🍽️
-![Food Bank](screenshots/Food.png)
+![Food Bank](screenshots/food-bank.png)
 **Nutrition Made Delightful**:
 - Yummy, diabetes-friendly meal ideas
 - Track your nutrition like a pro
 - Personalized dietary cheerleader 📣
 
 ### Schedule Management 📅
-![Schedule](screenshots/Schedule.png)
+![Schedule](screenshots/schedule-management.png)
 **Your Personal Health Assistant**:
 - Medication reminders that don't feel like a chore
 - Exercise tracking with fun motivations
