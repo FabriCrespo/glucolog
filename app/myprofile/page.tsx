@@ -6,6 +6,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { onAuthStateChanged, sendEmailVerification } from 'firebase/auth';
 import { FiEdit, FiCamera } from 'react-icons/fi';
 import { motion } from 'framer-motion';
+import { FirebaseError } from 'firebase/app';
 
 interface UserData {
   firstName: string;
@@ -56,8 +57,21 @@ const MyProfile = () => {
 
   const handleResendVerification = async () => {
     if (auth.currentUser && !auth.currentUser.emailVerified) {
-      await sendEmailVerification(auth.currentUser);
-      alert('Correo de verificación reenviado. Por favor revisa tu bandeja de entrada.');
+      try {
+        await sendEmailVerification(auth.currentUser);
+        alert('Correo de verificación reenviado. Por favor revisa tu bandeja de entrada.');
+      } catch (error) {
+        if (error instanceof FirebaseError) {
+          if (error.code === 'auth/too-many-requests') {
+            alert('Has enviado demasiadas solicitudes de verificación. Por favor, espera unos minutos antes de intentarlo nuevamente.');
+          } else {
+            alert(`Error al enviar el correo de verificación: ${error.message}`);
+          }
+          console.error('Error al enviar verificación:', error);
+        } else {
+          alert('Ha ocurrido un error al enviar el correo de verificación. Inténtalo más tarde.');
+        }
+      }
     }
   };
 

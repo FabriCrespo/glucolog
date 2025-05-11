@@ -4,64 +4,17 @@ import { get, ref, DatabaseReference } from "firebase/database";
 import { auth, database } from "../firebase/config";
 import Image from "next/image";
 import "./animations.css";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import { motion, AnimatePresence } from "framer-motion";
+import SearchBar from "@/components/foodbank/SearchBar";
+import FoodList from "@/components/foodbank/FoodList";
+import FoodDetails from "@/components/foodbank/FoodDetails";
+import MicronutrientBalance from "@/components/foodbank/MicronutrientBalance";
+import NutrientDensityCalculator from "@/components/foodbank/NutrientDensityCalculator";
+import { FoodItem, GlycemicLoadInfo, NutrientDensity, MicronutrientStatus, NutritionalRecommendation } from "@/types/food";
+import NutrientRecommendations from "@/components/foodbank/NutrientRecommendations";
 
-interface FoodItem {
-  Codigo: string;
-  Nombre: string;
-  Agua: number;
-  Calorias: number;
-  Proteina: number;
-  Grasa: number;
-  Carbohidratos: number;
-  Fibra: number;
-  Calcio: number;
-  Potasio: number;
-  Zinc: number;
-  Magnesio: number;
-  VitaminaB6: number;
-  VitaminaB12: number;
-  AcidoFolico: number;
-  FolatoEquivFD: number;
-  FraccionComestible: number;
-  Categoria: string;
-  CarbohidratosNetos: number;
-  ClasificacionCarbohidratos: string;
-  IndiceGlucemico?: number;
-  GramHCO?: number;
-}
-
-interface GlycemicLoadInfo {
-  value: number;
-  category: 'Baja' | 'Media' | 'Alta';
-}
-
-interface NutrientDensity {
-  caloriesPer100g: number;
-  proteinDensity: number;
-  fiberDensity: number;
-  mineralDensity: number;
-  vitaminDensity: number;
-}
-
-interface MicronutrientStatus {
-  magnesium: { value: number; status: 'low' | 'good' | 'high' };
-  zinc: { value: number; status: 'low' | 'good' | 'high' };
-  calcium: { value: number; status: 'low' | 'good' | 'high' };
-  potassium: { value: number; status: 'low' | 'good' | 'high' };
-}
-
-interface NutritionalRecommendation {
-  type: 'complement' | 'caution' | 'tip';
-  message: string;
-}
-
-const LoadingSpinner = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-700"></div>
-  </div>
-);
-
-const FoodDashboard = () => {
+const FoodDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [foodData, setFoodData] = useState<FoodItem[]>([]);
@@ -181,12 +134,12 @@ const FoodDashboard = () => {
       const category = value <= 10 ? 'Baja' : value <= 19 ? 'Media' : 'Alta';
 
       setGlycemicLoad({ value, category });
-      setIsVisible(true);
+      setIsVisible(true); // Aseguramos que el modal se muestre
 
-      // Auto-hide the modal after 2 seconds
+      // Auto-hide the modal after 5 seconds (aumentado de 2 a 5 segundos para mejor lectura)
       setTimeout(() => {
         setIsVisible(false);
-      }, 2000);
+      }, 5000);
     }
   };
 
@@ -287,19 +240,26 @@ const FoodDashboard = () => {
   return (
     <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Encabezado */}
-      <div className="flex items-center justify-center mb-10">
-        <div className="relative flex items-center">
-          <Image
-            src="/nutricion.svg"
-            alt="nutrición"
-            width={50}
-            height={50}
-            className="absolute -left-6 w-12 h-12"
-          />
-          <h1 className="text-3xl md:text-4xl font-bold text-green-600 ml-8">
+      <div className="flex justify-center mb-10">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative flex items-center bg-green-50 px-8 py-4 rounded-2xl shadow-md"
+        >
+          <div className="absolute -left-4 -top-4 bg-white p-3 rounded-full shadow-lg">
+            <Image
+              src="/nutricion.svg"
+              alt="nutrición"
+              width={40}
+              height={40}
+              className="w-10 h-10"
+            />
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent text-white ml-8">
             Tabla Nutricional de Alimentos
           </h1>
-        </div>
+        </motion.div>
       </div>
 
       {/* Alerta de Verificación */}
@@ -315,323 +275,142 @@ const FoodDashboard = () => {
       )}
 
       {/* Barra de búsqueda y filtros */}
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Buscar alimento..."
-                value={searchTerm}
-                onChange={handleSearch}
-                className="w-full h-12 pl-12 pr-4 rounded-lg border-2 border-gray-200 focus:border-green-600 focus:outline-none transition-colors"
-                disabled={!isEmailVerified}
-              />
-              <svg className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            <input
-              type="checkbox"
-              id="glycemicIndex"
-              checked={showWithGlycemicIndex}
-              onChange={handleCheckboxChange}
-              className="w-5 h-5 accent-green-600"
-              disabled={!isEmailVerified}
-            />
-            <label htmlFor="glycemicIndex" className="text-gray-700">
-              Solo con Índice Glucémico
-            </label>
-          </div>
-        </div>
-      </div>
+      <SearchBar 
+        searchTerm={searchTerm}
+        handleSearch={handleSearch}
+        showWithGlycemicIndex={showWithGlycemicIndex}
+        handleCheckboxChange={handleCheckboxChange}
+        isEmailVerified={isEmailVerified}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Lista de alimentos */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200">
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800">Alimentos</h2>
-          </div>
-          <div className="h-[600px] overflow-y-auto p-4">
-            {filteredFoodData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p>No se encontraron alimentos</p>
-              </div>
-            ) : (
-              <ul className="space-y-2">
-                {filteredFoodData.map((food) => (
-                  <li
-                    key={food.Codigo}
-                    onClick={() => handleFoodClick(food)}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors
-                      ${selectedFood?.Codigo === food.Codigo ? 'bg-green-600 text-white' : 'hover:bg-green-50'}
-                      ${!isEmailVerified ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    style={{ pointerEvents: isEmailVerified ? "auto" : "none" }}
-                  >
-                    <div className="flex items-center gap-3">
-                      {food.IndiceGlucemico && (
-                        <span className={`w-3 h-3 rounded-full flex-shrink-0
-                          ${food.IndiceGlucemico < 55 ? 'bg-green-500' :
-                            food.IndiceGlucemico <= 69 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                        />
-                      )}
-                      <span className="flex-1 font-medium">{food.Nombre}</span>
-                      {food.IndiceGlucemico && (
-                        <span className={`text-sm ${selectedFood?.Codigo === food.Codigo ? 'text-white' : 'text-gray-500'}`}>
-                          IG: {food.IndiceGlucemico}
-                        </span>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
+        <FoodList 
+          filteredFoodData={filteredFoodData}
+          selectedFood={selectedFood}
+          handleFoodClick={handleFoodClick}
+          isEmailVerified={isEmailVerified}
+        />
 
         {/* Información Nutricional */}
-        <div className="lg:col-span-2 bg-white rounded-lg shadow-md border border-gray-200">
-          {selectedFood ? (
-            <div className="p-6">
-              <h2 className="text-2xl font-bold text-green-600 mb-6">{selectedFood.Nombre}</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Información Básica</h3>
-                  <div className="space-y-2">
-                    {[
-                      { label: 'Calorías', value: selectedFood.Calorias.toFixed(1), unit: 'kcal' },
-                      { label: 'Proteína', value: selectedFood.Proteina.toFixed(1), unit: 'g' },
-                      { label: 'Grasa', value: selectedFood.Grasa.toFixed(1), unit: 'g' },
-                      { label: 'Carbohidratos', value: selectedFood.Carbohidratos.toFixed(1), unit: 'g' },
-                      { label: 'Fibra', value: selectedFood.Fibra.toFixed(1), unit: 'g' },
-                    ].map((item) => (
-                      <div key={item.label} className="flex justify-between py-2 border-b border-gray-100">
-                        <span className="text-gray-600">{item.label}</span>
-                        <span className="font-medium">{item.value} {item.unit}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Minerales y Vitaminas</h3>
-                  <div className="space-y-2">
-                    {[
-                      { label: 'Calcio', value: selectedFood.Calcio.toFixed(1), unit: 'mg' },
-                      { label: 'Potasio', value: selectedFood.Potasio.toFixed(1), unit: 'mg' },
-                      { label: 'Zinc', value: selectedFood.Zinc.toFixed(2), unit: 'mg' },
-                      { label: 'Magnesio', value: selectedFood.Magnesio.toFixed(1), unit: 'mg' },
-                      { label: 'Índice Glucémico', value: selectedFood.IndiceGlucemico?.toFixed(1) ?? 'No disponible', unit: '' },
-                    ].map((item) => (
-                      <div key={item.label} className="flex justify-between py-2 border-b border-gray-100">
-                        <span className="text-gray-600">{item.label}</span>
-                        <span className="font-medium">{item.value} {item.unit}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {selectedFood.IndiceGlucemico && (
-                <div className="mt-8 p-6 bg-green-400 rounded-lg">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Cálculo de Carga Glucémica</h3>
-                  <div className="flex flex-col md:flex-row gap-4 items-end">
-                    <div className="flex-1">
-                      <label htmlFor="portionSize" className="block text-sm font-medium text-gray-700 mb-2">
-                        Tamaño de porción
-                      </label>
-                      <div className="relative">
-                        <input
-                          id="portionSize"
-                          type="number"
-                          value={portionSize}
-                          onChange={(e) => setPortionSize(Math.max(0, Number(e.target.value)))}
-                          className="w-full h-12 px-4 border-2 border-gray-200 rounded-lg focus:border-green-600 focus:outline-none"
-                          min="0"
-                          disabled={!isEmailVerified}
-                        />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">g</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={calculateGlycemicLoad}
-                      className="h-12 px-6 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={!isEmailVerified || portionSize <= 0}
-                    >
-                      Calcular
-                    </button>
-                  </div>
-
-                  {glycemicLoad && (
-                    <div className="mt-4 p-4 bg-white rounded-lg border border-green-200">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-lg font-semibold text-gray-800">
-                            Carga Glucémica: <span className="text-green-600">{glycemicLoad.value.toFixed(2)}</span>
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Clasificación: <span className="font-medium">{glycemicLoad.category}</span>
-                          </p>
-                        </div>
-                        <div className={`w-3 h-3 rounded-full
-                          ${glycemicLoad.category === 'Baja' ? 'bg-green-500' :
-                            glycemicLoad.category === 'Media' ? 'bg-yellow-500' : 'bg-red-500'}`}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="h-full flex flex-col items-center justify-center p-8 text-gray-500">
-              <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-lg">Selecciona un alimento para ver sus detalles</p>
-            </div>
-          )}
-        </div>
+        <FoodDetails
+          selectedFood={selectedFood}
+          portionSize={portionSize}
+          setPortionSize={setPortionSize}
+          glycemicLoad={glycemicLoad}
+          calculateGlycemicLoad={calculateGlycemicLoad}
+          isEmailVerified={isEmailVerified}
+        />
       </div>
 
       {/* Nuevas secciones de análisis nutricional */}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Balance de Micronutrientes */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Balance de Micronutrientes</h3>
-          {micronutrientStatus && (
-            <div className="space-y-4">
-              {Object.entries(micronutrientStatus).map(([nutrient, data]) => (
-                <div key={nutrient} className="flex items-center justify-between">
-                  <span className="capitalize text-gray-700">{nutrient}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{data.value.toFixed(1)}</span>
-                    <div className={`px-2 py-1 rounded text-xs font-medium
-                      ${data.status === 'good' ? 'bg-green-100 text-green-800' :
-                        data.status === 'low' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'}`}>
-                      {data.status.toUpperCase()}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <MicronutrientBalance micronutrientStatus={micronutrientStatus} />
 
         {/* Calculadora de Densidad Nutricional */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Densidad Nutricional</h3>
-          {nutrientDensity && (
-            <div>
-              <div className="mb-6">
-                <p className="text-sm text-gray-500 mb-2">Calorías por 100g</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {nutrientDensity.caloriesPer100g.toFixed(1)} kcal
-                </p>
-              </div>
-              <div className="space-y-4">
-                {[
-                  { label: 'Densidad Proteica', value: nutrientDensity.proteinDensity },
-                  { label: 'Densidad de Fibra', value: nutrientDensity.fiberDensity },
-                  { label: 'Densidad Mineral', value: nutrientDensity.mineralDensity },
-                  { label: 'Densidad Vitamínica', value: nutrientDensity.vitaminDensity }
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center gap-2">
-                    <div className="flex-1">
-                      <div className="flex justify-between mb-1">
-                        <span className="text-sm text-gray-600">{item.label}</span>
-                        <span className="text-sm font-medium">{item.value.toFixed(1)}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5">
-                        <div
-                          className="bg-green-600 h-1.5 rounded-full"
-                          style={{ width: `${Math.min(item.value, 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        <NutrientDensityCalculator nutrientDensity={nutrientDensity} />
       </div>
 
-      {/* Nueva sección de Recomendaciones Nutricionales */}
-      {selectedFood && recommendations.length > 0 && (
-        <div className="mt-8">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Recomendaciones Nutricionales
-            </h3>
-            <div className="space-y-4">
-              {recommendations.map((rec, index) => (
-                <div 
-                  key={index} 
-                  className={`p-4 rounded-lg flex items-start gap-3
-                    ${rec.type === 'complement' ? 'bg-blue-50 border border-blue-200' :
-                      rec.type === 'caution' ? 'bg-yellow-50 border border-yellow-200' :
-                      'bg-green-50 border border-green-200'}`}
-                >
-                  <div className={`mt-1 flex-shrink-0
-                    ${rec.type === 'complement' ? 'text-blue-500' :
-                      rec.type === 'caution' ? 'text-yellow-500' :
-                      'text-green-500'}`}
+      {/* Componente de Recomendaciones Nutricionales */}
+      <NutrientRecommendations 
+        recommendations={recommendations} 
+        selectedFood={selectedFood} 
+      />
+
+      {/* Modal de Clasificación Glucémica */}
+      <AnimatePresence>
+        {glycemicLoad && isVisible && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50"
+          >
+            <motion.div 
+              initial={{ scale: 0.8, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.8, y: 20 }}
+              className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 border border-green-100 overflow-hidden relative"
+            >
+              {/* Decorative elements */}
+              <div className="absolute -right-10 -top-10 w-40 h-40 bg-green-50 rounded-full"></div>
+              <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-blue-50 rounded-full"></div>
+              
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-gray-800">Carga Glucémica</h3>
+                  <button 
+                    onClick={() => setIsVisible(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    {rec.type === 'complement' ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                    ) : rec.type === 'caution' ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                    ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    )}
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                </div>
+                
+                <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white
+                      ${glycemicLoad.category === 'Baja' ? 'bg-green-500' :
+                        glycemicLoad.category === 'Media' ? 'bg-yellow-500' : 'bg-red-500'}`}
+                    >
+                      {glycemicLoad.category === 'Baja' ? '✓' : 
+                       glycemicLoad.category === 'Media' ? '!' : '⚠'}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-700">
+                        {glycemicLoad.value.toFixed(1)}
+                      </h4>
+                      <p className={`text-sm font-medium
+                        ${glycemicLoad.category === 'Baja' ? 'text-green-600' :
+                          glycemicLoad.category === 'Media' ? 'text-yellow-600' : 'text-red-600'}`}
+                      >
+                        {glycemicLoad.category}
+                      </p>
+                    </div>
                   </div>
-                  <p className={`text-sm
-                    ${rec.type === 'complement' ? 'text-blue-700' :
-                      rec.type === 'caution' ? 'text-yellow-700' :
-                      'text-green-700'}`}
-                  >
-                    {rec.message}
+                  
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                    <div 
+                      className={`h-2.5 rounded-full
+                        ${glycemicLoad.category === 'Baja' ? 'bg-green-500' :
+                          glycemicLoad.category === 'Media' ? 'bg-yellow-500' : 'bg-red-500'}`}
+                      style={{ width: `${Math.min((glycemicLoad.value / 20) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                  
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>0</span>
+                    <span>10</span>
+                    <span>20+</span>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-gray-600">
+                  <p className="mb-2">
+                    {glycemicLoad.category === 'Baja' 
+                      ? 'Excelente elección. Este alimento tiene un impacto mínimo en tus niveles de glucosa.' 
+                      : glycemicLoad.category === 'Media'
+                        ? 'Moderación recomendada. Este alimento tiene un impacto moderado en tus niveles de glucosa.'
+                        : 'Precaución. Este alimento puede causar picos significativos en tus niveles de glucosa.'}
                   </p>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de Clasificación */}
-      {glycemicLoad && isVisible && (
-        <div className="fixed inset-0 bg-green-400 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-xl transform transition-all">
-            <div className="flex items-center space-x-4">
-              <div className={`w-4 h-4 rounded-full
-                ${glycemicLoad.category === 'Baja' ? 'bg-green-500' :
-                  glycemicLoad.category === 'Media' ? 'bg-yellow-500' : 'bg-red-500'}`}
-              />
-              <h3 className="text-2xl font-bold text-gray-800">
-                Carga Glucémica: <span className="text-green-600">{glycemicLoad.category}</span>
-              </h3>
-            </div>
-          </div>
-        </div>
-      )}
+                
+                <button
+                  onClick={() => setIsVisible(false)}
+                  className={`mt-4 w-full py-2 px-4 rounded-lg text-white font-medium transition-colors
+                    ${glycemicLoad.category === 'Baja' ? 'bg-green-600 hover:bg-green-700' :
+                      glycemicLoad.category === 'Media' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-red-500 hover:bg-red-600'}`}
+                >
+                  Entendido
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };
