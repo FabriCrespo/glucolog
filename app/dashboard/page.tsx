@@ -6,6 +6,7 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { useDashboardGlucose } from "@/hooks/useDashboardGlucose";
 import GlucoseCharts from "@/components/glucose/GlucoseCharts";
 import GlucoseForm from "@/components/glucose/GlucoseForm";
+import LivePredictionPanel from "@/components/glucose/LivePredictionPanel";
 import GlucoseTable from "@/components/glucose/GlucoseTable";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import "@/utils/chartConfig";
@@ -72,6 +73,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="mt-8 border-t border-slate-100 pt-8 lg:mt-10 lg:pt-10">
+            <LivePredictionPanel records={records} form={form} />
             <GlucoseCharts
               chartData={chartData}
               chartOptions={chartOptions}

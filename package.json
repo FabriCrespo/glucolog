@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "clean": "rimraf .next",
-    "rebuild": "npm run clean && next build"
+    "rebuild": "npm run clean && next build",
+    "ml:train": "python ml/src/train.py --input datasets/synthetic_t1_t2_120d.csv --out ml/artifacts",
+    "ml:serve": "python ml/src/server.py --artifacts ml/artifacts"
   },
   "dependencies": {
     "@fortawesome/free-solid-svg-icons": "^6.6.0",

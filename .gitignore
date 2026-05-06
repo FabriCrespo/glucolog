@@ -40,3 +40,7 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# ML artifacts / local Python env
+ml/.venv/
+ml/artifacts/
