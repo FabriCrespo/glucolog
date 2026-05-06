@@ -38,8 +38,8 @@ const FoodList = ({
   };
 
   const getIGColor = (ig: number | undefined) => {
-    if (!ig) return '';
-    return ig < 55 ? 'bg-green-500' : ig <= 69 ? 'bg-yellow-500' : 'bg-red-500';
+    if (!ig) return "";
+    return ig < 55 ? "bg-emerald-500" : ig <= 69 ? "bg-amber-500" : "bg-red-500";
   };
 
   const getIGLabel = (ig: number | undefined) => {
@@ -48,16 +48,18 @@ const FoodList = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200">
-      <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-gray-800">Alimentos</h2>
+    <div className="rounded-2xl border border-slate-200/90 bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b border-slate-100 p-4">
+        <h2 className="text-lg font-semibold text-slate-900">Alimentos</h2>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">Total: {filteredFoodData.length}</span>
+          <span className="text-sm text-slate-500">
+            Total: {filteredFoodData.length}
+          </span>
         </div>
       </div>
       <div className="h-[600px] overflow-y-auto p-4">
         {filteredFoodData.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+          <div className="flex h-full flex-col items-center justify-center text-slate-500">
             <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -67,37 +69,68 @@ const FoodList = ({
           <div className="space-y-6">
             {Object.entries(groupedByCategory).map(([category, foods]) => (
               <div key={category} className="space-y-2">
-                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">
-                  {category} <span className="text-xs text-gray-400">({foods.length})</span>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  {category}{" "}
+                  <span className="font-normal text-slate-400">({foods.length})</span>
                 </h3>
                 <ul className="space-y-2">
                   {sortItems(foods).map((food) => (
                     <li
                       key={food.Codigo}
                       onClick={() => handleFoodClick(food)}
-                      className={`p-3 rounded-lg cursor-pointer transition-all
-                        ${selectedFood?.Codigo === food.Codigo ? 'bg-green-600 text-white shadow-md' : 'hover:bg-green-50 hover:shadow'}
-                        ${!isEmailVerified ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className={`cursor-pointer rounded-xl border p-3 transition-all
+                        ${
+                          selectedFood?.Codigo === food.Codigo
+                            ? "border-emerald-300/90 bg-emerald-50 shadow-sm ring-1 ring-emerald-200/80"
+                            : "border-transparent hover:border-slate-200 hover:bg-slate-50"
+                        }
+                        ${!isEmailVerified ? "cursor-not-allowed opacity-50" : ""}`}
                       style={{ pointerEvents: isEmailVerified ? "auto" : "none" }}
                     >
                       <div className="flex items-center gap-3">
                         {food.IndiceGlucemico && (
                           <div className="flex flex-col items-center">
                             <span className={`w-3 h-3 rounded-full flex-shrink-0 ${getIGColor(food.IndiceGlucemico)}`} />
-                            <span className={`text-xs mt-1 ${selectedFood?.Codigo === food.Codigo ? 'text-white' : 'text-gray-400'}`}>
+                            <span
+                              className={`mt-1 text-xs ${
+                                selectedFood?.Codigo === food.Codigo
+                                  ? "text-emerald-800"
+                                  : "text-slate-400"
+                              }`}
+                            >
                               {getIGLabel(food.IndiceGlucemico)}
                             </span>
                           </div>
                         )}
-                        <span className="flex-1 font-medium">{food.Nombre}</span>
+                        <span
+                          className={`flex-1 font-medium ${
+                            selectedFood?.Codigo === food.Codigo
+                              ? "text-slate-900"
+                              : "text-slate-800"
+                          }`}
+                        >
+                          {food.Nombre}
+                        </span>
                         <div className="flex flex-col items-end">
                           {food.IndiceGlucemico && (
-                            <span className={`text-sm ${selectedFood?.Codigo === food.Codigo ? 'text-white' : 'text-gray-500'}`}>
+                            <span
+                              className={`text-sm ${
+                                selectedFood?.Codigo === food.Codigo
+                                  ? "text-slate-700"
+                                  : "text-slate-500"
+                              }`}
+                            >
                               IG: {food.IndiceGlucemico}
                             </span>
                           )}
                           {food.Calorias && (
-                            <span className={`text-xs ${selectedFood?.Codigo === food.Codigo ? 'text-white' : 'text-gray-400'}`}>
+                            <span
+                              className={`text-xs ${
+                                selectedFood?.Codigo === food.Codigo
+                                  ? "text-slate-500"
+                                  : "text-slate-400"
+                              }`}
+                            >
                               {food.Calorias} kcal
                             </span>
                           )}

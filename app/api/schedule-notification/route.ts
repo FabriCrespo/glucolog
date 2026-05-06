@@ -3,17 +3,14 @@ import { getMessaging } from 'firebase-admin/messaging';
 import { getFirestore } from 'firebase-admin/firestore';
 import { initAdmin } from '../../firebase/admin';
 
-// Initialize Firebase Admin
-initAdmin();
-
-const messaging = getMessaging();
-const db = getFirestore();
-
 export async function POST(request: Request) {
   try {
+    initAdmin();
+    const messaging = getMessaging();
+    const db = getFirestore();
+
     const { eventId, title, body, scheduledTime } = await request.json();
 
-    // Save the scheduled notification in Firestore
     await db.collection('scheduledNotifications').add({
       eventId,
       title,
@@ -22,22 +19,24 @@ export async function POST(request: Request) {
       sent: false,
     });
 
-    // For immediate notifications (when scheduledTime is current timestamp)
     const now = Date.now();
-    if (Math.abs(scheduledTime - now) < 1000) { // Si la diferencia es menos de 1 segundo
+    const t =
+      typeof scheduledTime === 'number'
+        ? scheduledTime
+        : new Date(scheduledTime).getTime();
+    if (Math.abs(t - now) < 1000) {
       try {
         const message = {
           notification: {
             title,
             body,
           },
-          topic: 'all' // Enviar a todos los dispositivos suscritos
+          topic: 'all',
         };
 
         await messaging.send(message);
       } catch (messagingError) {
         console.error('Error al enviar notificación inmediata:', messagingError);
-        // Continuamos la ejecución incluso si falla el envío inmediato
       }
     }
 

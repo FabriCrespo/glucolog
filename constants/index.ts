@@ -15,37 +15,40 @@ export const NAV_LINKS = [
     '/person-4.png',
   ];
   
+  /** Iconos de la home: solo Lucide (línea única). Ver mapeo en `app/page.tsx`. */
+  export type HomeFeatureIconId = "droplets" | "utensils" | "bell" | "sparkles"
+
   // FEATURES SECTION
-  export const FEATURES = [
+  export const FEATURES: {
+    title: string
+    icon: HomeFeatureIconId
+    description: string
+  }[] = [
     {
-      title: 'Registro y control de niveles de glucosa',
-      icon: '/glucose.svg',
-      variant: 'green',
+      title: "Registro y control de niveles de glucosa",
+      icon: "droplets",
       description:
-      'Registra y controla tus niveles de glucosa en sangre fácilmente desde nuestra aplicación. Mantén un seguimiento preciso para una mejor gestión de tu salud.',
-      },
-      {
-      title: 'Información nutricional de alimentos',
-      icon: '/fruitsandfood.svg',
-      variant: 'green',
+        "Registra y controla tus niveles de glucosa en sangre fácilmente desde nuestra aplicación. Mantén un seguimiento preciso para una mejor gestión de tu salud.",
+    },
+    {
+      title: "Información nutricional de alimentos",
+      icon: "utensils",
       description:
-      'Accede a información nutricional detallada sobre alimentos según la tabla boliviana de composición de alimentos. Toma decisiones informadas para una dieta saludable.',
-      },
-      {
-      title: 'Recordatorios para ejercicio y medicación',
-      icon: '/exercise.svg',
-      variant: 'green',
+        "Accede a información nutricional detallada sobre alimentos según la tabla boliviana de composición de alimentos. Toma decisiones informadas para una dieta saludable.",
+    },
+    {
+      title: "Recordatorios para ejercicio y medicación",
+      icon: "bell",
       description:
-      'Establece recordatorios personalizados para realizar ejercicio y tomar medicamentos. Mantén tu rutina de salud en orden y nunca te olvides de cuidarte.',
-      },
-      {
-      title: 'Predicciones de niveles de glucosa',
-      icon: '/prediction.svg',
-      variant: 'green',
+        "Establece recordatorios personalizados para realizar ejercicio y tomar medicamentos. Mantén tu rutina de salud en orden y nunca te olvides de cuidarte.",
+    },
+    {
+      title: "Predicciones de niveles de glucosa",
+      icon: "sparkles",
       description:
-      'Obtén predicciones inteligentes de tus niveles de glucosa en sangre utilizando tecnología de inteligencia artificial. Prepárate para lo que viene y toma el control de tu diabetes.',
-      },
-      ]
+        "Obtén predicciones inteligentes de tus niveles de glucosa en sangre utilizando tecnología de inteligencia artificial. Prepárate para lo que viene y toma el control de tu diabetes.",
+    },
+  ]
   
   
   export const FOOTER_CONTACT_INFO = {

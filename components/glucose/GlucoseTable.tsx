@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, FileText, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ClipboardList, Inbox } from 'lucide-react';
 
 interface GlucoseRecord {
   glucoseLevel: number;
@@ -47,63 +47,66 @@ const GlucoseTable = ({ records, fetchingRecords }: GlucoseTableProps) => {
 
   // Función para determinar el color de fondo según el nivel de glucosa
   const getGlucoseLevelColor = (level: number) => {
-    if (level < 70) return 'bg-yellow-100 text-yellow-800';
-    if (level > 140) return 'bg-red-100 text-red-800';
-    return 'bg-green-100 text-green-800';
+    if (level < 70) return "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80";
+    if (level > 140) return "bg-red-100 text-red-900 ring-1 ring-red-200/80";
+    return "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/80";
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="bg-white w-full md:w-[63%] flex-1 border border-gray-200 rounded-2xl shadow-lg p-6 overflow-hidden"
+      transition={{ duration: 0.45 }}
+      className="flex w-full min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/30 p-6 shadow-sm"
     >
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <div className="bg-green-50 p-2 rounded-lg mr-3">
-            <FileText className="h-5 w-5 text-white" />
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-100 bg-emerald-50 ring-1 ring-emerald-100/80">
+            <ClipboardList className="h-5 w-5 text-vitality-primary" strokeWidth={1.75} aria-hidden />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            Historial de Registros
-          </h1>
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
+              Historial
+            </h2>
+            <p className="text-xs text-slate-500">Últimas lecturas guardadas</p>
+          </div>
         </div>
-        
-        <div className="text-sm text-white bg-green-50 px-3 py-1 rounded-full">
-          {records.length} registros en total
+
+        <div className="w-fit rounded-full border border-emerald-200/80 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-900">
+          {records.length} {records.length === 1 ? "registro" : "registros"}
         </div>
       </div>
-      
-      <div className="relative bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+
+      <div className="relative overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-inner">
         {fetchingRecords ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white bg-opacity-90 z-10">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-50 mb-3"></div>
-            <p className="text-gray-600">Cargando registros...</p>
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/95 backdrop-blur-[1px]">
+            <div className="mb-3 h-10 w-10 animate-spin rounded-full border-2 border-emerald-200 border-t-vitality-primary" />
+            <p className="text-sm text-slate-600">Cargando registros…</p>
           </div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-green-50 bg-opacity-30 text-left">
-                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <tr className="bg-slate-50/90 text-left">
+                    <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
                       Fecha
                     </th>
-                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Comió Algo
+                    <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      ¿Comió?
                     </th>
-                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
                       Comida
                     </th>
-                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Qué Comió
+                    <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Detalle
                     </th>
-                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Nivel de Glucosa
+                    <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Glucosa
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-slate-100">
                   {currentRecords.length > 0 ? (
                     currentRecords.map((record, index) => (
                       <motion.tr
@@ -111,25 +114,27 @@ const GlucoseTable = ({ records, fetchingRecords }: GlucoseTableProps) => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
-                        className="hover:bg-green-50 hover:bg-opacity-10"
+                        className="transition-colors hover:bg-emerald-50/40"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                          <div className="font-medium">{record.date}</div>
-                          <div className="text-gray-500 text-xs">{record.time}</div>
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">
+                          <div className="font-medium text-slate-900">{record.date}</div>
+                          <div className="text-xs text-slate-500">{record.time}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            record.ateSomething 
-                              ? 'bg-green-50 bg-opacity-20 text-green-50' 
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
+                        <td className="whitespace-nowrap px-6 py-4 text-sm">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                              record.ateSomething
+                                ? "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/70"
+                                : "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80"
+                            }`}
+                          >
                             {record.ateSomething ? "Sí" : "No"}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">
                           {record.foodMeal || "—"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">
                           {record.foodEaten || "—"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -143,11 +148,15 @@ const GlucoseTable = ({ records, fetchingRecords }: GlucoseTableProps) => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center">
+                      <td colSpan={5} className="px-6 py-14 text-center">
                         <div className="flex flex-col items-center">
-                          <AlertCircle className="h-10 w-10 text-green-50 opacity-40 mb-2" />
-                          <p className="text-gray-500 text-lg font-medium">No hay registros disponibles</p>
-                          <p className="text-gray-400 text-sm mt-1">Registra tu primer nivel de glucosa para comenzar</p>
+                          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50">
+                            <Inbox className="h-7 w-7 text-slate-400" strokeWidth={1.5} aria-hidden />
+                          </div>
+                          <p className="text-base font-semibold text-slate-700">Aún no hay registros</p>
+                          <p className="mt-1 max-w-sm text-sm text-slate-500">
+                            Añade tu primera lectura en el panel izquierdo para verla aquí.
+                          </p>
                         </div>
                       </td>
                     </tr>
@@ -158,10 +167,10 @@ const GlucoseTable = ({ records, fetchingRecords }: GlucoseTableProps) => {
             
             {/* Paginación */}
             {records.length > 0 && (
-              <div className="bg-green-50 bg-opacity-10 px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+              <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50/50 px-6 py-4">
                 <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-slate-600">
                       Mostrando <span className="font-medium">{indexOfFirstRecord + 1}</span> a{" "}
                       <span className="font-medium">
                         {Math.min(indexOfLastRecord, records.length)}
@@ -174,13 +183,14 @@ const GlucoseTable = ({ records, fetchingRecords }: GlucoseTableProps) => {
                     <button
                       onClick={goToPreviousPage}
                       disabled={currentPage === 1}
-                      className={`relative inline-flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                      type="button"
+                      className={`relative inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                         currentPage === 1
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                          : "bg-white text-gray-700 hover:bg-green-50 hover:bg-opacity-20 border border-gray-300"
+                          ? "cursor-not-allowed bg-slate-100 text-slate-400"
+                          : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-200 hover:bg-emerald-50/50"
                       }`}
                     >
-                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      <ChevronLeft className="mr-1 h-4 w-4" strokeWidth={2} />
                       Anterior
                     </button>
                     
@@ -202,10 +212,11 @@ const GlucoseTable = ({ records, fetchingRecords }: GlucoseTableProps) => {
                           <button
                             key={pageNum}
                             onClick={() => paginate(pageNum)}
-                            className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${
+                            type="button"
+                            className={`relative inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
                               currentPage === pageNum
-                                ? "bg-green-50 text-white"
-                                : "bg-white text-gray-700 hover:bg-green-50 hover:bg-opacity-20 border border-gray-300"
+                                ? "bg-vitality-primary text-white shadow-sm"
+                                : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-200 hover:bg-emerald-50/40"
                             }`}
                           >
                             {pageNum}
@@ -217,14 +228,15 @@ const GlucoseTable = ({ records, fetchingRecords }: GlucoseTableProps) => {
                     <button
                       onClick={goToNextPage}
                       disabled={currentPage === totalPages}
-                      className={`relative inline-flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                      type="button"
+                      className={`relative inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                         currentPage === totalPages
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                          : "bg-white text-gray-700 hover:bg-green-50 hover:bg-opacity-20 border border-gray-300"
+                          ? "cursor-not-allowed bg-slate-100 text-slate-400"
+                          : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-200 hover:bg-emerald-50/50"
                       }`}
                     >
                       Siguiente
-                      <ChevronRight className="h-4 w-4 ml-1" />
+                      <ChevronRight className="ml-1 h-4 w-4" strokeWidth={2} />
                     </button>
                   </div>
                 </div>

@@ -15,20 +15,20 @@ body {
 }
 
 @layer utilities {
-  .btn_white { 
-    @apply  border-white bg-white px-8 py-3 text-green-50
+  .btn_white {
+    @apply border border-white bg-white px-7 py-3 text-[15px] font-semibold text-vitality-primary shadow-sm transition-all duration-200 ease-out hover:border-emerald-100 hover:bg-emerald-50/80 hover:shadow-md active:scale-[0.98];
   }
-  .btn_white_text  { 
-    @apply  border-white bg-white px-8 py-5 text-gray-90 hover:bg-green-90 hover:text-white 
+  .btn_white_text {
+    @apply border border-slate-200/90 bg-white/90 px-8 py-3.5 text-[15px] font-semibold text-slate-700 shadow-sm backdrop-blur-sm transition-all duration-200 ease-out hover:border-vitality-primary/40 hover:bg-white hover:text-vitality-primary hover:shadow-md active:scale-[0.98];
   }
-  .btn_green  { 
-    @apply  border-green-50 bg-green-50 px-8 py-5 text-white hover:bg-green-90
+  .btn_green {
+    @apply border border-vitality-primary bg-vitality-primary px-8 py-3.5 text-[15px] font-semibold text-white shadow-md shadow-emerald-900/10 transition-all duration-200 ease-out hover:border-vitality-primary-dark hover:bg-vitality-primary-dark hover:shadow-lg hover:shadow-emerald-900/15 active:scale-[0.98];
   }
   .btn_dark_green { 
-    @apply  bg-green-90 px-8 py-4 text-white transition-all hover:bg-black
+    @apply bg-vitality-neutral px-8 py-4 text-white transition-all hover:bg-slate-700
   }
   .btn_dark_green_outline  { 
-    @apply border-gray-20 bg-green-90 px-8 py-5 text-white
+    @apply border-gray-20 bg-vitality-neutral px-8 py-5 text-white
   }
   
   .max-container {
@@ -57,76 +57,145 @@ body {
 
   /* FONTS */
   .regular-64 {
-    @apply text-[64px] font-[400] leading-[120%];
+    @apply text-[64px] font-normal leading-[120%];
   }
 
   .regular-40 {
-    @apply text-[40px] font-[400] leading-[120%];
+    @apply text-[40px] font-normal leading-[120%];
   }
 
   .regular-32 {
-    @apply text-[32px] font-[400];
+    @apply text-[32px] font-normal;
   }
 
   .regular-24 {
-    @apply text-[24px] font-[400];
+    @apply text-[24px] font-normal;
   }
 
   .regular-20 {
-    @apply text-[20px] font-[400];
+    @apply text-[20px] font-normal;
   }
 
   .regular-18 {
-    @apply text-[18px] font-[400];
+    @apply text-[18px] font-normal;
   }
 
   .regular-16 {
-    @apply text-[16px] font-[400];
+    @apply text-[16px] font-normal;
   }
 
   .regular-14 {
-    @apply text-[14px] font-[400];
+    @apply text-[14px] font-normal;
   }
 
   .medium-14 {
-    @apply text-[14px] font-[600];
+    @apply text-[14px] font-semibold;
   }
 
   .bold-88 {
-    @apply text-[88px] font-[700] leading-[120%];
+    @apply text-[88px] font-bold leading-[120%];
   }
 
   .bold-64 {
-    @apply text-[64px] font-[700] leading-[120%];
+    @apply text-[64px] font-bold leading-[120%];
   }
 
   .bold-52 {
-    @apply text-[52px] font-[700] leading-[120%];
+    @apply text-[52px] font-bold leading-[120%];
   }
 
   .bold-40 {
-    @apply text-[40px] font-[700] leading-[120%];
+    @apply text-[40px] font-bold leading-[120%];
   }
 
   .bold-32 {
-    @apply text-[32px] font-[700] leading-[120%];
+    @apply text-[32px] font-bold leading-[120%];
   }
 
   .bold-20 {
-    @apply text-[20px] font-[700];
+    @apply text-[20px] font-bold;
   }
 
   .bold-18 {
-    @apply text-[18px] font-[700];
+    @apply text-[18px] font-bold;
   }
 
   .bold-16 {
-    @apply text-[16px] font-[700];
+    @apply text-[16px] font-bold;
   }
 
-  /* Hero */
-  .hero-map {
-    @apply absolute right-0 top-0 h-screen w-screen bg-pattern-2 bg-cover bg-center md:-right-28 xl:-top-60 sm:-top-20 sm:left-32;
+  /* Hero: foto HeroBG.png — móvil prioriza lectura (velo + posición); escritorio muestra composición completa */
+  .hero-photo {
+    @apply pointer-events-none absolute inset-0 -z-10 bg-no-repeat;
+    background-color: #fafcfb;
+    background-image: url("/images/backgrounds/HeroBG.png");
+    background-size: cover;
+    /* narrow: muestra zona derecha (comida/medidor); evita que el texto caiga solo sobre blanco vacío */
+    background-position: 88% center;
+  }
+
+  @media (min-width: 480px) {
+    .hero-photo {
+      background-position: 82% center;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .hero-photo {
+      background-position: 72% center;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .hero-photo {
+      background-position: center center;
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .hero-photo {
+      background-size: cover;
+      background-position: 52% center;
+    }
+  }
+
+  /* Velo suave desde la izquierda: contraste del texto en móvil sin tapar del todo la foto */
+  .hero-photo-scrim {
+    @apply pointer-events-none absolute inset-0 -z-[9];
+    background: linear-gradient(
+      105deg,
+      rgba(250, 251, 250, 0.97) 0%,
+      rgba(250, 251, 250, 0.82) 38%,
+      rgba(250, 251, 250, 0.38) 62%,
+      transparent 82%
+    );
+  }
+
+  @media (min-width: 768px) {
+    .hero-photo-scrim {
+      background: linear-gradient(
+        105deg,
+        rgba(250, 251, 250, 0.92) 0%,
+        rgba(250, 251, 250, 0.45) 36%,
+        transparent 62%
+      );
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .hero-photo-scrim {
+      background: linear-gradient(
+        90deg,
+        rgba(250, 251, 250, 0.78) 0%,
+        rgba(250, 251, 250, 0.22) 42%,
+        transparent 58%
+      );
+    }
+  }
+
+  /* Reservado: animaciones / decoración (debajo del bloque de texto) */
+  .hero-bg-decor {
+    @apply pointer-events-none absolute inset-0 -z-[8] overflow-hidden;
   }
 
   /* Camp */
@@ -134,14 +203,46 @@ body {
     @apply absolute -right-6 bottom-4 w-[140px] lg:bottom-10 xl:-right-8 xl:w-[186px] 3xl:right-0;
   }
 
-  /* Feature */
-  .feature-phone {
-    @apply absolute top-[13%] z-10 hidden max-w-[1500px] rotate-[15deg] md:-left-16 lg:flex  3xl:left-20;
+  /* Servicios / features: OurBG.png — centro claro para texto; bordes con alimentos */
+  .services-photo {
+    @apply pointer-events-none absolute inset-0 -z-10 bg-no-repeat;
+    background-color: #fcfdfc;
+    background-image: url("/images/backgrounds/OurBG.png");
+    background-size: cover;
+    background-position: center center;
   }
 
-  /* Get App */
+  @media (max-width: 639px) {
+    .services-photo {
+      background-position: center 32%;
+    }
+  }
+
+  /* Refuerzo lectura en zona central (móvil: más blanco útil si el encuadre aprieta) */
+  .services-photo-scrim {
+    @apply pointer-events-none absolute inset-0 -z-[9];
+    background: radial-gradient(
+      ellipse 92% 78% at 50% 42%,
+      rgba(255, 255, 255, 0.82) 0%,
+      rgba(255, 255, 255, 0.35) 52%,
+      transparent 76%
+    );
+  }
+
+  @media (min-width: 1024px) {
+    .services-photo-scrim {
+      background: radial-gradient(
+        ellipse 88% 72% at 50% 44%,
+        rgba(255, 255, 255, 0.55) 0%,
+        rgba(255, 255, 255, 0.12) 48%,
+        transparent 70%
+      );
+    }
+  }
+
+  /* CTA final — estilo app web / PWA (sin imagen de tienda) */
   .get-app {
-    @apply max-container relative flex w-full  flex-col justify-between gap-32 overflow-hidden bg-green-90 bg-pattern bg-cover bg-center bg-no-repeat px-6 py-12 text-white sm:flex-row sm:gap-12 sm:py-24 lg:px-20 xl:max-h-[598px] 2xl:rounded-5xl;
+    @apply relative mx-auto flex w-full max-w-[1440px] flex-col justify-between gap-12 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800 via-slate-900 to-[#0c4a3e] px-6 py-14 text-white shadow-[0_24px_60px_-15px_rgba(15,23,42,0.45)] sm:gap-16 sm:py-16 md:flex-row md:items-center md:gap-16 lg:px-16 lg:py-24 xl:gap-20 2xl:rounded-3xl;
   }
 
   @keyframes blob {

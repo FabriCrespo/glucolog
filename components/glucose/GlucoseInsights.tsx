@@ -38,84 +38,87 @@ const GlucoseInsights = ({ records }: GlucoseInsightsProps) => {
   
   // Determinar el estado general basado en el promedio
   const getStatusColor = (avg: number) => {
-    if (avg >= 70 && avg <= 140) return 'text-green-500';
-    if (avg < 70) return 'text-yellow-500';
-    return 'text-red-500';
+    if (avg >= 70 && avg <= 140) return "text-emerald-600";
+    if (avg < 70) return "text-amber-600";
+    return "text-red-600";
   };
-  
+
   const getStatusIcon = (avg: number) => {
-    if (avg >= 70 && avg <= 140) return <CheckCircle className="w-6 h-6 text-green-500" />;
-    if (avg < 70) return <TrendingDown className="w-6 h-6 text-yellow-500" />;
-    return <TrendingUp className="w-6 h-6 text-red-500" />;
+    if (avg >= 70 && avg <= 140)
+      return <CheckCircle className="h-6 w-6 text-emerald-600" strokeWidth={1.75} aria-hidden />;
+    if (avg < 70)
+      return <TrendingDown className="h-6 w-6 text-amber-600" strokeWidth={1.75} aria-hidden />;
+    return <TrendingUp className="h-6 w-6 text-red-600" strokeWidth={1.75} aria-hidden />;
   };
   
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200"
+      transition={{ duration: 0.45 }}
+      className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-md"
     >
-      <div className="bg-green-600 p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">
-            Resumen de Glucosa
+      <div className="bg-gradient-to-r from-vitality-primary to-emerald-700 p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-white sm:text-xl">
+            Resumen rápido
           </h2>
-          <Activity className="w-6 h-6 text-white" />
+          <Activity className="h-6 w-6 shrink-0 text-white/95" strokeWidth={1.75} aria-hidden />
         </div>
-        <p className="text-green-100 text-sm mt-1">
-          Basado en {stats.total} mediciones
+        <p className="mt-1 text-sm text-emerald-50/95">
+          Basado en {stats.total} {stats.total === 1 ? "medición" : "mediciones"}
         </p>
       </div>
       
       <div className="p-6">
         {/* Tarjetas de estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <motion.div 
-            whileHover={{ scale: 1.03 }}
-            className="bg-blue-50 p-5 rounded-xl shadow-sm border border-blue-200"
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="rounded-xl border border-sky-200 bg-sky-50/90 p-5 shadow-sm"
           >
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-blue-800 uppercase tracking-wider">Promedio</h3>
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-sky-900">Promedio</h3>
               {getStatusIcon(stats.average)}
             </div>
-            <p className={`text-3xl font-bold ${getStatusColor(stats.average)}`}>
-              {stats.average} <span className="text-sm font-normal text-gray-500">mg/dL</span>
+            <p className={`text-3xl font-bold tabular-nums ${getStatusColor(stats.average)}`}>
+              {stats.average}{" "}
+              <span className="text-sm font-normal text-slate-500">mg/dL</span>
             </p>
           </motion.div>
-          
-          <motion.div 
-            whileHover={{ scale: 1.03 }}
-            className="bg-green-50 p-5 rounded-xl shadow-sm border border-green-200"
+
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="rounded-xl border border-emerald-200 bg-emerald-50/90 p-5 shadow-sm"
           >
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-green-800 uppercase tracking-wider">Mínimo</h3>
-              <TrendingDown className="w-6 h-6 text-green-600" />
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-emerald-900">Mínimo</h3>
+              <TrendingDown className="h-6 w-6 text-emerald-700" strokeWidth={1.75} aria-hidden />
             </div>
-            <p className="text-3xl font-bold text-green-600">
-              {stats.min} <span className="text-sm font-normal text-gray-500">mg/dL</span>
+            <p className="text-3xl font-bold tabular-nums text-emerald-700">
+              {stats.min} <span className="text-sm font-normal text-slate-500">mg/dL</span>
             </p>
           </motion.div>
-          
-          <motion.div 
-            whileHover={{ scale: 1.03 }}
-            className="bg-red-50 p-5 rounded-xl shadow-sm border border-red-200"
+
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="rounded-xl border border-red-200 bg-red-50/90 p-5 shadow-sm"
           >
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-red-800 uppercase tracking-wider">Máximo</h3>
-              <TrendingUp className="w-6 h-6 text-red-600" />
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-red-900">Máximo</h3>
+              <TrendingUp className="h-6 w-6 text-red-700" strokeWidth={1.75} aria-hidden />
             </div>
-            <p className="text-3xl font-bold text-red-600">
-              {stats.max} <span className="text-sm font-normal text-gray-500">mg/dL</span>
+            <p className="text-3xl font-bold tabular-nums text-red-700">
+              {stats.max} <span className="text-sm font-normal text-slate-500">mg/dL</span>
             </p>
           </motion.div>
         </div>
-        
+
         {/* Distribución de lecturas */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold mb-3 text-gray-800 flex items-center">
-            <Activity className="w-5 h-5 mr-2 text-gray-600" />
-            Distribución de Lecturas
+          <h3 className="mb-3 flex items-center text-lg font-semibold text-slate-900">
+            <Activity className="mr-2 h-5 w-5 text-vitality-primary" strokeWidth={1.75} aria-hidden />
+            Distribución de lecturas
           </h3>
           
           <div className="relative pt-1">
@@ -124,7 +127,7 @@ const GlucoseInsights = ({ records }: GlucoseInsightsProps) => {
                 initial={{ width: 0 }}
                 animate={{ width: `${(stats.normal / stats.total) * 100}%` }}
                 transition={{ duration: 0.8, delay: 0.1 }}
-                className="bg-green-500 h-full flex items-center justify-center text-xs font-medium text-white"
+                className="flex h-full items-center justify-center bg-emerald-500 text-xs font-semibold text-white"
                 style={{ width: `${(stats.normal / stats.total) * 100}%` }}
                 title={`Normal: ${stats.normal} lecturas`}
               >
@@ -174,18 +177,18 @@ const GlucoseInsights = ({ records }: GlucoseInsightsProps) => {
         </div>
         
         {/* Recomendaciones */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="bg-gray-50 p-5 rounded-xl border  border-gray-200"
+          className="rounded-xl border border-slate-200 bg-slate-50/90 p-5"
         >
-          <h3 className="text-lg font-semibold mb-3 text-white flex items-center">
-            <Info className="w-5 h-5 mr-2 text-blue-500" />
+          <h3 className="mb-3 flex items-center text-lg font-semibold text-slate-900">
+            <Info className="mr-2 h-5 w-5 text-sky-600" strokeWidth={1.75} aria-hidden />
             Recomendaciones
           </h3>
-          
-          <ul className="space-y-3 ">
+
+          <ul className="space-y-3">
             {stats.high > stats.normal && (
               <motion.li 
                 initial={{ x: -10, opacity: 0 }}
@@ -196,7 +199,9 @@ const GlucoseInsights = ({ records }: GlucoseInsightsProps) => {
                 <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-100 flex items-center justify-center mr-2 mt-0.5">
                   <TrendingDown className="w-3 h-3 text-red-600" />
                 </div>
-                <p className="text-white">Considera reducir el consumo de carbohidratos y aumentar la actividad física.</p>
+                <p className="text-sm leading-relaxed text-slate-700">
+                  Considera reducir el consumo de carbohidratos y aumentar la actividad física.
+                </p>
               </motion.li>
             )}
             
@@ -210,7 +215,9 @@ const GlucoseInsights = ({ records }: GlucoseInsightsProps) => {
                 <div className="flex-shrink-0 w-5 h-5 rounded-full bg-yellow-100 flex items-center justify-center mr-2 mt-0.5">
                   <TrendingUp className="w-3 h-3 text-yellow-600" />
                 </div>
-                <p className="text-white">Mantén siempre a mano alimentos con azúcares de rápida absorción para casos de hipoglucemia.</p>
+                <p className="text-sm leading-relaxed text-slate-700">
+                  Mantén siempre a mano alimentos con azúcares de rápida absorción para casos de hipoglucemia.
+                </p>
               </motion.li>
             )}
             
@@ -224,7 +231,10 @@ const GlucoseInsights = ({ records }: GlucoseInsightsProps) => {
                 <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-100 flex items-center justify-center mr-2 mt-0.5">
                   <AlertTriangle className="w-3 h-3 text-red-600" />
                 </div>
-                <p className="text-white">Tu promedio está por encima del rango recomendado. Consulta con tu médico sobre ajustes en tu tratamiento.</p>
+                <p className="text-sm leading-relaxed text-slate-700">
+                  Tu promedio está por encima del rango recomendado. Consulta con tu médico sobre ajustes en tu
+                  tratamiento.
+                </p>
               </motion.li>
             )}
             
@@ -238,7 +248,10 @@ const GlucoseInsights = ({ records }: GlucoseInsightsProps) => {
                 <div className="flex-shrink-0 w-5 h-5 rounded-full bg-yellow-100 flex items-center justify-center mr-2 mt-0.5">
                   <AlertTriangle className="w-3 h-3 text-yellow-600" />
                 </div>
-                <p className="text-white">Tu promedio está por debajo del rango recomendado. Consulta con tu médico sobre ajustes en tu tratamiento.</p>
+                <p className="text-sm leading-relaxed text-slate-700">
+                  Tu promedio está por debajo del rango recomendado. Consulta con tu médico sobre ajustes en tu
+                  tratamiento.
+                </p>
               </motion.li>
             )}
             
@@ -252,7 +265,9 @@ const GlucoseInsights = ({ records }: GlucoseInsightsProps) => {
                 <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mr-2 mt-0.5">
                   <CheckCircle className="w-3 h-3 text-green-600" />
                 </div>
-                <p className="text-white">¡Buen trabajo! Tu promedio está dentro del rango recomendado.</p>
+                <p className="text-sm leading-relaxed text-slate-700">
+                  ¡Buen trabajo! Tu promedio está dentro del rango recomendado.
+                </p>
               </motion.li>
             )}
           </ul>

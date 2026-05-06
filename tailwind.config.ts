@@ -8,9 +8,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        /** Vitality Intelligence — paleta principal */
+        vitality: {
+          primary: '#32B970',
+          'primary-dark': '#2a9d5f',
+          secondary: '#E8F5F1',
+          tertiary: '#10B981',
+          neutral: '#334155',
+        },
         green: {
-          50: '#30AF5B',
-          90: '#292C27',
+          50: '#32B970',
+          90: '#334155',
         },
         gray: {
           10: '#EEEEEE',
@@ -32,9 +40,9 @@ module.exports = {
       backgroundImage: {
         'bg-img-1': "url('/img-1.png')",
         'bg-img-2': "url('/img-2.png')",
-        'feature-bg': "url('/feature-bg.png')",
-        pattern: "url('/pattern.png')",
-        'pattern-2': "url('/pattern-bg.png')",
+        'feature-bg': "url('/images/backgrounds/feature-bg.png')",
+        pattern: "url('/images/backgrounds/pattern.png')",
+        'pattern-2': "url('/images/backgrounds/pattern-bg.png')",
       },
       screens: {
         xs: '400px',

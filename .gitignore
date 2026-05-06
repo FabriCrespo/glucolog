@@ -29,6 +29,9 @@ yarn-error.log*
 .env.local
 .env
 
+# Firebase: clave de cuenta de servicio (no commitear)
+*firebase-adminsdk*.json
+
 # vercel
 .vercel
 

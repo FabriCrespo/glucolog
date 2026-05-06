@@ -23,7 +23,7 @@ const SearchBar = ({
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="mb-8 bg-white p-4 rounded-xl shadow-md border border-gray-100"
+      className="mb-6 rounded-xl border border-slate-200/90 bg-slate-50/40 p-4 shadow-sm"
     >
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1">
@@ -35,13 +35,13 @@ const SearchBar = ({
               onChange={handleSearch}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              className={`w-full h-12 pl-12 pr-4 rounded-lg border-2 
-                ${isFocused ? 'border-green-600 shadow-lg' : 'border-gray-200'} 
-                focus:outline-none transition-all duration-300`}
+              className={`h-12 w-full rounded-xl border-2 pl-12 pr-4 text-slate-900 transition-all duration-300 placeholder:text-slate-400
+                ${isFocused ? "border-vitality-primary shadow-md shadow-emerald-900/5" : "border-slate-200"}
+                focus:outline-none focus:ring-2 focus:ring-vitality-primary/25`}
               disabled={!isEmailVerified}
             />
             <motion.svg 
-              className={`absolute left-4 top-3.5 h-5 w-5 transition-colors duration-300 ${isFocused ? 'text-green-600' : 'text-gray-400'}`} 
+              className={`absolute left-4 top-3.5 h-5 w-5 transition-colors duration-300 ${isFocused ? "text-vitality-primary" : "text-slate-400"}`} 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -53,7 +53,7 @@ const SearchBar = ({
             {searchTerm && (
               <button 
                 onClick={() => handleSearch({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
-                className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600"
+                className="absolute right-4 top-3.5 text-slate-400 hover:text-slate-600"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -69,7 +69,7 @@ const SearchBar = ({
         </div>
         
         <motion.div 
-          className="flex items-center space-x-3 bg-green-50 bg-opacity-10 p-3 rounded-lg"
+          className="flex items-center space-x-3 rounded-lg bg-emerald-50/40 p-3"
           whileHover={{ scale: 1.03 }}
         >
           <label className="relative inline-flex items-center cursor-pointer">
@@ -80,11 +80,10 @@ const SearchBar = ({
               className="sr-only peer"
               disabled={!isEmailVerified}
             />
-            <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer 
-              ${isEmailVerified ? 'peer-checked:after:translate-x-full peer-checked:after:border-white peer-checked:bg-green-600' : 'opacity-60'} 
-              after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 
-              after:border after:rounded-full after:h-5 after:w-5 after:transition-all`}></div>
-            <span className="ml-3 text-sm font-medium text-gray-700">Solo con Índice Glucémico</span>
+            <div className={`relative h-6 w-11 rounded-full bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-vitality-primary/30 
+              ${isEmailVerified ? "peer-checked:bg-vitality-primary peer-checked:after:translate-x-full peer-checked:after:border-white" : "opacity-60"} 
+              after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-['']`}></div>
+            <span className="ml-3 text-sm font-medium text-slate-700">Solo con índice glucémico</span>
           </label>
         </motion.div>
       </div>

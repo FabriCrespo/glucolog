@@ -1,93 +1,177 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Heart, AlertTriangle, Info } from 'lucide-react';
-import { UserData } from '@/services/userService';
+import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { AlertTriangle, CheckCircle2, Heart, Info, Shield } from "lucide-react";
+import { UserData } from "@/services/userService";
 
 interface MedicalInfoProps {
   userData: UserData;
 }
 
+function formatDiabetesType(type?: string) {
+  if (!type) return "No especificado";
+  const map: Record<string, string> = {
+    type1: "Tipo 1",
+    type2: "Tipo 2",
+    gestational: "Gestacional",
+    other: "Otro",
+  };
+  return map[type] ?? type;
+}
+
 const MedicalInfo = ({ userData }: MedicalInfoProps) => {
-  const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [checks, setChecks] = useState({
+    hydration: false,
+    medication: false,
+    movement: false,
+  });
 
-  useEffect(() => {
-    // Generar recomendaciones basadas en el tipo de diabetes
-    const generateRecommendations = () => {
-      const diabetesType = userData.diabetesType || 'No especificado';
-      const recs: string[] = [];
+  const diabetesType = formatDiabetesType(userData.diabetesType);
 
-      if (diabetesType.toLowerCase().includes('tipo 1')) {
-        recs.push('Monitorea tus niveles de glucosa al menos 4 veces al día');
-        recs.push('Administra insulina según las indicaciones de tu médico');
-        recs.push('Mantén un registro de carbohidratos consumidos');
-      } else if (diabetesType.toLowerCase().includes('tipo 2')) {
-        recs.push('Mantén un peso saludable y realiza actividad física regularmente');
-        recs.push('Limita el consumo de carbohidratos refinados y azúcares');
-        recs.push('Toma tus medicamentos orales según lo prescrito');
-      } else if (diabetesType.toLowerCase().includes('gestacional')) {
-        recs.push('Monitorea tus niveles de glucosa con mayor frecuencia');
-        recs.push('Sigue una dieta equilibrada recomendada por tu nutricionista');
-        recs.push('Realiza actividad física moderada según lo aprobado por tu médico');
-      } else {
-        recs.push('Consulta con un especialista para determinar tu tipo específico de diabetes');
-        recs.push('Mantén un estilo de vida saludable con alimentación balanceada');
-        recs.push('Realiza chequeos médicos regulares');
-      }
-
-      setRecommendations(recs);
-    };
-
-    generateRecommendations();
+  const recommendations = useMemo(() => {
+    const type = (userData.diabetesType ?? "").toLowerCase();
+    if (type.includes("type1") || type.includes("tipo 1")) {
+      return [
+        "Monitorea glucosa con frecuencia durante el dia.",
+        "Planifica carbohidratos y dosis con tu equipo medico.",
+        "Mantener horarios estables suele reducir variaciones bruscas.",
+      ];
+    }
+    if (type.includes("type2") || type.includes("tipo 2")) {
+      return [
+        "Combina actividad diaria con alimentacion de bajo indice glucemico.",
+        "Revisa tendencia semanal y no solo lecturas aisladas.",
+        "Prioriza sueno y manejo de estres para apoyar el control.",
+      ];
+    }
+    if (type.includes("gest")) {
+      return [
+        "Sigue controles frecuentes segun indicacion profesional.",
+        "Distribuye comidas en porciones mas pequenas durante el dia.",
+        "Consulta de inmediato ante cambios marcados en lecturas.",
+      ];
+    }
+    return [
+      "Construye una rutina simple de medicion y registro.",
+      "Busca evaluacion profesional para personalizar tu plan.",
+      "Sostenibilidad > perfeccion: cambios pequenos, consistentes.",
+    ];
   }, [userData.diabetesType]);
 
-  const getDiabetesDescription = () => {
-    const type = userData.diabetesType?.toLowerCase() || '';
-    
-    if (type.includes('tipo 1')) {
-      return 'La diabetes tipo 1 es una condición autoinmune donde el páncreas produce poca o ninguna insulina. Requiere inyecciones de insulina diarias.';
-    } else if (type.includes('tipo 2')) {
-      return 'La diabetes tipo 2 ocurre cuando el cuerpo se vuelve resistente a la insulina o no produce suficiente. Se maneja con dieta, ejercicio y medicamentos.';
-    } else if (type.includes('gestacional')) {
-      return 'La diabetes gestacional ocurre durante el embarazo y generalmente desaparece después del parto, aunque aumenta el riesgo de desarrollar diabetes tipo 2 en el futuro.';
-    }
-    return 'La diabetes afecta cómo tu cuerpo procesa la glucosa. Es importante mantener un seguimiento regular con tu médico.';
-  };
+  const profileScore = useMemo(() => {
+    const fields = [
+      userData.age,
+      userData.weight,
+      userData.height,
+      userData.phone,
+      userData.address,
+      userData.diabetesType,
+    ];
+    const completed = fields.filter(Boolean).length;
+    return Math.round((completed / fields.length) * 100);
+  }, [
+    userData.address,
+    userData.age,
+    userData.diabetesType,
+    userData.height,
+    userData.phone,
+    userData.weight,
+  ]);
+
+  const completedChecks = Object.values(checks).filter(Boolean).length;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="bg-white p-4 rounded-lg shadow-md"
+      transition={{ duration: 0.45 }}
+      className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6"
     >
-      <div className="flex items-center mb-3">
-        <Heart className="w-5 h-5 text-red-500 mr-2" />
-        <h3 className="text-lg font-semibold">Información Médica</h3>
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+            <Heart className="h-5 w-5 text-rose-500" />
+            Informacion medica personalizada
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Contexto rapido para tomar mejores decisiones cada dia.
+          </p>
+        </div>
+        <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+          Perfil {profileScore}%
+        </div>
       </div>
-      
-      <div className="mb-4">
-        <p className="text-sm font-medium text-gray-600">Tipo de Diabetes</p>
-        <p className="text-lg font-medium">{userData.diabetesType || 'No especificado'}</p>
-        <p className="text-xs text-gray-500 mt-1">{getDiabetesDescription()}</p>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Tipo de diabetes
+          </p>
+          <p className="mt-1 text-lg font-semibold text-slate-900">{diabetesType}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Estos datos no reemplazan orientacion medica profesional.
+          </p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Checklist de hoy
+          </p>
+          <p className="mt-1 text-lg font-semibold text-vitality-primary">
+            {completedChecks}/3 completados
+          </p>
+          <p className="mt-1 text-xs text-slate-500">Construye consistencia diaria.</p>
+        </div>
       </div>
-      
-      <div className="border-t border-gray-100 pt-3">
-        <p className="text-sm font-medium text-gray-600 mb-2">Recomendaciones Personalizadas</p>
+
+      <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Recomendaciones clave
+        </p>
         <ul className="space-y-2">
-          {recommendations.map((rec, index) => (
-            <li key={index} className="flex items-start">
-              <Info className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
-              <span className="text-sm text-gray-700">{rec}</span>
+          {recommendations.map((rec) => (
+            <li key={rec} className="flex items-start gap-2 text-sm text-slate-700">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+              <span>{rec}</span>
             </li>
           ))}
         </ul>
       </div>
-      
-      <div className="mt-4 pt-3 border-t border-gray-100">
-        <div className="flex items-center">
-          <AlertTriangle className="w-4 h-4 text-yellow-500 mr-2" />
-          <p className="text-sm text-gray-600">Próxima medicación: 2:00 PM</p>
-        </div>
+
+      <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Rutina rapida
+        </p>
+        {[
+          { id: "hydration", label: "Mantener buena hidratacion" },
+          { id: "medication", label: "Cumplir medicacion indicada" },
+          { id: "movement", label: "Realizar algo de movimiento hoy" },
+        ].map((task) => (
+          <label key={task.id} className="mb-2 flex cursor-pointer items-center gap-2 last:mb-0">
+            <input
+              type="checkbox"
+              checked={checks[task.id as keyof typeof checks]}
+              onChange={() =>
+                setChecks((prev) => ({ ...prev, [task.id]: !prev[task.id as keyof typeof prev] }))
+              }
+              className="h-4 w-4 rounded border-slate-300 text-vitality-primary focus:ring-vitality-primary/30"
+            />
+            <span className="text-sm text-slate-700">{task.label}</span>
+          </label>
+        ))}
+      </div>
+
+      <div className="mt-5 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-sm text-amber-800">
+        {completedChecks === 3 ? (
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+        ) : completedChecks === 0 ? (
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+        ) : (
+          <Shield className="mt-0.5 h-4 w-4 shrink-0" />
+        )}
+        <span>
+          {completedChecks === 3
+            ? "Excelente. Cumpliste tu bloque esencial del dia."
+            : "Tip: completar este checklist suele mejorar la estabilidad de tus lecturas."}
+        </span>
       </div>
     </motion.div>
   );

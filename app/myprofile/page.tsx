@@ -1,161 +1,95 @@
 "use client";
-import { useEffect, useState } from "react";
-import { auth } from "@/app/firebase/config";
-import { onAuthStateChanged, sendEmailVerification } from "firebase/auth";
-import { motion } from "framer-motion";
-import { FirebaseError } from "firebase/app";
-import LoadingSpinner from "@/components/LoadingSpinner";
-import { UserData, getUserData, updateUserData, uploadProfilePhoto } from "@/services/userService";
-import ProfileContent from "@/components/profile/ProfileContent";
 
-const MyProfile = () => {
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isVerified, setIsVerified] = useState(false);
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [previewURL, setPreviewURL] = useState<string | null>(null);
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useMyProfilePage } from "@/hooks/useMyProfilePage";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ProfileContent from "@/components/profile/ProfileContent";
+import EmailVerificationGate from "@/components/profile/EmailVerificationGate";
+
+export default function MyProfilePage() {
+  const router = useRouter();
+  const { user: sessionUser, loading: authLoading } = useAuthSession();
+  const profile = useMyProfilePage(sessionUser, authLoading);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        await user.reload();
-        setIsVerified(user.emailVerified);
-
-        try {
-          const data = await getUserData(user.uid);
-          if (data) {
-            // Asegurarnos de que userData tenga el uid
-            setUserData({
-              ...data,
-              uid: user.uid // Ahora uid es una propiedad válida en UserData
-            });
-            setPreviewURL(data.photoURL || null);
-          } else {
-            console.log("No such document!");
-          }
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        window.location.href = "/login";
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const handleResendVerification = async () => {
-    if (auth.currentUser && !auth.currentUser.emailVerified) {
-      try {
-        await sendEmailVerification(auth.currentUser);
-        alert(
-          "Correo de verificación reenviado. Por favor revisa tu bandeja de entrada."
-        );
-      } catch (error) {
-        if (error instanceof FirebaseError) {
-          if (error.code === "auth/too-many-requests") {
-            alert(
-              "Has enviado demasiadas solicitudes de verificación. Por favor, espera unos minutos antes de intentarlo nuevamente."
-            );
-          } else {
-            alert(
-              `Error al enviar el correo de verificación: ${error.message}`
-            );
-          }
-          console.error("Error al enviar verificación:", error);
-        } else {
-          alert(
-            "Ha ocurrido un error al enviar el correo de verificación. Inténtalo más tarde."
-          );
-        }
-      }
+    if (authLoading) return;
+    if (!sessionUser) {
+      router.replace("/login");
     }
-  };
+  }, [authLoading, sessionUser, router]);
 
-  const handleSaveData = async () => {
-    if (auth.currentUser && userData) {
-      try {
-        if (photo) {
-          const photoURL = await uploadProfilePhoto(auth.currentUser, photo);
-          setUserData((prevData) =>
-            prevData ? { ...prevData, photoURL } : null
-          );
-          await updateUserData(auth.currentUser.uid, { ...userData, photoURL });
-        } else {
-          await updateUserData(auth.currentUser.uid, userData);
-        }
-      } catch (error) {
-        console.error("Error al guardar:", error);
-      }
-    }
-  };
-
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setPhoto(file);
-      const url = URL.createObjectURL(file);
-      setPreviewURL(url);
-    }
-  };
-
-  if (loading) {
+  if (authLoading || !sessionUser || profile.loading) {
     return <LoadingSpinner />;
   }
 
-  if (!userData) {
+  if (profile.loadError) {
     return (
-      <p className="text-center text-lg text-red-500">
-        No hay datos de usuario disponibles
-      </p>
+      <section className="min-h-[calc(100vh-5rem)] w-full bg-gradient-to-b from-slate-50 via-white to-emerald-50/40 py-12">
+        <div className="max-container padding-container">
+          <div className="rounded-2xl border border-red-200/90 bg-white p-8 text-center shadow-[0_20px_50px_-12px_rgba(15,23,42,0.12)]">
+            <p className="font-medium text-red-700">{profile.loadError}</p>
+          </div>
+        </div>
+      </section>
     );
   }
 
-  if (!isVerified) {
+  if (!profile.userData) {
     return (
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex justify-center items-center min-h-screen bg-gradient-to-r from-green-50 to-blue-50"
-      >
-        <div className="bg-white w-2/3 md:w-1/2 lg:w-2/5 xl:w-1/3 p-8 rounded-2xl shadow-xl">
-          <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2 className="text-2xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-blue-500">
-              ¡Bienvenido de vuelta, {userData.firstName}!
-            </h2>
-            <p className="text-red-500 text-center mt-4">
-              Por favor, verifica tu correo electrónico para acceder a todas las
-              funcionalidades.
+      <section className="min-h-[calc(100vh-5rem)] w-full bg-gradient-to-b from-slate-50 via-white to-emerald-50/40 py-12">
+        <div className="max-container padding-container">
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-8 text-center shadow-[0_20px_50px_-12px_rgba(15,23,42,0.12)]">
+            <p className="text-[15px] text-slate-600">
+              No hay datos de perfil guardados. Completa el registro o contacta
+              soporte si el problema continúa.
             </p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleResendVerification}
-              className="mt-6 bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl w-full font-medium shadow-lg transition-all duration-300"
-            >
-              Reenviar correo de verificación
-            </motion.button>
-          </motion.div>
+          </div>
         </div>
-      </motion.section>
+      </section>
+    );
+  }
+
+  if (!profile.isVerified) {
+    return (
+      <EmailVerificationGate
+        firstName={profile.userData.firstName}
+        onResend={profile.handleResendVerification}
+        feedback={profile.verificationFeedback}
+        resending={profile.resendingVerification}
+      />
     );
   }
 
   return (
-    <ProfileContent 
-      userData={userData}
-      setUserData={setUserData}
-      previewURL={previewURL}
-      handlePhotoChange={handlePhotoChange}
-      handleSaveData={handleSaveData}
-    />
-  );
-};
+    <section className="min-h-[calc(100vh-5rem)] w-full bg-gradient-to-b from-slate-50 via-white to-emerald-50/40 py-8 sm:py-10 lg:py-12">
+      <div className="max-container padding-container">
+        <header className="mb-8 lg:mb-10">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-800/90 sm:text-xs">
+            Cuenta · Glucolog
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+            Mi perfil
+          </h1>
+          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-slate-600 sm:text-base">
+            Datos personales, salud y actividad en el mismo estilo que el panel
+            principal.
+          </p>
+        </header>
 
-export default MyProfile;
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_20px_50px_-12px_rgba(15,23,42,0.12)] sm:p-6 lg:p-8">
+          <ProfileContent
+            userData={profile.userData}
+            setUserData={profile.setUserData}
+            previewURL={profile.previewURL}
+            handlePhotoChange={profile.handlePhotoChange}
+            handleSaveData={profile.handleSaveData}
+            saving={profile.saving}
+            pendingPhotoUpload={profile.pendingPhotoUpload}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}

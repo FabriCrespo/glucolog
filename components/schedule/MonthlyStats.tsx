@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import "@/components/schedule/registerChartJs";
+import React, { useState } from "react";
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { MonthlyStatsType } from '@/types/events';
 import { FaMedkit, FaRunning, FaClock, FaChartBar, FaChartPie } from 'react-icons/fa';
@@ -37,7 +38,7 @@ const MonthlyStats = ({ monthlyStats, exerciseChartData, medicationChartData }: 
   }
 
   return (
-    <div className="mt-8 bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+    <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8">
         <h2 className="text-2xl font-bold text-green-800 flex items-center">
           <span className="bg-green-100 p-2 rounded-full mr-3">

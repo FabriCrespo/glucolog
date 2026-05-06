@@ -1,52 +1,86 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Activity, Pill, CheckCircle, Clock, Calendar } from 'lucide-react';
+import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Activity,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Dumbbell,
+  Flame,
+  Footprints,
+} from "lucide-react";
+import { fetchGlucoseRecords } from "@/services/glucoseService";
+import type { GlucoseRecord } from "@/types/glucose";
 
 interface ActivityStatsProps {
   userId: string;
 }
 
+type RangeDays = 7 | 14 | 30;
+type WorkoutType = "Caminata" | "Fuerza" | "Yoga" | "Movilidad";
+
+const WORKOUT_PRESETS: Record<WorkoutType, number> = {
+  Caminata: 30,
+  Fuerza: 40,
+  Yoga: 25,
+  Movilidad: 20,
+};
+
 const ActivityStats = ({ userId }: ActivityStatsProps) => {
   const [loading, setLoading] = useState(true);
-  const [activityData, setActivityData] = useState({
-    medicationCompliance: 85,
-    recentExercises: [
-      { name: 'Caminata', duration: 30, date: '2023-06-15', completed: true },
-      { name: 'Yoga', duration: 45, date: '2023-06-13', completed: true },
-      { name: 'Natación', duration: 60, date: '2023-06-10', completed: false }
-    ],
-    totalExerciseDuration: 240,
-    exerciseDays: 8
-  });
+  const [selectedRange, setSelectedRange] = useState<RangeDays>(14);
+  const [records, setRecords] = useState<GlucoseRecord[]>([]);
+  const [todayWorkout, setTodayWorkout] = useState<WorkoutType>("Caminata");
+  const [todayDone, setTodayDone] = useState(false);
 
   useEffect(() => {
-    // Aquí iría la lógica para obtener los datos reales del usuario
-    // Por ahora usamos datos de ejemplo
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-  }, [userId]);
+    const load = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchGlucoseRecords(userId, selectedRange);
+        setRecords(data);
+      } catch (error) {
+        console.error("Error fetching activity data:", error);
+        setRecords([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (userId) void load();
+  }, [selectedRange, userId]);
 
-  const getComplianceColor = (percentage: number) => {
-    if (percentage >= 90) return 'text-green-600';
-    if (percentage >= 70) return 'text-yellow-600';
-    return 'text-red-600';
-  };
+  const activeDays = useMemo(() => new Set(records.map((r) => r.date)).size, [records]);
 
-  const getComplianceBackground = (percentage: number) => {
-    if (percentage >= 90) return 'bg-green-100';
-    if (percentage >= 70) return 'bg-yellow-100';
-    return 'bg-red-100';
-  };
+  const readingsPerDay = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const r of records) {
+      map.set(r.date, (map.get(r.date) ?? 0) + 1);
+    }
+    return [...map.entries()]
+      .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
+      .slice(-8);
+  }, [records]);
+
+  const consistency = useMemo(
+    () => (selectedRange ? Math.min(100, Math.round((activeDays / selectedRange) * 100)) : 0),
+    [activeDays, selectedRange]
+  );
+
+  const estimatedMinutes = useMemo(() => {
+    const base = activeDays * 22;
+    return todayDone ? base + WORKOUT_PRESETS[todayWorkout] : base;
+  }, [activeDays, todayDone, todayWorkout]);
+
+  const weeklyGoalProgress = Math.min(100, Math.round((estimatedMinutes / 150) * 100));
 
   if (loading) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-md animate-pulse">
-        <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+      <div className="animate-pulse rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="mb-4 h-5 w-1/3 rounded bg-slate-200" />
         <div className="space-y-3">
-          <div className="h-4 bg-gray-200 rounded w-full"></div>
-          <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-          <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+          <div className="h-16 rounded-xl bg-slate-100" />
+          <div className="h-16 rounded-xl bg-slate-100" />
+          <div className="h-16 rounded-xl bg-slate-100" />
         </div>
       </div>
     );
@@ -56,112 +90,163 @@ const ActivityStats = ({ userId }: ActivityStatsProps) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="bg-white p-6 rounded-lg shadow-md"
+      transition={{ duration: 0.45 }}
+      className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6"
     >
-      <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-        <Activity className="w-5 h-5 mr-2 text-blue-600" />
-        Estadísticas de Actividad
-      </h3>
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+          <Activity className="h-5 w-5 text-blue-600" />
+          Actividad fisica y consistencia
+        </h3>
+        <div className="flex gap-2">
+          {[7, 14, 30].map((days) => (
+            <button
+              key={days}
+              type="button"
+              onClick={() => setSelectedRange(days as RangeDays)}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                selectedRange === days
+                  ? "bg-vitality-primary text-white"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              {days} dias
+            </button>
+          ))}
+        </div>
+      </div>
 
-      <div className="space-y-6">
-        {/* Cumplimiento de medicación */}
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-          <h4 className="text-sm font-medium text-blue-800 uppercase tracking-wider mb-2 flex items-center">
-            <Pill className="w-4 h-4 mr-1" />
-            Cumplimiento de Medicación
-          </h4>
-          
-          <div className="mt-2">
-            <div className="flex justify-between mb-1">
-              <span className={`text-sm font-medium ${getComplianceColor(activityData.medicationCompliance)}`}>
-                {activityData.medicationCompliance}% Completado
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${activityData.medicationCompliance}%` }}
-                transition={{ duration: 0.8 }}
-                className={`h-2.5 rounded-full ${
-                  activityData.medicationCompliance >= 90 ? 'bg-green-600' : 
-                  activityData.medicationCompliance >= 70 ? 'bg-yellow-500' : 'bg-red-500'
-                }`}
-              ></motion.div>
-            </div>
-          </div>
-          
-          <div className="mt-3 flex items-center">
-            <div className={`p-1 rounded-full ${getComplianceBackground(activityData.medicationCompliance)}`}>
-              <CheckCircle className={`w-4 h-4 ${getComplianceColor(activityData.medicationCompliance)}`} />
-            </div>
-            <p className="ml-2 text-sm text-gray-600">
-              {activityData.medicationCompliance >= 90 
-                ? '¡Excelente cumplimiento!' 
-                : activityData.medicationCompliance >= 70 
-                ? 'Buen cumplimiento, pero hay margen de mejora.' 
-                : 'Necesitas mejorar tu cumplimiento de medicación.'}
-            </p>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Dias activos
+          </p>
+          <p className="mt-1 text-2xl font-bold text-slate-900">{activeDays}</p>
+          <p className="mt-1 text-xs text-slate-500">Con registros en la app</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Consistencia
+          </p>
+          <p className="mt-1 text-2xl font-bold text-vitality-primary">{consistency}%</p>
+          <p className="mt-1 text-xs text-slate-500">Ventana de {selectedRange} dias</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Minutos estimados
+          </p>
+          <p className="mt-1 text-2xl font-bold text-slate-900">{estimatedMinutes}</p>
+          <p className="mt-1 text-xs text-slate-500">Basado en tu ritmo de registro</p>
+        </div>
+      </div>
+
+      <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
+        <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <Flame className="h-4 w-4 text-amber-500" />
+          Progreso objetivo semanal (150 min)
+        </p>
+        <div className="h-2.5 w-full rounded-full bg-slate-200">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${weeklyGoalProgress}%` }}
+            transition={{ duration: 0.6 }}
+            className="h-2.5 rounded-full bg-vitality-primary"
+          />
+        </div>
+        <p className="mt-2 text-sm text-slate-600">
+          {weeklyGoalProgress}% del objetivo.{" "}
+          {weeklyGoalProgress >= 100
+            ? "Meta cumplida, excelente trabajo."
+            : "Suma sesiones cortas para acercarte a la meta."}
+        </p>
+      </div>
+
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+          <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
+            <Calendar className="h-4 w-4 text-purple-600" />
+            Ritmo diario reciente
+          </p>
+          <div className="space-y-2">
+            {readingsPerDay.length ? (
+              readingsPerDay.map(([date, count]) => {
+                const width = Math.max(10, Math.min(100, count * 18));
+                return (
+                  <div
+                    key={date}
+                    className="grid grid-cols-[5rem,1fr,3rem] items-center gap-2 text-xs"
+                  >
+                    <span className="font-medium text-slate-600">{date.slice(5)}</span>
+                    <div className="h-2.5 rounded-full bg-slate-200">
+                      <div
+                        className="h-full rounded-full bg-indigo-500"
+                        style={{ width: `${width}%` }}
+                      />
+                    </div>
+                    <span className="text-right font-semibold text-slate-700">{count}x</span>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-sm text-slate-500">Aun no hay suficientes registros.</p>
+            )}
           </div>
         </div>
 
-        {/* Ejercicios recientes */}
-        <div>
-          <h4 className="text-sm font-medium text-gray-700 uppercase tracking-wider mb-3 flex items-center">
-            <Calendar className="w-4 h-4 mr-1 text-purple-600" />
-            Ejercicios Recientes
-          </h4>
-          
-          <div className="space-y-2">
-            {activityData.recentExercises.map((exercise, index) => (
-              <div key={index} className={`flex items-center justify-between p-3 rounded-lg border ${
-                exercise.completed ? 'bg-green-50 border-green-100' : 'bg-gray-50 border-gray-200'
-              }`}>
-                <div>
-                  <span className="font-medium text-gray-800">{exercise.name}</span>
-                  <div className="flex items-center mt-1">
-                    <Clock className="w-3 h-3 text-gray-500" />
-                    <span className="text-xs text-gray-500 ml-1">{exercise.duration} min</span>
-                    <span className="text-xs text-gray-500 ml-2">{new Date(exercise.date).toLocaleDateString()}</span>
-                  </div>
-                </div>
-                {exercise.completed ? (
-                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full flex items-center">
-                    <CheckCircle className="w-3 h-3 mr-1" /> Completado
-                  </span>
-                ) : (
-                  <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
-                    Pendiente
-                  </span>
-                )}
-              </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
+            <Dumbbell className="h-4 w-4 text-blue-600" />
+            Plan rapido de hoy
+          </p>
+
+          <div className="mb-3 flex flex-wrap gap-2">
+            {(Object.keys(WORKOUT_PRESETS) as WorkoutType[]).map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setTodayWorkout(option)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  todayWorkout === option
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                {option}
+              </button>
             ))}
           </div>
-        </div>
 
-        {/* Duración total de ejercicio */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
-            <h4 className="text-xs font-medium text-purple-800 uppercase tracking-wider mb-1">
-              Duración Total
-            </h4>
-            <div className="flex items-end">
-              <span className="text-2xl font-bold text-purple-700">{activityData.totalExerciseDuration}</span>
-              <span className="text-sm text-purple-600 ml-1 mb-0.5">minutos</span>
-            </div>
-            <p className="text-xs text-gray-600 mt-1">Este mes</p>
+          <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            <p className="font-medium">
+              Sesion sugerida: {todayWorkout} ({WORKOUT_PRESETS[todayWorkout]} min)
+            </p>
+            <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+              <Clock className="h-3.5 w-3.5" />
+              Bloque corto y sostenible.
+            </p>
           </div>
-          
-          <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
-            <h4 className="text-xs font-medium text-indigo-800 uppercase tracking-wider mb-1">
-              Días Activos
-            </h4>
-            <div className="flex items-end">
-              <span className="text-2xl font-bold text-indigo-700">{activityData.exerciseDays}</span>
-              <span className="text-sm text-indigo-600 ml-1 mb-0.5">días</span>
-            </div>
-            <p className="text-xs text-gray-600 mt-1">Este mes</p>
-          </div>
+
+          <button
+            type="button"
+            onClick={() => setTodayDone((v) => !v)}
+            className={`mt-3 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+              todayDone
+                ? "bg-emerald-100 text-emerald-800"
+                : "bg-vitality-primary text-white hover:bg-vitality-primary-dark"
+            }`}
+          >
+            {todayDone ? (
+              <>
+                <CheckCircle2 className="h-4 w-4" />
+                Sesion marcada como hecha
+              </>
+            ) : (
+              <>
+                <Footprints className="h-4 w-4" />
+                Marcar sesion de hoy
+              </>
+            )}
+          </button>
         </div>
       </div>
     </motion.div>

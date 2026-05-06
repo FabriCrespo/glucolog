@@ -1,9 +1,22 @@
-import React, { useState, useEffect } from 'react';
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPills, faDumbbell, faTimes, faCheck, faClock, faCalendarAlt, faNoteSticky } from "@fortawesome/free-solid-svg-icons";
-import dayjs from 'dayjs';
-import { Event } from '@/types/events';
-import { motion, AnimatePresence } from 'framer-motion';
+import {
+  faPills,
+  faDumbbell,
+  faTimes,
+  faCheck,
+  faClock,
+  faCalendarAlt,
+  faNoteSticky,
+} from "@fortawesome/free-solid-svg-icons";
+import dayjs from "dayjs";
+import { motion } from "framer-motion";
+import type { Event } from "@/types/events";
+import { exerciseCompletionDurationSchema } from "@/lib/validation/scheduleForms";
+import ScheduleModalShell from "@/components/schedule/ScheduleModalShell";
 
 interface EventDetailModalProps {
   selectedEvent: Event | null;
@@ -11,7 +24,6 @@ interface EventDetailModalProps {
   actualDuration: number;
   setActualDuration: (duration: number) => void;
   handleCompleteEvent: (event: Event) => void;
-  getEventStatusColor: (event: Event) => string;
   getEventStatusText: (event: Event) => string;
 }
 
@@ -21,262 +33,327 @@ const EventDetailModal: React.FC<EventDetailModalProps> = ({
   actualDuration,
   setActualDuration,
   handleCompleteEvent,
-  getEventStatusColor,
-  getEventStatusText
+  getEventStatusText,
 }) => {
-  const [notes, setNotes] = useState('');
-  
+  const [notes, setNotes] = useState("");
+  const [durationError, setDurationError] = useState<string | null>(null);
+
   useEffect(() => {
     if (selectedEvent) {
-      setNotes(selectedEvent.notes || '');
-      setActualDuration(selectedEvent.actualDuration || selectedEvent.plannedDuration || 0);
+      setNotes(selectedEvent.notes || "");
+      setActualDuration(
+        selectedEvent.actualDuration || selectedEvent.plannedDuration || 0
+      );
+      setDurationError(null);
     }
   }, [selectedEvent, setActualDuration]);
-  
-  if (!selectedEvent) return null;
-  
+
   const handleClose = () => {
     setSelectedEvent(null);
+    setDurationError(null);
   };
-  
+
   const handleComplete = () => {
+    if (!selectedEvent) return;
+
+    if (selectedEvent.type === "exercise") {
+      const check = exerciseCompletionDurationSchema.safeParse(actualDuration);
+      if (!check.success) {
+        const msg =
+          check.error.issues[0]?.message ?? "Duración no válida.";
+        setDurationError(msg);
+        return;
+      }
+    }
+
+    setDurationError(null);
     const updatedEvent = {
       ...selectedEvent,
-      notes: notes,
-      actualDuration: selectedEvent.type === "exercise" ? actualDuration : undefined
+      notes,
+      actualDuration:
+        selectedEvent.type === "exercise" ? actualDuration : undefined,
     };
     handleCompleteEvent(updatedEvent);
   };
-  
-  const getIconColor = () => {
-    return selectedEvent.type === "medication" ? "text-green-500" : "text-blue-500";
-  };
-  
-  const getBgColor = () => {
-    return selectedEvent.type === "medication" ? "bg-green-50" : "bg-blue-50";
-  };
-  
-  const getBorderColor = () => {
-    return selectedEvent.type === "medication" ? "border-green-100" : "border-blue-100";
-  };
-  
+
   return (
-    <AnimatePresence>
-      <motion.div 
-        className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={handleClose}
-      >
-        <motion.div 
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
-          initial={{ scale: 0.9, y: 20 }}
-          animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.9, y: 20 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          onClick={(e) => e.stopPropagation()}
+    <AnimatePresence mode="wait">
+      {selectedEvent && (
+        <ScheduleModalShell
+          key={selectedEvent.id}
+          onClose={handleClose}
+          stackOrder={58}
+          maxWidthClass="max-w-md"
         >
-          {/* Header */}
-          <div className={`${getBgColor()} p-6 relative`}>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className={`${getIconColor()} bg-white p-3 rounded-full shadow-md`}>
+          <div className="flex max-h-[min(90vh,800px)] flex-col overflow-hidden">
+            <div
+              className={`shrink-0 border-b border-slate-100 p-5 sm:p-6 ${
+                selectedEvent.type === "medication"
+                  ? "bg-emerald-50/90"
+                  : "bg-sky-50/90"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/80">
+                    <FontAwesomeIcon
+                      icon={
+                        selectedEvent.type === "medication"
+                          ? faPills
+                          : faDumbbell
+                      }
+                      className={`text-xl ${
+                        selectedEvent.type === "medication"
+                          ? "text-emerald-700"
+                          : "text-sky-700"
+                      }`}
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-lg font-semibold text-slate-900">
+                      {selectedEvent.title}
+                    </p>
+                    <div
+                      className={`mt-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
+                        selectedEvent.completed
+                          ? "bg-emerald-200/90 text-emerald-950"
+                          : getEventStatusText(selectedEvent) === "Vencido"
+                            ? "bg-red-100 text-red-900"
+                            : "bg-amber-100 text-amber-950"
+                      }`}
+                    >
+                      {selectedEvent.completed && (
+                        <FontAwesomeIcon icon={faCheck} className="text-xs" />
+                      )}
+                      {getEventStatusText(selectedEvent)}
+                      {selectedEvent.completed && selectedEvent.completedAt && (
+                        <span className="font-normal text-emerald-950/90">
+                          ·{" "}
+                          {dayjs(selectedEvent.completedAt).format(
+                            "DD/MM/YYYY HH:mm"
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="rounded-xl p-2 text-slate-500 transition-colors hover:bg-white/80 hover:text-slate-800"
+                  aria-label="Cerrar"
+                >
+                  <FontAwesomeIcon icon={faTimes} className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 sm:p-6">
+              <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-100 bg-slate-50 p-4">
+                <div className="flex items-start gap-2">
                   <FontAwesomeIcon
-                    icon={selectedEvent.type === "medication" ? faPills : faDumbbell}
-                    className="text-xl"
+                    icon={faCalendarAlt}
+                    className="mt-0.5 text-vitality-primary"
                   />
-                </div>
-                <h3 className="text-xl font-bold text-black">
-                  {selectedEvent.title}
-                </h3>
-              </div>
-              <button
-                onClick={handleClose}
-                className="text-gray-500 hover:text-gray-700 transition-colors bg-white rounded-full p-2 shadow-md"
-              >
-                <FontAwesomeIcon icon={faTimes} />
-              </button>
-            </div>
-            
-            <div className={`mt-4 p-3 rounded-lg ${selectedEvent.completed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'} flex items-center justify-between`}>
-              <span className="font-medium flex items-center gap-2">
-                {selectedEvent.completed && <FontAwesomeIcon icon={faCheck} />}
-                {getEventStatusText(selectedEvent)}
-              </span>
-              {selectedEvent.completed && (
-                <span className="text-sm font-medium flex items-center gap-1">
-                  <FontAwesomeIcon icon={faClock} className="text-xs" />
-                  {dayjs(selectedEvent.completedAt!).format("DD/MM/YYYY HH:mm")}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-6 space-y-5">
-            {/* Date and Time */}
-            <div className="flex items-center gap-4 bg-gray-500 p-4 rounded-xl">
-              <div className="flex items-center gap-3 flex-1">
-                <FontAwesomeIcon icon={faCalendarAlt} className="text-white" />
-                <div>
-                  <p className="text-xs text-white uppercase tracking-wider">Fecha</p>
-                  <p className="font-semibold text-green-100">
-                    {dayjs(selectedEvent.date).format("DD/MM/YYYY")}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 flex-1">
-                <FontAwesomeIcon icon={faClock} className="text-white" />
-                <div>
-                  <p className="text-xs text-white uppercase tracking-wider">Hora</p>
-                  <p className="font-semibold text-green-100">{selectedEvent.time}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Details */}
-            <div className={`p-4 rounded-xl ${getBgColor()} ${getBorderColor()} border space-y-4`}>
-              {selectedEvent.type === "medication" ? (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-white uppercase tracking-wider">
-                        Tipo de Medicamento
-                      </p>
-                      <p className="font-semibold text-green-200 capitalize">
-                        {selectedEvent.medicationType || "No especificado"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-white uppercase tracking-wider">Dosis</p>
-                      <p className="font-semibold text-green-200">
-                        {selectedEvent.dose || "No especificada"}
-                      </p>
-                    </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                      Fecha
+                    </p>
+                    <p className="font-semibold text-slate-900">
+                      {dayjs(selectedEvent.date).format("DD/MM/YYYY")}
+                    </p>
                   </div>
-                  {selectedEvent.frequency && (
-                    <div>
-                      <p className="text-xs text-white uppercase tracking-wider">Frecuencia</p>
-                      <p className="font-semibold text-green-200 capitalize">
-                        {selectedEvent.frequency}
-                      </p>
-                    </div>
-                  )}
-                  {selectedEvent.instructions && (
-                    <div>
-                      <p className="text-xs text-white uppercase tracking-wider">Instrucciones</p>
-                      <p className="font-semibold text-green-200">
-                        {selectedEvent.instructions}
-                      </p>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wider">
-                        Tipo de Actividad
-                      </p>
-                      <p className="font-semibold text-gray-800 capitalize">
-                        {selectedEvent.activityType || "No especificado"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wider">Intensidad</p>
-                      <p className="font-semibold text-gray-800 capitalize">
-                        {selectedEvent.intensity || "No especificada"}
-                      </p>
-                    </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <FontAwesomeIcon
+                    icon={faClock}
+                    className="mt-0.5 text-vitality-primary"
+                  />
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                      Hora
+                    </p>
+                    <p className="font-semibold text-slate-900">
+                      {selectedEvent.time}
+                    </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wider">
-                        Duración Planeada
-                      </p>
-                      <p className="font-semibold text-gray-800">
-                        {selectedEvent.plannedDuration} minutos
-                      </p>
-                    </div>
-                    {selectedEvent.completed && selectedEvent.actualDuration && (
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-4 rounded-2xl border border-slate-100 bg-white p-4 ring-1 ring-slate-50">
+                {selectedEvent.type === "medication" ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wider">
-                          Duración Real
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                          Tipo
                         </p>
-                        <p className="font-semibold text-gray-800">
-                          {selectedEvent.actualDuration} minutos
+                        <p className="font-medium capitalize text-slate-900">
+                          {selectedEvent.medicationType || "—"}
                         </p>
                       </div>
-                    )}
-                  </div>
-                </>
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                          Dosis
+                        </p>
+                        <p className="font-medium text-slate-900">
+                          {selectedEvent.dose || "—"}
+                        </p>
+                      </div>
+                    </div>
+                    {selectedEvent.frequency ? (
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                          Frecuencia
+                        </p>
+                        <p className="font-medium capitalize text-slate-900">
+                          {selectedEvent.frequency}
+                        </p>
+                      </div>
+                    ) : null}
+                    {selectedEvent.instructions ? (
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                          Instrucciones
+                        </p>
+                        <p className="text-sm leading-relaxed text-slate-700">
+                          {selectedEvent.instructions}
+                        </p>
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                          Actividad
+                        </p>
+                        <p className="font-medium capitalize text-slate-900">
+                          {selectedEvent.activityType || "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                          Intensidad
+                        </p>
+                        <p className="font-medium capitalize text-slate-900">
+                          {selectedEvent.intensity || "—"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                          Duración planeada
+                        </p>
+                        <p className="font-medium text-slate-900">
+                          {selectedEvent.plannedDuration ?? "—"} min
+                        </p>
+                      </div>
+                      {selectedEvent.completed &&
+                      selectedEvent.actualDuration != null ? (
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                            Duración real
+                          </p>
+                          <p className="font-medium text-slate-900">
+                            {selectedEvent.actualDuration} min
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="mt-5">
+                <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <FontAwesomeIcon
+                    icon={faNoteSticky}
+                    className="text-slate-400"
+                  />
+                  Notas
+                </label>
+                <textarea
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-[15px] text-slate-900 placeholder:text-slate-400 focus:border-vitality-primary focus:outline-none focus:ring-2 focus:ring-vitality-primary/25 disabled:bg-slate-50"
+                  rows={3}
+                  placeholder="Añade notas sobre este evento…"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  disabled={selectedEvent.completed}
+                />
+              </div>
+
+              {!selectedEvent.completed && (
+                <div className="mt-6 space-y-4 border-t border-slate-100 pt-6">
+                  {selectedEvent.type === "exercise" && (
+                    <div>
+                      <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+                        <FontAwesomeIcon
+                          icon={faClock}
+                          className="text-slate-400"
+                        />
+                        Duración real (minutos)
+                      </label>
+                      <div className="flex items-center gap-0 overflow-hidden rounded-xl border border-slate-200">
+                        <button
+                          type="button"
+                          className="bg-slate-100 px-4 py-3 text-lg font-medium text-slate-700 transition-colors hover:bg-slate-200"
+                          onClick={() =>
+                            setActualDuration(Math.max(5, actualDuration - 5))
+                          }
+                          aria-label="Menos 5 minutos"
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          className="min-w-0 flex-1 border-x border-slate-200 py-3 text-center text-[15px] font-semibold text-slate-900 focus:border-vitality-primary focus:outline-none focus:ring-2 focus:ring-vitality-primary/25"
+                          value={actualDuration}
+                          onChange={(e) => {
+                            setActualDuration(
+                              Math.max(0, parseInt(e.target.value, 10) || 0)
+                            );
+                            setDurationError(null);
+                          }}
+                          min={5}
+                        />
+                        <button
+                          type="button"
+                          className="bg-slate-100 px-4 py-3 text-lg font-medium text-slate-700 transition-colors hover:bg-slate-200"
+                          onClick={() =>
+                            setActualDuration(actualDuration + 5)
+                          }
+                          aria-label="Más 5 minutos"
+                        >
+                          +
+                        </button>
+                      </div>
+                      {durationError && (
+                        <p className="mt-2 text-xs font-medium text-red-600">
+                          {durationError}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={handleComplete}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-vitality-primary py-3.5 text-[15px] font-semibold text-white shadow-md shadow-emerald-900/10 transition-colors hover:bg-vitality-primary-dark"
+                  >
+                    <FontAwesomeIcon icon={faCheck} />
+                    Marcar como completado
+                  </motion.button>
+                </div>
               )}
             </div>
-
-            {/* Notes */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <FontAwesomeIcon icon={faNoteSticky} className="text-gray-500" />
-                Notas
-              </label>
-              <textarea
-                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
-                rows={3}
-                placeholder="Añade notas sobre este evento..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                disabled={selectedEvent.completed}
-              />
-            </div>
-
-            {/* Complete Button */}
-            {!selectedEvent.completed && (
-              <div className="space-y-4">
-                {selectedEvent.type === "exercise" && (
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                      <FontAwesomeIcon icon={faClock} className="text-gray-500" />
-                      Duración Real (minutos)
-                    </label>
-                    <div className="flex items-center">
-                      <button 
-                        className="bg-gray-200 p-2 rounded-l-lg hover:bg-gray-300"
-                        onClick={() => setActualDuration(Math.max(0, actualDuration - 5))}
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        className="w-full p-3 border-y border-gray-200 text-center focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        value={actualDuration}
-                        onChange={(e) => setActualDuration(Math.max(0, parseInt(e.target.value) || 0))}
-                        min="0"
-                      />
-                      <button 
-                        className="bg-gray-200 p-2 rounded-r-lg hover:bg-gray-300"
-                        onClick={() => setActualDuration(actualDuration + 5)}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleComplete}
-                  className="w-full py-3 px-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium flex items-center justify-center gap-2 shadow-md"
-                >
-                  <FontAwesomeIcon icon={faCheck} />
-                  Marcar como Completado
-                </motion.button>
-              </div>
-            )}
           </div>
-        </motion.div>
-      </motion.div>
+        </ScheduleModalShell>
+      )}
     </AnimatePresence>
   );
 };

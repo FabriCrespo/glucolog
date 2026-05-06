@@ -2,10 +2,13 @@ import { GlucoseRecord } from "@/types/glucose";
 import { ChartData, ChartOptions } from "chart.js";
 
 export function prepareChartData(records: GlucoseRecord[]) {
+  const getDateObj = (record: GlucoseRecord) =>
+    record.recordedAt ? record.recordedAt.toDate() : new Date(`${record.date}T${record.time}`);
+
   // Ordenar registros por fecha y hora
   const sortedRecords = [...records].sort((a, b) => {
-    const dateA = new Date(`${a.date}T${a.time}`);
-    const dateB = new Date(`${b.date}T${b.time}`);
+    const dateA = getDateObj(a);
+    const dateB = getDateObj(b);
     return dateA.getTime() - dateB.getTime();
   });
 
@@ -24,16 +27,18 @@ export function prepareChartData(records: GlucoseRecord[]) {
   };
 
   // Datos para el gráfico de impacto por comida
-  const mealTypes = ['desayuno', 'almuerzo', 'cena', 'Otro'];
+  const mealTypes = ["desayuno", "almuerzo", "cena", "otro"];
   const mealData = mealTypes.map(meal => {
-    const mealRecords = records.filter(r => r.foodMeal === meal);
+    const mealRecords = records.filter(
+      (r) => (r.foodMeal ?? "").toLowerCase() === meal
+    );
     return mealRecords.length > 0 
       ? mealRecords.reduce((sum, r) => sum + r.glucoseLevel, 0) / mealRecords.length 
       : 0;
   });
 
   const mealImpactData = {
-    labels: ['Desayuno', 'Almuerzo', 'Cena', 'Otro'],
+    labels: ["Desayuno", "Almuerzo", "Cena", "Otro"],
     datasets: [
       {
         label: 'Promedio de Glucosa',
@@ -58,19 +63,19 @@ export function prepareChartData(records: GlucoseRecord[]) {
   // Datos para el gráfico de patrones diarios
   const timeGroups = {
     'Mañana (6-12)': records.filter(r => {
-      const hour = parseInt(r.time.split(':')[0]);
+      const hour = getDateObj(r).getHours();
       return hour >= 6 && hour < 12;
     }),
     'Tarde (12-18)': records.filter(r => {
-      const hour = parseInt(r.time.split(':')[0]);
+      const hour = getDateObj(r).getHours();
       return hour >= 12 && hour < 18;
     }),
     'Noche (18-24)': records.filter(r => {
-      const hour = parseInt(r.time.split(':')[0]);
+      const hour = getDateObj(r).getHours();
       return hour >= 18 && hour < 24;
     }),
     'Madrugada (0-6)': records.filter(r => {
-      const hour = parseInt(r.time.split(':')[0]);
+      const hour = getDateObj(r).getHours();
       return hour >= 0 && hour < 6;
     })
   };
