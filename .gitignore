@@ -44,3 +44,6 @@ next-env.d.ts
 # ML artifacts / local Python env
 ml/.venv/
 ml/artifacts/
+
+# GitHub Pages static build temp
+.github-pages-build/

@@ -6,7 +6,7 @@ import axios from "axios";
  * axios centraliza errores y URLs para llamadas REST propias.
  */
 export const api = axios.create({
-  baseURL: "/api",
+  baseURL: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api`,
   headers: {
     "Content-Type": "application/json",
   },

@@ -2,6 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Brain, Loader2, ShieldAlert, ShieldCheck } from "lucide-react";
+import {
+  requestPrediction,
+  type PredictionPayload,
+  type PredictionResult,
+} from "@/lib/prediction/clientFallback";
 import type { GlucoseFormSnapshot } from "@/types/dashboard-glucose";
 import type { GlucoseRecord } from "@/types/glucose";
 
@@ -9,34 +14,6 @@ interface LivePredictionPanelProps {
   records: GlucoseRecord[];
   form: GlucoseFormSnapshot;
 }
-
-interface PredictionResult {
-  predicted_glucose_mg_dl: number;
-  risk_flag_high: boolean;
-  risk_flag_low: boolean;
-}
-
-type PredictionPayload = {
-  diabetes_type: "type1" | "type2" | "unknown";
-  age: number;
-  sex: "female" | "male" | "other";
-  measurement_context:
-    | "fasting"
-    | "pre_meal"
-    | "post_meal_1h"
-    | "post_meal_2h"
-    | "bedtime"
-    | "random";
-  ate_something: boolean;
-  food_meal: string;
-  minutes_since_meal: number;
-  medication_taken_recently: boolean;
-  medication_type: string;
-  activity_level_last_hours: "none" | "light" | "moderate" | "intense";
-  stress_level: number;
-  hour_of_day: number;
-  day_of_week: number;
-};
 
 function toDateFromRecord(record: GlucoseRecord): Date {
   if (record.recordedAt) return record.recordedAt.toDate();
@@ -88,18 +65,7 @@ export default function LivePredictionPanel({
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/prediction", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const body = await response.json().catch(() => null);
-        throw new Error(body?.detail || "No se pudo obtener la predicción");
-      }
-
-      const data = (await response.json()) as PredictionResult;
+      const data = await requestPrediction(payload, latestRecord?.glucoseLevel);
       setResult(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error inesperado");
@@ -107,7 +73,7 @@ export default function LivePredictionPanel({
     } finally {
       setLoading(false);
     }
-  }, [payload]);
+  }, [latestRecord?.glucoseLevel, payload]);
 
   const latestSignature = useMemo(
     () =>
@@ -233,6 +199,7 @@ export default function LivePredictionPanel({
               : result.risk_flag_low
               ? "Riesgo de nivel bajo detectado."
               : "Riesgo bajo, dentro de rango esperado."}
+            {result.source === "client-fallback" ? " (modo estimación en cliente)" : null}
           </p>
           {riskDrivers.length ? (
             <div className="mt-3 rounded-lg border border-current/20 bg-white/40 p-3">

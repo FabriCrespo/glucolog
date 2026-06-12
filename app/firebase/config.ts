@@ -58,7 +58,7 @@ const db = (() => {
     return initializeFirestore(app, {
       experimentalAutoDetectLongPolling: true,
       useFetchStreams: false,
-    });
+    } as Parameters<typeof initializeFirestore>[1]);
   } catch {
     // Si ya fue inicializado (ej. HMR en desarrollo), reutilizamos la instancia.
     return getFirestore(app);
