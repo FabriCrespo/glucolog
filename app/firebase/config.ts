@@ -28,9 +28,11 @@ function firebaseConfigFromEnv() {
   if (!appId) missing.push("NEXT_PUBLIC_FIREBASE_APP_ID");
 
   if (missing.length) {
-    throw new Error(
-      `Faltan variables en .env: ${missing.join(", ")}. Copia .env.example a .env y complétalas.`
-    );
+    const hint =
+      process.env.GITHUB_PAGES === "true"
+        ? "Configura `.env.production` o los secrets NEXT_PUBLIC_FIREBASE_* en GitHub Actions."
+        : "Copia .env.example a .env y complétalas.";
+    throw new Error(`Faltan variables de Firebase: ${missing.join(", ")}. ${hint}`);
   }
 
   return {
