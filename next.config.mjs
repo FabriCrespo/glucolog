@@ -8,18 +8,34 @@ loadEnvConfig(__dirname);
 
 const isGithubPages = process.env.GITHUB_PAGES === 'true';
 
+function resolveBasePath() {
+  const fromEnv = process.env.NEXT_PUBLIC_BASE_PATH?.replace(/\/$/, '') ?? '';
+  if (fromEnv) return fromEnv;
+
+  if (isGithubPages && process.env.GITHUB_REPOSITORY) {
+    const repo = process.env.GITHUB_REPOSITORY.split('/')[1];
+    if (repo) return `/${repo}`;
+  }
+
+  if (isGithubPages) return '/glucolog';
+
+  return '';
+}
+
+const basePath = resolveBasePath();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   output: isGithubPages ? 'export' : 'standalone',
+  ...(basePath ? { basePath, assetPrefix: basePath } : {}),
+  ...(isGithubPages ? { trailingSlash: true } : {}),
   images: {
     unoptimized: isGithubPages,
   },
-  ...(isGithubPages && process.env.NEXT_PUBLIC_BASE_PATH
-    ? { basePath: process.env.NEXT_PUBLIC_BASE_PATH }
-    : {}),
 
   env: {
+    NEXT_PUBLIC_BASE_PATH: basePath,
     NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
     NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
     NEXT_PUBLIC_FIREBASE_DATABASE_URL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,

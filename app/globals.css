@@ -128,7 +128,6 @@ body {
   .hero-photo {
     @apply pointer-events-none absolute inset-0 -z-10 bg-no-repeat;
     background-color: #fafcfb;
-    background-image: url("/images/backgrounds/HeroBG.png");
     background-size: cover;
     /* narrow: muestra zona derecha (comida/medidor); evita que el texto caiga solo sobre blanco vacío */
     background-position: 88% center;
@@ -207,7 +206,6 @@ body {
   .services-photo {
     @apply pointer-events-none absolute inset-0 -z-10 bg-no-repeat;
     background-color: #fcfdfc;
-    background-image: url("/images/backgrounds/OurBG.png");
     background-size: cover;
     background-position: center center;
   }

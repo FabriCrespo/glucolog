@@ -36,9 +36,13 @@ function parseEnvFile(filePath) {
 }
 
 function ensureFirebaseEnv() {
-  // CI secrets / shell env override committed defaults.
-  for (const key of [...FIREBASE_ENV_KEYS, ...OPTIONAL_ENV_KEYS]) {
-    if (process.env[key]) continue;
+  if (!process.env.NEXT_PUBLIC_BASE_PATH) {
+    if (process.env.GITHUB_REPOSITORY) {
+      const repo = process.env.GITHUB_REPOSITORY.split("/")[1];
+      if (repo) process.env.NEXT_PUBLIC_BASE_PATH = `/${repo}`;
+    } else {
+      process.env.NEXT_PUBLIC_BASE_PATH = "/glucolog";
+    }
   }
 
   parseEnvFile(path.join(root, ".env.production.local"));

@@ -1,3 +1,5 @@
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH?.replace(/\/$/, '') ?? '';
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -38,11 +40,11 @@ module.exports = {
         },
       },
       backgroundImage: {
-        'bg-img-1': "url('/img-1.png')",
-        'bg-img-2': "url('/img-2.png')",
-        'feature-bg': "url('/images/backgrounds/feature-bg.png')",
-        pattern: "url('/images/backgrounds/pattern.png')",
-        'pattern-2': "url('/images/backgrounds/pattern-bg.png')",
+        'bg-img-1': `url('${basePath}/img-1.png')`,
+        'bg-img-2': `url('${basePath}/img-2.png')`,
+        'feature-bg': `url('${basePath}/images/backgrounds/feature-bg.png')`,
+        pattern: `url('${basePath}/images/backgrounds/pattern.png')`,
+        'pattern-2': `url('${basePath}/images/backgrounds/pattern-bg.png')`,
       },
       screens: {
         xs: '400px',
