@@ -1,4 +1,4 @@
-import Image from "next/image";
+import PublicImage from "@/components/PublicImage";
 import {
   BellRing,
   BookmarkPlus,
@@ -105,14 +105,13 @@ export default function Home() {
       <div className="max-container padding-container relative z-10">
         <div className="flex flex-col gap-12 lg:flex-row lg:items-start lg:gap-14 xl:gap-20">
           <div className="order-2 flex justify-center lg:order-1 lg:w-[min(100%,380px)] lg:shrink-0 xl:w-[400px]">
-            <Image
+            <PublicImage
               src="/images/devices/phone.png"
               alt="Vista de la app Glucolog en el móvil"
               width={440}
               height={1000}
               className="relative z-10 h-auto w-[min(100%,260px)] rotate-[11deg] drop-shadow-[0_25px_50px_-12px_rgba(15,23,42,0.25)] sm:w-[min(100%,300px)] lg:sticky lg:top-28 lg:w-full lg:max-w-none"
               sizes="(max-width: 1023px) 260px, 380px"
-              priority={false}
             />
           </div>
 
@@ -198,7 +197,7 @@ export default function Home() {
 
         <div className="relative flex flex-1 items-center justify-center md:justify-end">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_70%_50%,rgba(45,212,191,0.12),transparent)]" aria-hidden />
-          <Image
+          <PublicImage
             src="/images/devices/phones.png"
             alt="Glucolog en móvil y escritorio"
             width={520}

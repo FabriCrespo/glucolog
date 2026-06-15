@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import PublicImage from "@/components/PublicImage";
 import Link from "next/link";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/app/firebase/config";
@@ -96,7 +96,7 @@ export default function Login() {
       >
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80">
-            <Image
+            <PublicImage
               src="/icons/food.svg"
               alt=""
               width={36}

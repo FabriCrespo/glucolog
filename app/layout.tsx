@@ -9,6 +9,9 @@ import { assetPath } from '@/lib/basePath';
 export const metadata: Metadata = {
   title: 'Glucolog',
   description: 'App Web para diabéticos',
+  icons: {
+    icon: assetPath('/favicon.ico'),
+  },
 }
 
 export default function RootLayout({

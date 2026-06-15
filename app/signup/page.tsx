@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+import PublicImage from "@/components/PublicImage";
 import { useState, useEffect } from "react";
 import { auth } from "@/app/firebase/config";
 import { onAuthStateChanged } from "firebase/auth";
@@ -116,7 +116,7 @@ const SignUp = () => {
       >
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80">
-            <Image
+            <PublicImage
               src="/icons/food.svg"
               alt=""
               width={36}

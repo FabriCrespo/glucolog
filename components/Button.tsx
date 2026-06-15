@@ -1,4 +1,4 @@
-import Image from "next/image";
+import PublicImage from "@/components/PublicImage";
 import Link from "next/link";
 
 type ButtonProps = {
@@ -16,7 +16,7 @@ type ButtonProps = {
 const Button = ({ type, title, icon, iconEnd, variant, full, link, onClick }: ButtonProps) => {
   const iconEl =
     icon ? (
-      <Image src={icon} alt="" width={24} height={24} aria-hidden />
+      <PublicImage src={icon} alt="" width={24} height={24} className="h-6 w-6" />
     ) : null;
 
   return (

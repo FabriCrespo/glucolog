@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
+import PublicImage from "@/components/PublicImage";
 import { FOOTER_CONTACT_INFO, NAV_LINKS } from "@/constants";
 import { Heart, Mail, Phone, Shield } from "lucide-react";
 
@@ -25,7 +25,7 @@ const Footer = () => {
             <Link href="/" className="inline-flex items-center gap-3">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-vitality-primary to-vitality-tertiary p-0.5 shadow-lg shadow-vitality-primary/20">
                 <span className="flex h-full w-full items-center justify-center rounded-[0.9rem] bg-white">
-                  <Image
+                  <PublicImage
                     src="/images/branding/LogoOG.png"
                     alt="Glucolog"
                     width={48}

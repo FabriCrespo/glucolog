@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/app/firebase/config";
 import { NAV_LINKS } from "@/constants";
-import Image from "next/image";
+import PublicImage from "@/components/PublicImage";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, LogOut, Sparkles } from "lucide-react";
@@ -61,7 +61,7 @@ const Navbar = () => {
         >
           <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-vitality-primary to-vitality-tertiary p-0.5 shadow-md shadow-vitality-primary/25">
             <span className="flex h-full w-full items-center justify-center rounded-[0.85rem] bg-white">
-              <Image
+              <PublicImage
                 src="/images/branding/LogoOG.png"
                 alt="Glucolog"
                 width={56}
