@@ -9,6 +9,8 @@ import { motion } from "framer-motion";
 import { ShieldCheck, BadgeCheck } from "lucide-react";
 import { useLogin } from "@/hooks/useLogin";
 import { usePasswordReset } from "@/hooks/usePasswordReset";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -19,7 +21,8 @@ export default function Login() {
   const router = useRouter();
   const { login, isLoading: loginLoading } = useLogin();
   const { requestReset, isLoading: resetLoading } = usePasswordReset();
-  const isLoading = loginLoading || resetLoading;
+  const { signInWithGoogle, isLoading: googleLoading } = useGoogleAuth();
+  const isLoading = loginLoading || resetLoading || googleLoading;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -69,6 +72,21 @@ export default function Login() {
     setSuccess(
       "Se ha enviado un enlace para restablecer tu contraseña. Revisa tu correo."
     );
+  };
+
+  const handleGoogleLogin = async () => {
+    setError(null);
+    setSuccess(null);
+
+    const result = await signInWithGoogle();
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    setSuccess("¡Inicio de sesión con Google exitoso!");
+    setTimeout(() => {
+      router.push("/myprofile");
+    }, 500);
   };
 
   return (
@@ -288,6 +306,21 @@ export default function Login() {
               )}
             </button>
           </form>
+
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-gray-200" />
+            <span className="text-xs font-medium uppercase tracking-wide text-vitality-neutral/45">
+              o
+            </span>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
+
+          <GoogleSignInButton
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            isLoading={googleLoading}
+            label="Continuar con Google"
+          />
 
           <div className="mt-8 border-t border-gray-200 pt-6">
             <p className="text-center text-sm text-vitality-neutral/80">

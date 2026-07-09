@@ -27,6 +27,24 @@ const SIGNUP_MESSAGES: Record<string, string> = {
   "auth/internal-error": "Error del servidor. Intenta de nuevo.",
 };
 
+const GOOGLE_MESSAGES: Record<string, string> = {
+  "auth/popup-closed-by-user": "Cerraste la ventana de Google. Inténtalo de nuevo.",
+  "auth/cancelled-popup-request": "Se canceló el inicio con Google.",
+  "auth/popup-blocked":
+    "El navegador bloqueó la ventana emergente. Permite popups e inténtalo otra vez.",
+  "auth/account-exists-with-different-credential":
+    "Este correo ya está registrado con otro método. Inicia sesión con email y contraseña.",
+  "auth/operation-not-allowed":
+    "El inicio con Google no está habilitado en Firebase. Actívalo en Authentication → Sign-in method.",
+  "auth/unauthorized-domain":
+    "Este dominio no está autorizado en Firebase. Añádelo en Authentication → Settings → Authorized domains.",
+  "auth/network-request-failed":
+    "Error de conexión. Verifica tu conexión a internet.",
+  "auth/too-many-requests": "Demasiados intentos. Prueba más tarde.",
+  "auth/user-disabled": "Esta cuenta está deshabilitada.",
+  "auth/internal-error": "Error del servidor. Intenta de nuevo.",
+};
+
 export function mapLoginError(error: unknown): string {
   if (error instanceof FirebaseError && error.code) {
     return LOGIN_MESSAGES[error.code] ?? "Error al iniciar sesión. Revisa tus datos.";
@@ -41,4 +59,15 @@ export function mapSignupError(error: unknown): string {
   }
   if (error instanceof Error) return error.message;
   return "Error inesperado al registrarse.";
+}
+
+export function mapGoogleAuthError(error: unknown): string {
+  if (error instanceof FirebaseError && error.code) {
+    return (
+      GOOGLE_MESSAGES[error.code] ??
+      "No se pudo continuar con Google. Inténtalo de nuevo."
+    );
+  }
+  if (error instanceof Error) return error.message;
+  return "Error inesperado al autenticarse con Google.";
 }

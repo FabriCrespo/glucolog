@@ -31,7 +31,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="flex min-h-screen flex-col bg-white antialiased">
+      <body
+        className="flex min-h-screen flex-col bg-white antialiased"
+        suppressHydrationWarning
+      >
         <Navbar />
         <main className="relative flex-1 overflow-hidden">
           {children}

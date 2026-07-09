@@ -1,4 +1,5 @@
 "use client";
+
 import PublicImage from "@/components/PublicImage";
 import { useState, useEffect } from "react";
 import { auth } from "@/app/firebase/config";
@@ -8,13 +9,15 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ShieldCheck, BadgeCheck, UserPlus } from "lucide-react";
 import { useSignup } from "@/hooks/useSignup";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 const inputBase =
   "block w-full rounded-xl border border-gray-200 bg-vitality-secondary/50 py-3 px-3 text-vitality-neutral placeholder:text-gray-400 focus:border-vitality-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-vitality-primary/25 disabled:opacity-60";
 
 const labelClass = "mb-1.5 block text-sm font-medium text-vitality-neutral";
 
-const SignUp = () => {
+export default function SignUpPage() {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -29,7 +32,9 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
-  const { signup, isLoading } = useSignup();
+  const { signup, isLoading: signupLoading } = useSignup();
+  const { signInWithGoogle, isLoading: googleLoading } = useGoogleAuth();
+  const isLoading = signupLoading || googleLoading;
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -75,6 +80,26 @@ const SignUp = () => {
     setTimeout(() => {
       router.push("/login");
     }, 3000);
+  };
+
+  const handleGoogleSignUp = async () => {
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const result = await signInWithGoogle();
+    if (!result.ok) {
+      setErrorMessage(result.error);
+      return;
+    }
+
+    setSuccessMessage(
+      result.isNewUser
+        ? "¡Cuenta creada con Google! Completa tu perfil cuando puedas."
+        : "¡Inicio de sesión con Google exitoso!"
+    );
+    setTimeout(() => {
+      router.push("/myprofile");
+    }, 800);
   };
 
   return (
@@ -386,7 +411,7 @@ const SignUp = () => {
                   : "bg-vitality-primary hover:bg-vitality-primary-dark active:scale-[0.99]"
               }`}
             >
-              {isLoading ? (
+              {signupLoading ? (
                 <>
                   <svg
                     className="h-4 w-4 animate-spin"
@@ -420,6 +445,21 @@ const SignUp = () => {
             </button>
           </form>
 
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-gray-200" />
+            <span className="text-xs font-medium uppercase tracking-wide text-vitality-neutral/45">
+              o
+            </span>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
+
+          <GoogleSignInButton
+            onClick={handleGoogleSignUp}
+            disabled={isLoading}
+            isLoading={googleLoading}
+            label="Registrarse con Google"
+          />
+
           <div className="mt-8 border-t border-gray-200 pt-6">
             <p className="text-center text-sm text-vitality-neutral/80">
               ¿Ya tienes cuenta?{" "}
@@ -449,6 +489,4 @@ const SignUp = () => {
       </motion.div>
     </section>
   );
-};
-
-export default SignUp;
+}
