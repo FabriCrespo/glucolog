@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "1rmN4Dh2X41q4VeLns1-hU4-RcZ8iYu24dlAjT7mCRh4": {
+      "AlimentosDB": {
+        ".read": "auth != null",
+        ".write": false
+      }
+    }
+  }
+}
