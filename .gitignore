@@ -28,8 +28,8 @@ yarn-error.log*
 .env*.local
 .env.local
 .env
-.env.production
 .env.development
+# `.env.production` se versiona a propósito: solo NEXT_PUBLIC_* para GitHub Pages.
 
 # Firebase: clave de cuenta de servicio (no commitear)
 *firebase-adminsdk*.json
