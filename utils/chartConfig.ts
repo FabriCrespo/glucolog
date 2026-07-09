@@ -8,10 +8,10 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
-} from 'chart.js';
+  Filler,
+} from "chart.js";
+import annotationPlugin from "chartjs-plugin-annotation";
 
-// Registrar los componentes necesarios de Chart.js
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -21,8 +21,8 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  annotationPlugin
 );
 
-// Exportar para que pueda ser importado en otros archivos
 export default ChartJS;

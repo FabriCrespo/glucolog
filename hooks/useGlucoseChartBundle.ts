@@ -5,17 +5,20 @@ import type { GlucoseChartDatasets, GlucoseChartOptionsBundle } from "@/types/da
 import type { GlucoseRecord } from "@/types/glucose";
 import { prepareChartData, prepareChartOptions } from "@/utils/chartHelpers";
 
-const EMPTY_DATASETS: GlucoseChartDatasets = {
+const EMPTY_DATASETS = {
+  sortedRecords: [] as GlucoseRecord[],
   timelineData: { labels: [], datasets: [] },
-  mealImpactData: { labels: [], datasets: [] },
-  patternData: { labels: [], datasets: [] },
+  mealImpactData: { labels: [], counts: [], datasets: [] },
+  patternData: { labels: [], counts: [], datasets: [] },
 };
+
+export type GlucoseChartBundle = ReturnType<typeof prepareChartData>;
 
 /**
  * Deriva datos y opciones de Chart.js a partir de los registros (sin duplicar estado en la página).
  */
 export function useGlucoseChartBundle(records: GlucoseRecord[]): {
-  chartData: GlucoseChartDatasets;
+  chartData: GlucoseChartBundle;
   chartOptions: GlucoseChartOptionsBundle;
 } {
   const chartOptions = useMemo(() => {
@@ -31,12 +34,7 @@ export function useGlucoseChartBundle(records: GlucoseRecord[]): {
     if (!records.length) {
       return EMPTY_DATASETS;
     }
-    const { timelineData, mealImpactData, patternData } = prepareChartData(records);
-    return {
-      timelineData: timelineData as GlucoseChartDatasets["timelineData"],
-      mealImpactData: mealImpactData as GlucoseChartDatasets["mealImpactData"],
-      patternData: patternData as GlucoseChartDatasets["patternData"],
-    };
+    return prepareChartData(records);
   }, [records]);
 
   return { chartData, chartOptions };

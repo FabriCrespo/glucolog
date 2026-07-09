@@ -1,253 +1,159 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ClipboardList, Inbox } from 'lucide-react';
+"use client";
 
-interface GlucoseRecord {
-  glucoseLevel: number;
-  date: string;
-  time: string;
-  ateSomething: boolean;
-  foodMeal?: string | null;
-  foodEaten?: string | null;
-}
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { GlucoseRecord } from "@/types/glucose";
+import { getGlucoseStatus } from "@/lib/dashboard/metrics";
 
 interface GlucoseTableProps {
   records: GlucoseRecord[];
   fetchingRecords: boolean;
+  className?: string;
 }
 
-const GlucoseTable = ({ records, fetchingRecords }: GlucoseTableProps) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 5;
-  
-  // Calcular el total de páginas
-  const totalPages = Math.ceil(records.length / recordsPerPage);
-  
-  // Obtener los registros de la página actual
-  const indexOfLastRecord = currentPage * recordsPerPage;
-  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord);
-  
-  // Cambiar de página
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
-  
-  // Ir a la página anterior
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-  
-  // Ir a la página siguiente
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  // Función para determinar el color de fondo según el nivel de glucosa
-  const getGlucoseLevelColor = (level: number) => {
-    if (level < 70) return "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80";
-    if (level > 140) return "bg-red-100 text-red-900 ring-1 ring-red-200/80";
-    return "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/80";
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45 }}
-      className="flex w-full min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/30 p-6 shadow-sm"
-    >
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-100 bg-emerald-50 ring-1 ring-emerald-100/80">
-            <ClipboardList className="h-5 w-5 text-vitality-primary" strokeWidth={1.75} aria-hidden />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
-              Historial
-            </h2>
-            <p className="text-xs text-slate-500">Últimas lecturas guardadas</p>
-          </div>
-        </div>
-
-        <div className="w-fit rounded-full border border-emerald-200/80 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-900">
-          {records.length} {records.length === 1 ? "registro" : "registros"}
-        </div>
-      </div>
-
-      <div className="relative overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-inner">
-        {fetchingRecords ? (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/95 backdrop-blur-[1px]">
-            <div className="mb-3 h-10 w-10 animate-spin rounded-full border-2 border-emerald-200 border-t-vitality-primary" />
-            <p className="text-sm text-slate-600">Cargando registros…</p>
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-slate-50/90 text-left">
-                    <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Fecha
-                    </th>
-                    <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      ¿Comió?
-                    </th>
-                    <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Comida
-                    </th>
-                    <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Detalle
-                    </th>
-                    <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Glucosa
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {currentRecords.length > 0 ? (
-                    currentRecords.map((record, index) => (
-                      <motion.tr
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                        className="transition-colors hover:bg-emerald-50/40"
-                      >
-                        <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">
-                          <div className="font-medium text-slate-900">{record.date}</div>
-                          <div className="text-xs text-slate-500">{record.time}</div>
-                        </td>
-                        <td className="whitespace-nowrap px-6 py-4 text-sm">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                              record.ateSomething
-                                ? "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/70"
-                                : "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80"
-                            }`}
-                          >
-                            {record.ateSomething ? "Sí" : "No"}
-                          </span>
-                        </td>
-                        <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">
-                          {record.foodMeal || "—"}
-                        </td>
-                        <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">
-                          {record.foodEaten || "—"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium ${
-                            getGlucoseLevelColor(record.glucoseLevel)
-                          }`}>
-                            {record.glucoseLevel} mg/dL
-                          </span>
-                        </td>
-                      </motion.tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-14 text-center">
-                        <div className="flex flex-col items-center">
-                          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50">
-                            <Inbox className="h-7 w-7 text-slate-400" strokeWidth={1.5} aria-hidden />
-                          </div>
-                          <p className="text-base font-semibold text-slate-700">Aún no hay registros</p>
-                          <p className="mt-1 max-w-sm text-sm text-slate-500">
-                            Añade tu primera lectura en el panel izquierdo para verla aquí.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            
-            {/* Paginación */}
-            {records.length > 0 && (
-              <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50/50 px-6 py-4">
-                <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm text-slate-600">
-                      Mostrando <span className="font-medium">{indexOfFirstRecord + 1}</span> a{" "}
-                      <span className="font-medium">
-                        {Math.min(indexOfLastRecord, records.length)}
-                      </span>{" "}
-                      de <span className="font-medium">{records.length}</span> registros
-                    </p>
-                  </div>
-                  
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={goToPreviousPage}
-                      disabled={currentPage === 1}
-                      type="button"
-                      className={`relative inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                        currentPage === 1
-                          ? "cursor-not-allowed bg-slate-100 text-slate-400"
-                          : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-200 hover:bg-emerald-50/50"
-                      }`}
-                    >
-                      <ChevronLeft className="mr-1 h-4 w-4" strokeWidth={2} />
-                      Anterior
-                    </button>
-                    
-                    <div className="hidden md:flex space-x-1">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        // Mostrar 5 páginas centradas en la página actual
-                        let pageNum;
-                        if (totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1;
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i;
-                        } else {
-                          pageNum = currentPage - 2 + i;
-                        }
-                        
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => paginate(pageNum)}
-                            type="button"
-                            className={`relative inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-                              currentPage === pageNum
-                                ? "bg-vitality-primary text-white shadow-sm"
-                                : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-200 hover:bg-emerald-50/40"
-                            }`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    
-                    <button
-                      onClick={goToNextPage}
-                      disabled={currentPage === totalPages}
-                      type="button"
-                      className={`relative inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                        currentPage === totalPages
-                          ? "cursor-not-allowed bg-slate-100 text-slate-400"
-                          : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-200 hover:bg-emerald-50/50"
-                      }`}
-                    >
-                      Siguiente
-                      <ChevronRight className="ml-1 h-4 w-4" strokeWidth={2} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </motion.div>
-  );
+const CONTEXT_LABELS: Record<string, string> = {
+  fasting: "Ayunas",
+  pre_meal: "Pre comida",
+  post_meal_1h: "Post 1h",
+  post_meal_2h: "Post 2h",
+  bedtime: "Noche",
+  random: "Aleatoria",
 };
 
-export default GlucoseTable;
+const STATUS_DOT = {
+  low: "bg-amber-500",
+  normal: "bg-emerald-500",
+  high: "bg-red-500",
+} as const;
 
+const STATUS_TEXT = {
+  low: "text-amber-600",
+  normal: "text-emerald-600",
+  high: "text-red-600",
+} as const;
+
+export default function GlucoseTable({
+  records,
+  fetchingRecords,
+  className = "",
+}: GlucoseTableProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 8;
+  const totalPages = Math.max(1, Math.ceil(records.length / recordsPerPage));
+  const indexOfLast = currentPage * recordsPerPage;
+  const indexOfFirst = indexOfLast - recordsPerPage;
+  const currentRecords = records.slice(indexOfFirst, indexOfLast);
+
+  if (fetchingRecords) {
+    return (
+      <div className={`border-y border-slate-200 py-16 text-center ${className}`}>
+        <p className="text-sm font-light text-slate-400">Cargando registros…</p>
+      </div>
+    );
+  }
+
+  if (!records.length) {
+    return (
+      <div className={`border-y border-dashed border-slate-200 py-16 text-center ${className}`}>
+        <p className="dash-eyebrow">Sin datos</p>
+        <p className="dash-body mt-3">
+          Pulsa <span className="font-normal text-vitality-primary">Nuevo registro</span> para añadir tu primera lectura.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={className}>
+      <ul className="divide-y divide-slate-200 border-y border-slate-200">
+        {currentRecords.map((record, index) => {
+          const { status, label } = getGlucoseStatus(record.glucoseLevel);
+          const context = CONTEXT_LABELS[record.measurementContext] ?? "—";
+
+          return (
+            <motion.li
+              key={`${record.recordedAtIso}-${index}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: index * 0.03 }}
+              className="group dash-row grid grid-cols-[1fr_auto] items-center gap-4 py-4 sm:grid-cols-12 sm:gap-6 sm:py-5"
+            >
+              <div className="min-w-0 sm:col-span-5">
+                <p className="text-sm font-light text-slate-800">{record.date}</p>
+                <p className="dash-muted mt-0.5">
+                  {record.time}
+                  <span className="mx-2 text-emerald-200">·</span>
+                  <span className="text-emerald-800/60">{context}</span>
+                  {record.ateSomething && record.foodMeal ? (
+                    <>
+                      <span className="mx-2 text-slate-200">·</span>
+                      {record.foodMeal}
+                    </>
+                  ) : null}
+                </p>
+              </div>
+
+              <div className="hidden items-center gap-6 sm:col-span-4 sm:flex">
+                <span className="dash-stat-label hidden sm:inline">
+                  {record.ateSomething ? "Comió" : "Sin comida"}
+                </span>
+                {record.foodEaten ? (
+                  <span className="truncate text-xs font-light text-slate-500 transition-colors group-hover:text-slate-600">
+                    {record.foodEaten}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 sm:col-span-3">
+                <span
+                  className={`hidden items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.18em] sm:inline-flex ${STATUS_TEXT[status]}`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[status]}`} />
+                  {label}
+                </span>
+                <p className={`text-2xl font-extralight tabular-nums sm:text-3xl ${STATUS_TEXT[status]}`}>
+                  {record.glucoseLevel}
+                </p>
+                <span className="hidden text-[10px] font-light text-slate-400 sm:inline">
+                  mg/dL
+                </span>
+              </div>
+            </motion.li>
+          );
+        })}
+      </ul>
+
+      {totalPages > 1 ? (
+        <div className="flex items-center justify-between pt-5">
+          <p className="text-xs font-light text-slate-400">
+            {indexOfFirst + 1}–{Math.min(indexOfLast, records.length)} de {records.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-2 text-slate-400 transition-all duration-200 hover:bg-emerald-50 hover:text-vitality-primary disabled:opacity-30"
+              aria-label="Página anterior"
+            >
+              <ChevronLeft className="h-4 w-4" strokeWidth={1.25} />
+            </button>
+            <span className="min-w-[3rem] text-center text-xs font-light tabular-nums text-emerald-800/70">
+              {currentPage}/{totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-2 text-slate-400 transition-all duration-200 hover:bg-emerald-50 hover:text-vitality-primary disabled:opacity-30"
+              aria-label="Página siguiente"
+            >
+              <ChevronRight className="h-4 w-4" strokeWidth={1.25} />
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}

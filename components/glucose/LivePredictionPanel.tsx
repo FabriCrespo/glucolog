@@ -1,12 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Brain, Loader2, ShieldAlert, ShieldCheck } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, Loader2 } from "lucide-react";
 import {
   requestPrediction,
   type PredictionPayload,
   type PredictionResult,
 } from "@/lib/prediction/clientFallback";
+import {
+  getPredictionCoachMessage,
+  getPredictionRiskMeta,
+  getRiskScore,
+} from "@/lib/dashboard/metrics";
 import type { GlucoseFormSnapshot } from "@/types/dashboard-glucose";
 import type { GlucoseRecord } from "@/types/glucose";
 
@@ -99,122 +105,181 @@ export default function LivePredictionPanel({
         payload.measurement_context === "post_meal_1h" ||
         payload.measurement_context === "post_meal_2h"
       ) {
-        drivers.push("Contexto post comida reciente.");
+        drivers.push("Post comida");
       }
-      if (payload.stress_level >= 4) {
-        drivers.push("Estrés alto reportado.");
-      }
-      if (payload.activity_level_last_hours === "none") {
-        drivers.push("Poca actividad física en últimas horas.");
-      }
-      if (!payload.medication_taken_recently) {
-        drivers.push("No hay medicación reciente registrada.");
-      }
-      if (payload.minutes_since_meal >= 0 && payload.minutes_since_meal <= 90) {
-        drivers.push("Ventana cercana a la comida (pico probable).");
-      }
+      if (payload.stress_level >= 4) drivers.push("Estrés alto");
+      if (payload.activity_level_last_hours === "none") drivers.push("Poca actividad");
+      if (!payload.medication_taken_recently) drivers.push("Sin medicación reciente");
     } else if (result.risk_flag_low) {
-      if (payload.measurement_context === "fasting") {
-        drivers.push("Medición en ayunas.");
-      }
-      if (payload.activity_level_last_hours === "intense") {
-        drivers.push("Actividad intensa reciente.");
-      }
-      if (payload.medication_taken_recently) {
-        drivers.push("Medicación reciente puede bajar niveles.");
-      }
+      if (payload.measurement_context === "fasting") drivers.push("En ayunas");
+      if (payload.medication_taken_recently) drivers.push("Medicación activa");
     } else {
-      drivers.push("Contexto general estable para este momento del día.");
-      if (payload.activity_level_last_hours !== "none") {
-        drivers.push("Actividad reciente aporta control glucémico.");
-      }
-      if (payload.stress_level <= 3) {
-        drivers.push("Estrés bajo-moderado.");
-      }
+      drivers.push("Contexto estable");
+      if (payload.activity_level_last_hours !== "none") drivers.push("Actividad reciente");
     }
 
     return drivers.slice(0, 3);
   }, [payload, result]);
 
-  const riskTone = result?.risk_flag_high
-    ? "text-red-700 bg-red-50 border-red-200"
-    : result?.risk_flag_low
-    ? "text-amber-700 bg-amber-50 border-amber-200"
-    : "text-emerald-700 bg-emerald-50 border-emerald-200";
+  const riskMeta = result ? getPredictionRiskMeta(result) : null;
+  const riskScore = result ? getRiskScore(result) : 0;
+  const delta =
+    result && latestRecord
+      ? result.predicted_glucose_mg_dl - latestRecord.glucoseLevel
+      : null;
 
   return (
-    <section className="mb-8 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm sm:p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <section
+      aria-label="Predicción en vivo"
+      className="border-t border-slate-200 pt-10 lg:pt-14"
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-4">
         <div>
-          <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-vitality-primary">
-            <Brain className="h-4 w-4" />
+          <p className="flex items-center gap-2 dash-eyebrow">
+            <span
+              className={`inline-block h-1.5 w-1.5 rounded-full ${loading ? "animate-pulse bg-vitality-primary" : "bg-emerald-500"}`}
+              aria-hidden
+            />
             Predicción en vivo
           </p>
-          <h3 className="mt-2 text-lg font-semibold text-slate-900">
-            Estimación automática de riesgo
-          </h3>
-          <p className="mt-1 text-sm text-slate-600">
-            Usa el último contexto de tus registros para estimar glucosa y riesgo.
-          </p>
+          <h2 className="dash-title mt-2 text-xl lg:text-2xl">
+            Próxima lectura estimada
+          </h2>
         </div>
+
         <button
           type="button"
           onClick={handlePredict}
-          disabled={loading}
-          className="inline-flex items-center justify-center rounded-full bg-vitality-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-vitality-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={loading || !latestRecord}
+          className="dash-btn-ghost"
         >
           {loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Prediciendo...
-            </>
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+              Analizando
+            </span>
           ) : (
-            "Predecir ahora"
+            "Actualizar"
           )}
         </button>
       </div>
 
       {error ? (
-        <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+        <p className="mt-6 text-sm font-light text-red-600">{error}</p>
+      ) : null}
+
+      {!latestRecord && !loading ? (
+        <p className="mt-8 dash-body text-slate-500">
+          Registra una lectura para activar la predicción automática.
         </p>
       ) : null}
 
-      {result ? (
-        <div className={`mt-4 rounded-xl border px-4 py-4 ${riskTone}`}>
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-medium">Predicción estimada</p>
-            {result.risk_flag_high || result.risk_flag_low ? (
-              <ShieldAlert className="h-5 w-5" />
-            ) : (
-              <ShieldCheck className="h-5 w-5" />
-            )}
-          </div>
-          <p className="mt-2 text-2xl font-bold">
-            {result.predicted_glucose_mg_dl} mg/dL
-          </p>
-          <p className="mt-1 text-sm">
-            {result.risk_flag_high
-              ? "Riesgo alto detectado."
-              : result.risk_flag_low
-              ? "Riesgo de nivel bajo detectado."
-              : "Riesgo bajo, dentro de rango esperado."}
-            {result.source === "client-fallback" ? " (modo estimación en cliente)" : null}
-          </p>
-          {riskDrivers.length ? (
-            <div className="mt-3 rounded-lg border border-current/20 bg-white/40 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide">
-                Factores que empujan el resultado
-              </p>
-              <ul className="mt-2 space-y-1 text-sm">
-                {riskDrivers.map((driver) => (
-                  <li key={driver}>• {driver}</li>
-                ))}
-              </ul>
+      <AnimatePresence mode="wait">
+        {loading && !result ? (
+          <motion.p
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="mt-10 text-sm font-light text-slate-400"
+          >
+            Leyendo tu contexto…
+          </motion.p>
+        ) : null}
+
+        {result && riskMeta ? (
+          <motion.div
+            key={`${result.predicted_glucose_mg_dl}-${result.risk_flag_high}-${result.risk_flag_low}`}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className={`relative mt-8 overflow-hidden border-y border-slate-200 bg-gradient-to-r ${riskMeta.glow} py-8 pl-4 lg:mt-10 lg:py-10 lg:pl-5`}
+          >
+            <div className={`absolute inset-y-0 left-0 w-0.5 ${riskMeta.bar}`} aria-hidden />
+
+            <p className={`text-[10px] font-medium uppercase tracking-[0.22em] ${riskMeta.text}`}>
+              {riskMeta.label}
+            </p>
+
+            <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4 lg:mt-8 lg:grid-cols-12 lg:items-end lg:gap-0 lg:divide-x lg:divide-slate-200/80">
+              {latestRecord ? (
+                <dl className="group lg:col-span-2 lg:pr-8">
+                  <dt className="dash-stat-label">Actual</dt>
+                  <dd className="mt-1 text-3xl font-extralight tabular-nums text-slate-500 transition-colors duration-300 group-hover:text-slate-700 lg:text-4xl">
+                    {latestRecord.glucoseLevel}
+                  </dd>
+                  <dd className="dash-muted">mg/dL</dd>
+                </dl>
+              ) : null}
+
+              {latestRecord ? (
+                <div className="col-span-2 hidden items-center justify-center lg:col-span-1 lg:flex">
+                  <ArrowRight
+                    className="h-5 w-5 text-emerald-300/80 transition-colors duration-300"
+                    strokeWidth={1}
+                    aria-hidden
+                  />
+                </div>
+              ) : null}
+
+              <dl className="group lg:col-span-3 lg:px-8">
+                <dt className="dash-stat-label">Estimado</dt>
+                <dd
+                  className={`mt-1 text-5xl font-extralight tabular-nums leading-none lg:text-6xl xl:text-7xl ${riskMeta.text}`}
+                >
+                  {result.predicted_glucose_mg_dl}
+                </dd>
+                <dd className="dash-muted mt-1">mg/dL</dd>
+              </dl>
+
+              {delta != null ? (
+                <dl className="group lg:col-span-2 lg:px-8">
+                  <dt className="dash-stat-label">Cambio</dt>
+                  <dd className={`mt-1 text-3xl font-extralight tabular-nums lg:text-4xl ${riskMeta.text}`}>
+                    {delta === 0 ? "0" : delta > 0 ? `+${delta}` : delta}
+                  </dd>
+                  <dd className="dash-muted">mg/dL</dd>
+                </dl>
+              ) : null}
+
+              <dl className="group col-span-2 sm:col-span-4 lg:col-span-4 lg:pl-8">
+                <dt className="dash-stat-label">Nivel de riesgo</dt>
+                <dd className="mt-3">
+                  <div className="h-px w-full bg-slate-200" aria-hidden />
+                  <motion.div
+                    className={`-mt-px h-0.5 ${riskMeta.bar}`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${riskScore}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                  />
+                </dd>
+                <dd className={`mt-2 text-sm font-light tabular-nums lg:text-base ${riskMeta.text}`}>
+                  {riskScore}%
+                </dd>
+              </dl>
             </div>
-          ) : null}
-        </div>
-      ) : null}
+
+            <div className="mt-8 grid gap-6 border-t border-slate-200/80 pt-8 lg:mt-10 lg:grid-cols-[1.2fr_1fr] lg:items-start lg:gap-16 lg:pt-10">
+              <p className="dash-accent-quote text-sm lg:text-[15px]">
+                {getPredictionCoachMessage(result)}
+              </p>
+
+              <div className="lg:text-right">
+                {riskDrivers.length ? (
+                  <p className="text-xs font-light tracking-wide text-slate-500 lg:text-sm">
+                    {riskDrivers.join("  ·  ")}
+                  </p>
+                ) : null}
+                {result.source === "client-fallback" ? (
+                  <p className="mt-3 text-[10px] font-light uppercase tracking-[0.18em] text-slate-300">
+                    Modo estimación local
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </section>
   );
 }
