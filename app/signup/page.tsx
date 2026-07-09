@@ -11,11 +11,34 @@ import { ShieldCheck, BadgeCheck, UserPlus } from "lucide-react";
 import { useSignup } from "@/hooks/useSignup";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
+import {
+  authCard,
+  authDecorSvg,
+  authDividerLine,
+  authDividerText,
+  authError,
+  authFieldWrap,
+  authFooterBorder,
+  authFooterText,
+  authHint,
+  authInputPadding,
+  authInputWithToggle,
+  authLabelBlock,
+  authLinkInline,
+  authLogoWrap,
+  authPageSection,
+  authSelect,
+  authSelectChevronClasses,
+  authSubmitBtn,
+  authSubtitle,
+  authSuccess,
+  authTitle,
+  authTogglePassword,
+  authTrustBadge,
+  authTrustCaption,
+} from "@/lib/auth/authFormStyles";
 
-const inputBase =
-  "block w-full rounded-xl border border-gray-200 bg-vitality-secondary/50 py-3 px-3 text-vitality-neutral placeholder:text-gray-400 focus:border-vitality-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-vitality-primary/25 disabled:opacity-60";
-
-const labelClass = "mb-1.5 block text-sm font-medium text-vitality-neutral";
+const selectClass = `${authSelect} ${authSelectChevronClasses}`;
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -103,9 +126,9 @@ export default function SignUpPage() {
   };
 
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-vitality-secondary via-[#eef6f3] to-vitality-secondary px-4 py-10 md:py-14">
+    <section className={authPageSection}>
       <svg
-        className="pointer-events-none absolute right-0 top-0 h-40 w-48 text-vitality-primary/15 md:h-52 md:w-64"
+        className={`${authDecorSvg} right-0 top-0 h-40 w-48 md:h-52 md:w-64`}
         viewBox="0 0 200 160"
         fill="none"
         aria-hidden
@@ -119,7 +142,7 @@ export default function SignUpPage() {
         />
       </svg>
       <svg
-        className="pointer-events-none absolute bottom-0 left-0 h-32 w-40 text-vitality-tertiary/12 md:h-44 md:w-52"
+        className={`${authDecorSvg} bottom-0 left-0 h-32 w-40 md:h-44 md:w-52`}
         viewBox="0 0 200 160"
         fill="none"
         aria-hidden
@@ -140,7 +163,7 @@ export default function SignUpPage() {
         className="relative z-10 w-full max-w-lg"
       >
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80">
+          <div className={authLogoWrap}>
             <PublicImage
               src="/icons/food.svg"
               alt=""
@@ -149,25 +172,23 @@ export default function SignUpPage() {
               className="h-9 w-9"
             />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-vitality-neutral md:text-[1.65rem]">
-            Únete a Glucolog
-          </h1>
-          <p className="mt-2 max-w-md text-sm leading-relaxed text-vitality-neutral/65">
+          <h1 className={authTitle}>Únete a Glucolog</h1>
+          <p className={authSubtitle}>
             Tu asistente inteligente para el control de la diabetes
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow-md ring-1 ring-vitality-secondary sm:p-8">
+        <div className={authCard}>
           <form onSubmit={handleSignUp} className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="firstName" className={labelClass}>
+                <label htmlFor="firstName" className={authLabelBlock}>
                   Nombre
                 </label>
                 <input
                   id="firstName"
                   name="firstName"
-                  className={inputBase}
+                  className={authInputPadding}
                   type="text"
                   placeholder="Tu nombre"
                   value={formData.firstName}
@@ -177,13 +198,13 @@ export default function SignUpPage() {
                 />
               </div>
               <div>
-                <label htmlFor="lastName" className={labelClass}>
+                <label htmlFor="lastName" className={authLabelBlock}>
                   Apellido
                 </label>
                 <input
                   id="lastName"
                   name="lastName"
-                  className={inputBase}
+                  className={authInputPadding}
                   type="text"
                   placeholder="Tu apellido"
                   value={formData.lastName}
@@ -195,13 +216,13 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label htmlFor="email" className={labelClass}>
+              <label htmlFor="email" className={authLabelBlock}>
                 Correo electrónico
               </label>
               <input
                 id="email"
                 name="email"
-                className={inputBase}
+                className={authInputPadding}
                 type="email"
                 placeholder="ejemplo@correo.com"
                 value={formData.email}
@@ -213,16 +234,13 @@ export default function SignUpPage() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="gender" className={labelClass}>
+                <label htmlFor="gender" className={authLabelBlock}>
                   Sexo
                 </label>
                 <select
                   id="gender"
                   name="gender"
-                  className={`${inputBase} appearance-none bg-[length:1rem] bg-[right_0.75rem_center] bg-no-repeat pr-10`}
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23334155'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                  }}
+                  className={selectClass}
                   value={formData.gender}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -236,16 +254,13 @@ export default function SignUpPage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="diabetesType" className={labelClass}>
+                <label htmlFor="diabetesType" className={authLabelBlock}>
                   Tipo de diabetes
                 </label>
                 <select
                   id="diabetesType"
                   name="diabetesType"
-                  className={`${inputBase} appearance-none bg-[length:1rem] bg-[right_0.75rem_center] bg-no-repeat pr-10`}
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23334155'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                  }}
+                  className={selectClass}
                   value={formData.diabetesType}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -262,14 +277,14 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className={labelClass}>
+              <label htmlFor="password" className={authLabelBlock}>
                 Contraseña
               </label>
-              <div className="relative">
+              <div className={authFieldWrap}>
                 <input
                   id="password"
                   name="password"
-                  className={`${inputBase} pr-11`}
+                  className={authInputWithToggle}
                   type={showPassword ? "text" : "password"}
                   placeholder="Mayúscula, minúscula y número"
                   value={formData.password}
@@ -279,7 +294,7 @@ export default function SignUpPage() {
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                  className={authTogglePassword}
                   onClick={() => setShowPassword((v) => !v)}
                   aria-label={
                     showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
@@ -319,14 +334,14 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className={labelClass}>
+              <label htmlFor="confirmPassword" className={authLabelBlock}>
                 Confirmar contraseña
               </label>
-              <div className="relative">
+              <div className={authFieldWrap}>
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
-                  className={`${inputBase} pr-11`}
+                  className={authInputWithToggle}
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Repite tu contraseña"
                   value={formData.confirmPassword}
@@ -336,7 +351,7 @@ export default function SignUpPage() {
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                  className={authTogglePassword}
                   onClick={() => setShowConfirmPassword((v) => !v)}
                   aria-label={
                     showConfirmPassword
@@ -377,39 +392,35 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            <p className="text-xs leading-relaxed text-vitality-neutral/55">
+            <p className={authHint}>
               La contraseña debe tener al menos 6 caracteres e incluir una
               mayúscula, una minúscula y un número.
             </p>
 
-            {errorMessage && (
+            {errorMessage ? (
               <motion.div
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl bg-red-50 p-3 text-sm text-red-700 ring-1 ring-red-100"
+                className={authError}
               >
                 {errorMessage}
               </motion.div>
-            )}
+            ) : null}
 
-            {successMessage && (
+            {successMessage ? (
               <motion.div
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl bg-vitality-secondary p-3 text-sm text-vitality-neutral ring-1 ring-vitality-tertiary/25"
+                className={authSuccess}
               >
                 {successMessage}
               </motion.div>
-            )}
+            ) : null}
 
             <button
               type="submit"
               disabled={isLoading}
-              className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-center text-sm font-semibold text-white shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-vitality-primary/45 focus:ring-offset-2 ${
-                isLoading
-                  ? "cursor-not-allowed bg-gray-400"
-                  : "bg-vitality-primary hover:bg-vitality-primary-dark active:scale-[0.99]"
-              }`}
+              className={`flex items-center justify-center gap-2 ${authSubmitBtn(signupLoading)}`}
             >
               {signupLoading ? (
                 <>
@@ -446,11 +457,9 @@ export default function SignUpPage() {
           </form>
 
           <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-gray-200" />
-            <span className="text-xs font-medium uppercase tracking-wide text-vitality-neutral/45">
-              o
-            </span>
-            <div className="h-px flex-1 bg-gray-200" />
+            <div className={authDividerLine} />
+            <span className={authDividerText}>o</span>
+            <div className={authDividerLine} />
           </div>
 
           <GoogleSignInButton
@@ -460,13 +469,10 @@ export default function SignUpPage() {
             label="Registrarse con Google"
           />
 
-          <div className="mt-8 border-t border-gray-200 pt-6">
-            <p className="text-center text-sm text-vitality-neutral/80">
+          <div className={authFooterBorder}>
+            <p className={authFooterText}>
               ¿Ya tienes cuenta?{" "}
-              <Link
-                href="/login"
-                className="font-medium text-vitality-tertiary transition-colors hover:text-vitality-primary-dark hover:underline"
-              >
+              <Link href="/login" className={authLinkInline}>
                 Inicia sesión
               </Link>
             </p>
@@ -475,16 +481,14 @@ export default function SignUpPage() {
 
         <div className="mt-10 flex flex-col items-center gap-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-vitality-secondary text-vitality-primary ring-1 ring-vitality-tertiary/30">
+            <span className={authTrustBadge}>
               <ShieldCheck className="h-5 w-5" strokeWidth={2} />
             </span>
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-vitality-secondary text-vitality-primary ring-1 ring-vitality-tertiary/30">
+            <span className={authTrustBadge}>
               <BadgeCheck className="h-5 w-5" strokeWidth={2} />
             </span>
           </div>
-          <p className="text-center text-[10px] font-medium uppercase tracking-[0.2em] text-vitality-neutral/45">
-            Powered by Atmospheric Intelligence
-          </p>
+          <p className={authTrustCaption}>Powered by Atmospheric Intelligence</p>
         </div>
       </motion.div>
     </section>

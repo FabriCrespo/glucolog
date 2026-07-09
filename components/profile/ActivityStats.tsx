@@ -75,7 +75,7 @@ const ActivityStats = ({ userId }: ActivityStatsProps) => {
 
   if (loading) {
     return (
-      <div className="animate-pulse border border-slate-200 p-6">
+      <div className="profile-skeleton">
         <div className="mb-4 h-5 w-1/3 rounded bg-slate-200" />
         <div className="space-y-3">
           <div className="h-16 rounded-xl bg-slate-100" />
@@ -91,11 +91,11 @@ const ActivityStats = ({ userId }: ActivityStatsProps) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45 }}
-      className="border border-slate-200 p-5 sm:p-6"
+      className="profile-panel"
     >
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-          <Activity className="h-5 w-5 text-blue-600" />
+        <h3 className="dash-title flex items-center gap-2 text-lg">
+          <Activity className="h-5 w-5 text-blue-600 dark:text-emerald-400" />
           Actividad fisica y consistencia
         </h3>
         <div className="flex gap-2">
@@ -113,35 +113,35 @@ const ActivityStats = ({ userId }: ActivityStatsProps) => {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="profile-card-muted">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-emerald-300/80">
             Dias activos
           </p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">{activeDays}</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-50">{activeDays}</p>
           <p className="mt-1 text-xs text-slate-500">Con registros en la app</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="profile-card-muted">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-emerald-300/80">
             Consistencia
           </p>
           <p className="mt-1 text-2xl font-bold text-vitality-primary">{consistency}%</p>
           <p className="mt-1 text-xs text-slate-500">Ventana de {selectedRange} dias</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="profile-card-muted">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-emerald-300/80">
             Minutos estimados
           </p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">{estimatedMinutes}</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-50">{estimatedMinutes}</p>
           <p className="mt-1 text-xs text-slate-500">Basado en tu ritmo de registro</p>
         </div>
       </div>
 
-      <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
-        <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <div className="profile-card mt-5">
+        <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-emerald-300/80">
           <Flame className="h-4 w-4 text-amber-500" />
           Progreso objetivo semanal (150 min)
         </p>
-        <div className="h-2.5 w-full rounded-full bg-slate-200">
+        <div className="h-2.5 w-full rounded-full bg-slate-200 dark:bg-emerald-950/50">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${weeklyGoalProgress}%` }}
@@ -149,7 +149,7 @@ const ActivityStats = ({ userId }: ActivityStatsProps) => {
             className="h-2.5 rounded-full bg-vitality-primary"
           />
         </div>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           {weeklyGoalProgress}% del objetivo.{" "}
           {weeklyGoalProgress >= 100
             ? "Meta cumplida, excelente trabajo."
@@ -158,8 +158,8 @@ const ActivityStats = ({ userId }: ActivityStatsProps) => {
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-          <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
+        <div className="profile-card-muted">
+          <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-emerald-300/80">
             <Calendar className="h-4 w-4 text-purple-600" />
             Ritmo diario reciente
           </p>
@@ -172,14 +172,14 @@ const ActivityStats = ({ userId }: ActivityStatsProps) => {
                     key={date}
                     className="grid grid-cols-[5rem,1fr,3rem] items-center gap-2 text-xs"
                   >
-                    <span className="font-medium text-slate-600">{date.slice(5)}</span>
-                    <div className="h-2.5 rounded-full bg-slate-200">
+                    <span className="font-medium text-slate-600 dark:text-slate-300">{date.slice(5)}</span>
+                    <div className="h-2.5 rounded-full bg-slate-200 dark:bg-emerald-950/50">
                       <div
                         className="h-full rounded-full bg-indigo-500"
                         style={{ width: `${width}%` }}
                       />
                     </div>
-                    <span className="text-right font-semibold text-slate-700">{count}x</span>
+                    <span className="text-right font-semibold text-slate-700 dark:text-slate-200">{count}x</span>
                   </div>
                 );
               })
@@ -189,8 +189,8 @@ const ActivityStats = ({ userId }: ActivityStatsProps) => {
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
+        <div className="profile-card">
+          <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-emerald-300/80">
             <Dumbbell className="h-4 w-4 text-blue-600" />
             Plan rapido de hoy
           </p>
@@ -208,7 +208,7 @@ const ActivityStats = ({ userId }: ActivityStatsProps) => {
             ))}
           </div>
 
-          <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+          <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-emerald-800/30 dark:bg-emerald-950/22 dark:text-slate-200">
             <p className="font-medium">
               Sesion sugerida: {todayWorkout} ({WORKOUT_PRESETS[todayWorkout]} min)
             </p>
@@ -223,7 +223,7 @@ const ActivityStats = ({ userId }: ActivityStatsProps) => {
             onClick={() => setTodayDone((v) => !v)}
             className={`mt-3 inline-flex items-center gap-2 px-3 py-2 text-sm font-light transition-colors ${
               todayDone
-                ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
+                ? "border border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-700/55 dark:bg-emerald-950/45 dark:text-emerald-200"
                 : "dash-btn-outline-active"
             }`}
           >

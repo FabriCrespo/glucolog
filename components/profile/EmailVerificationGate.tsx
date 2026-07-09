@@ -16,8 +16,8 @@ export default function EmailVerificationGate({
   resending,
 }: EmailVerificationGateProps) {
   return (
-    <section className="flex min-h-[calc(100vh-5rem)] w-full items-center justify-center bg-white px-4 py-12">
-      <div className="w-full max-w-md border border-slate-200 p-8">
+    <section className="profile-page flex items-center justify-center px-4 py-12">
+      <div className="profile-panel w-full max-w-md p-8">
         <p className="dash-eyebrow text-center">Verificación · Glucolog</p>
         <h2 className="dash-title mt-3 text-center text-2xl">
           Hola, {firstName}
@@ -32,8 +32,8 @@ export default function EmailVerificationGate({
             role="status"
             className={`mt-5 border px-4 py-3 text-sm ${
               feedback.tone === "success"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-950"
-                : "border-red-200 bg-red-50 text-red-900"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-700/55 dark:bg-emerald-950/45 dark:text-emerald-200"
+                : "border-red-200 bg-red-50 text-red-900 dark:border-red-800/60 dark:bg-red-950/40 dark:text-red-300"
             }`}
           >
             {feedback.message}

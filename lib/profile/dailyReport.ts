@@ -148,37 +148,37 @@ export function controlLevelStyles(level: ControlLevel) {
   switch (level) {
     case "excellent":
       return {
-        border: "border-emerald-200",
-        bg: "bg-emerald-50/40",
-        tone: "text-emerald-800",
+        border: "border-emerald-200 dark:border-emerald-700/60",
+        bg: "bg-emerald-50/40 dark:bg-emerald-950/45",
+        tone: "text-emerald-800 dark:text-emerald-200",
         dot: "bg-emerald-500",
       };
     case "good":
       return {
-        border: "border-sky-200",
-        bg: "bg-sky-50/30",
-        tone: "text-sky-900",
+        border: "border-sky-200 dark:border-emerald-700/50",
+        bg: "bg-sky-50/30 dark:bg-emerald-950/38",
+        tone: "text-sky-900 dark:text-emerald-200",
         dot: "bg-sky-500",
       };
     case "attention":
       return {
-        border: "border-amber-200",
-        bg: "bg-amber-50/40",
-        tone: "text-amber-900",
+        border: "border-amber-200 dark:border-amber-700/55",
+        bg: "bg-amber-50/40 dark:bg-amber-950/40",
+        tone: "text-amber-900 dark:text-amber-200",
         dot: "bg-amber-500",
       };
     case "critical":
       return {
-        border: "border-red-200",
-        bg: "bg-red-50/40",
-        tone: "text-red-800",
+        border: "border-red-200 dark:border-red-700/55",
+        bg: "bg-red-50/40 dark:bg-red-950/40",
+        tone: "text-red-800 dark:text-red-300",
         dot: "bg-red-500",
       };
     default:
       return {
-        border: "border-slate-200",
-        bg: "bg-slate-50/40",
-        tone: "text-slate-700",
+        border: "border-slate-200 dark:border-emerald-800/40",
+        bg: "bg-slate-50/40 dark:bg-emerald-950/30",
+        tone: "text-slate-700 dark:text-slate-200",
         dot: "bg-slate-400",
       };
   }

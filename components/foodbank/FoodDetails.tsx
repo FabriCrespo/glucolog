@@ -151,7 +151,7 @@ const FoodDetails = ({
       >
         <div
           className={`dash-stat-cell shrink-0 border border-slate-100 px-4 py-3 ${
-            mobile ? "min-w-[140px] snap-start rounded-2xl bg-gradient-to-br from-white to-emerald-50/30" : ""
+            mobile ? "min-w-[140px] snap-start rounded-2xl bg-gradient-to-br from-white to-emerald-50/30 dark:from-emerald-950/55 dark:to-emerald-900/30" : ""
           }`}
         >
           <p className="dash-stat-label">Calorías</p>
@@ -163,7 +163,7 @@ const FoodDetails = ({
         </div>
         <div
           className={`dash-stat-cell shrink-0 border border-slate-100 px-4 py-3 ${
-            mobile ? "min-w-[140px] snap-start rounded-2xl bg-gradient-to-br from-white to-amber-50/30" : ""
+            mobile ? "min-w-[140px] snap-start rounded-2xl bg-gradient-to-br from-white to-amber-50/30 dark:from-emerald-950/55 dark:to-emerald-900/30" : ""
           }`}
         >
           <p className="dash-stat-label">Carbohidratos</p>
@@ -175,7 +175,7 @@ const FoodDetails = ({
         </div>
         <div
           className={`dash-stat-cell shrink-0 border border-slate-100 px-4 py-3 ${
-            mobile ? "min-w-[140px] snap-start rounded-2xl bg-gradient-to-br from-white to-sky-50/30" : ""
+            mobile ? "min-w-[140px] snap-start rounded-2xl bg-gradient-to-br from-white to-sky-50/30 dark:from-emerald-950/55 dark:to-emerald-900/30" : ""
           }`}
         >
           <p className="dash-stat-label">Fibra</p>

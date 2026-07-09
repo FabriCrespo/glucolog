@@ -202,10 +202,10 @@ export default function FoodBankPage() {
                   <button
                     type="button"
                     onClick={() => setShowMobileAnalysis((v) => !v)}
-                    className="flex w-full items-center justify-between rounded-2xl border border-violet-200/80 bg-gradient-to-r from-violet-50/80 to-sky-50/50 px-4 py-4 text-left transition-colors active:scale-[0.99]"
+                    className="flex w-full items-center justify-between rounded-2xl border border-violet-200/80 bg-gradient-to-r from-violet-50/80 to-sky-50/50 px-4 py-4 text-left transition-colors active:scale-[0.99] dark:border-emerald-700/60 dark:from-emerald-950/55 dark:to-emerald-900/35"
                   >
                     <span className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-700">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-700 dark:bg-emerald-900/50 dark:text-emerald-300">
                         <FlaskConical className="h-5 w-5" strokeWidth={1.5} />
                       </span>
                       <span>

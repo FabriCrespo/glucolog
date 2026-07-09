@@ -44,10 +44,10 @@ const ProfileContent = ({
 
   return (
     <div>
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-slate-200 pb-4">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-slate-200 pb-4 dark:border-emerald-800/45">
         <div className="flex min-w-0 items-center gap-4">
           <div className="group relative shrink-0">
-            <div className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-slate-200 bg-slate-50 sm:h-20 sm:w-20">
+            <div className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-slate-200 bg-slate-50 ring-2 ring-emerald-500/0 transition-shadow dark:border-emerald-700/50 dark:bg-emerald-950/40 dark:ring-emerald-500/20 sm:h-20 sm:w-20">
               {previewURL ? (
                 <img
                   src={previewURL}
@@ -56,7 +56,7 @@ const ProfileContent = ({
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
-                  <Camera className="h-6 w-6 text-slate-400" strokeWidth={1.5} />
+                  <Camera className="h-6 w-6 text-slate-400 dark:text-emerald-400/70" strokeWidth={1.5} />
                 </div>
               )}
               <label
@@ -89,8 +89,8 @@ const ProfileContent = ({
       </div>
 
       {pendingPhotoUpload ? (
-        <div className="mb-6 flex flex-col gap-3 border border-emerald-200 bg-emerald-50/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="dash-body text-emerald-950">
+        <div className="mb-6 flex flex-col gap-3 border border-emerald-200 bg-emerald-50/40 px-4 py-3 dark:border-emerald-700/55 dark:bg-emerald-950/45 sm:flex-row sm:items-center sm:justify-between">
+          <p className="dash-body text-emerald-950 dark:text-emerald-200">
             Tienes una foto nueva. Guárdala para actualizar tu perfil.
           </p>
           <button
@@ -104,7 +104,7 @@ const ProfileContent = ({
         </div>
       ) : null}
 
-      <div className="flex border-b border-slate-200">
+      <div className="flex border-b border-slate-200 dark:border-emerald-800/45">
         <button
           type="button"
           onClick={() => setActiveTab("report")}
@@ -135,7 +135,7 @@ const ProfileContent = ({
             diabetesType={userData.diabetesType}
           />
 
-          <section className="border-t border-slate-200 pt-10">
+          <section className="border-t border-slate-200 pt-10 dark:border-emerald-800/40">
             <p className="dash-eyebrow">Glucosa</p>
             <h3 className="dash-title mt-2 text-lg">Detalle de lecturas</h3>
             <p className="dash-body mt-2">
@@ -146,7 +146,7 @@ const ProfileContent = ({
             </div>
           </section>
 
-          <section className="border-t border-slate-200 pt-10">
+          <section className="border-t border-slate-200 pt-10 dark:border-emerald-800/40">
             <p className="dash-eyebrow">Nutrición</p>
             <h3 className="dash-title mt-2 text-lg">Alimentación y glucosa</h3>
             <p className="dash-body mt-2">
@@ -157,7 +157,7 @@ const ProfileContent = ({
             </div>
           </section>
 
-          <section className="border-t border-slate-200 pt-10">
+          <section className="border-t border-slate-200 pt-10 dark:border-emerald-800/40">
             <p className="dash-eyebrow">Actividad</p>
             <h3 className="dash-title mt-2 text-lg">Movimiento y constancia</h3>
             <p className="dash-body mt-2">
@@ -168,7 +168,7 @@ const ProfileContent = ({
             </div>
           </section>
 
-          <section className="border-t border-slate-200 pt-10">
+          <section className="border-t border-slate-200 pt-10 dark:border-emerald-800/40">
             <p className="dash-eyebrow">Plan personal</p>
             <h3 className="dash-title mt-2 text-lg">Recomendaciones clínicas</h3>
             <p className="dash-body mt-2">
@@ -267,7 +267,7 @@ const ProfileContent = ({
                   </div>
                 </div>
 
-                <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
+                <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 dark:border-emerald-800/40 sm:flex-row sm:justify-end">
                   <button
                     type="button"
                     disabled={saving}
@@ -313,7 +313,7 @@ const ProfileContent = ({
                 ].map((row) => (
                   <div
                     key={row.label}
-                    className="dash-stat-cell border border-slate-200 px-4 py-4"
+                    className="dash-stat-cell border border-slate-200 px-4 py-4 dark:border-emerald-800/40"
                   >
                     <p className="dash-stat-label">{row.label}</p>
                     <p className="dash-stat-value mt-1 text-lg">{row.value}</p>
@@ -323,7 +323,7 @@ const ProfileContent = ({
             )}
           </section>
 
-          <section className="border-t border-slate-200 pt-8">
+          <section className="border-t border-slate-200 pt-8 dark:border-emerald-800/40">
             <AppEngagement userId={userId} />
           </section>
         </div>

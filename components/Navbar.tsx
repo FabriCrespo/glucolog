@@ -209,7 +209,7 @@ const Navbar = () => {
                   <button
                     type="button"
                     onClick={() => void handleSignOut()}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3.5 text-sm font-medium text-slate-700 transition-colors hover:border-vitality-primary/30 hover:bg-emerald-50/50"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3.5 text-sm font-medium text-slate-700 transition-colors hover:border-vitality-primary/30 hover:bg-emerald-50/50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-emerald-600 dark:hover:bg-emerald-950/50"
                   >
                     <LogOut className="h-4 w-4" strokeWidth={1.5} />
                     Cerrar sesión
@@ -280,7 +280,7 @@ const Navbar = () => {
                     className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       active
                         ? "bg-white text-vitality-neutral shadow-sm ring-1 ring-vitality-primary/20 dark:bg-slate-700 dark:text-white dark:ring-emerald-500/50"
-                        : "text-vitality-neutral/75 hover:bg-white/80 hover:text-vitality-neutral dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
+                        : "text-vitality-neutral/75 hover:bg-white/80 hover:text-vitality-neutral dark:text-slate-300 dark:hover:bg-emerald-950/50 dark:hover:text-emerald-200"
                     }`}
                   >
                     {link.label.trim()}

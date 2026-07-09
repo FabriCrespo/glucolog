@@ -44,7 +44,7 @@ function OptionButton({
       className={`rounded-xl border px-3 py-2.5 text-sm transition-all active:scale-[0.98] ${
         active
           ? "border-emerald-500 bg-emerald-600 font-semibold text-white shadow-sm dark:border-emerald-400 dark:bg-emerald-600 dark:text-white"
-          : "border-slate-200 bg-white font-medium text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/40 dark:border-slate-500 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-emerald-500 dark:hover:bg-slate-700"
+          : "border-slate-200 bg-white font-medium text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/40 dark:border-slate-500 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-emerald-500 dark:hover:bg-emerald-950/50"
       } ${className}`}
     >
       {children}

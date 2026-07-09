@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import PublicImage from "@/components/PublicImage";
 import Link from "next/link";
@@ -11,6 +12,31 @@ import { useLogin } from "@/hooks/useLogin";
 import { usePasswordReset } from "@/hooks/usePasswordReset";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
+import {
+  authCardInner,
+  authDecorSvg,
+  authDividerLine,
+  authDividerText,
+  authError,
+  authFieldWrap,
+  authFooterBorder,
+  authFooterText,
+  authIconMuted,
+  authInputPassword,
+  authInputWithIcon,
+  authLabel,
+  authLink,
+  authLinkInline,
+  authLogoWrap,
+  authPageSection,
+  authSubmitBtn,
+  authSubtitle,
+  authSuccess,
+  authTitle,
+  authTogglePassword,
+  authTrustBadge,
+  authTrustCaption,
+} from "@/lib/auth/authFormStyles";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -90,9 +116,9 @@ export default function Login() {
   };
 
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-vitality-secondary via-[#eef6f3] to-vitality-secondary px-4 py-12">
+    <section className={authPageSection}>
       <svg
-        className="pointer-events-none absolute right-0 top-0 h-40 w-48 text-vitality-primary/15 md:h-52 md:w-64"
+        className={`${authDecorSvg} right-0 top-0 h-40 w-48 md:h-52 md:w-64`}
         viewBox="0 0 200 160"
         fill="none"
         aria-hidden
@@ -113,7 +139,7 @@ export default function Login() {
         className="relative z-10 w-full max-w-md"
       >
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80">
+          <div className={authLogoWrap}>
             <PublicImage
               src="/icons/food.svg"
               alt=""
@@ -122,27 +148,22 @@ export default function Login() {
               className="h-9 w-9"
             />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-vitality-neutral md:text-[1.65rem]">
-            Bienvenido a Glucolog
-          </h1>
-          <p className="mt-2 max-w-sm text-sm leading-relaxed text-vitality-neutral/65">
+          <h1 className={authTitle}>Bienvenido a Glucolog</h1>
+          <p className={authSubtitle}>
             Tu asistente inteligente para el control de la diabetes
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white p-8 shadow-md ring-1 ring-vitality-secondary">
+        <div className={authCardInner}>
           <form onSubmit={handleEmailLogin} className="space-y-5">
             <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium text-vitality-neutral"
-              >
+              <label htmlFor="email" className={authLabel}>
                 Correo Electrónico
               </label>
-              <div className="relative">
+              <div className={authFieldWrap}>
                 <input
                   id="email"
-                  className="block w-full rounded-xl border border-gray-200 bg-vitality-secondary/50 py-3 pl-10 pr-3 text-vitality-neutral placeholder:text-gray-400 focus:border-vitality-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-vitality-primary/25 disabled:opacity-60"
+                  className={authInputWithIcon}
                   type="email"
                   placeholder="ejemplo@correo.com"
                   value={email}
@@ -150,7 +171,7 @@ export default function Login() {
                   disabled={isLoading}
                   autoComplete="email"
                 />
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <span className={authIconMuted} aria-hidden>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5"
@@ -166,25 +187,22 @@ export default function Login() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <label
-                  htmlFor="password"
-                  className="text-sm font-medium text-vitality-neutral"
-                >
+                <label htmlFor="password" className={authLabel}>
                   Contraseña
                 </label>
                 <button
                   type="button"
                   onClick={handleResetPassword}
                   disabled={isLoading}
-                  className="text-sm font-medium text-vitality-tertiary transition-colors hover:text-vitality-primary-dark hover:underline disabled:opacity-50"
+                  className={authLink}
                 >
                   ¿Olvidó su contraseña?
                 </button>
               </div>
-              <div className="relative">
+              <div className={authFieldWrap}>
                 <input
                   id="password"
-                  className="block w-full rounded-xl border border-gray-200 bg-vitality-secondary/50 py-3 pl-10 pr-11 text-vitality-neutral placeholder:text-gray-400 focus:border-vitality-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-vitality-primary/25 disabled:opacity-60"
+                  className={authInputPassword}
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
@@ -192,7 +210,7 @@ export default function Login() {
                   disabled={isLoading}
                   autoComplete="current-password"
                 />
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <span className={authIconMuted} aria-hidden>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5"
@@ -208,7 +226,7 @@ export default function Login() {
                 </span>
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                  className={authTogglePassword}
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={
                     showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
@@ -247,34 +265,30 @@ export default function Login() {
               </div>
             </div>
 
-            {error && (
+            {error ? (
               <motion.div
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-lg bg-red-50 p-3 text-sm text-red-700 ring-1 ring-red-100"
+                className={authError}
               >
                 {error}
               </motion.div>
-            )}
+            ) : null}
 
-            {success && (
+            {success ? (
               <motion.div
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl bg-vitality-secondary p-3 text-sm text-vitality-neutral ring-1 ring-vitality-tertiary/25"
+                className={authSuccess}
               >
                 {success}
               </motion.div>
-            )}
+            ) : null}
 
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full rounded-xl py-3 text-center text-sm font-semibold text-white shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-vitality-primary/45 focus:ring-offset-2 ${
-                isLoading
-                  ? "cursor-not-allowed bg-gray-400"
-                  : "bg-vitality-primary hover:bg-vitality-primary-dark active:scale-[0.99]"
-              }`}
+              className={authSubmitBtn(loginLoading)}
             >
               {loginLoading ? (
                 <span className="inline-flex items-center justify-center gap-2">
@@ -308,11 +322,9 @@ export default function Login() {
           </form>
 
           <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-gray-200" />
-            <span className="text-xs font-medium uppercase tracking-wide text-vitality-neutral/45">
-              o
-            </span>
-            <div className="h-px flex-1 bg-gray-200" />
+            <div className={authDividerLine} />
+            <span className={authDividerText}>o</span>
+            <div className={authDividerLine} />
           </div>
 
           <GoogleSignInButton
@@ -322,13 +334,10 @@ export default function Login() {
             label="Continuar con Google"
           />
 
-          <div className="mt-8 border-t border-gray-200 pt-6">
-            <p className="text-center text-sm text-vitality-neutral/80">
+          <div className={authFooterBorder}>
+            <p className={authFooterText}>
               ¿No tiene cuenta?{" "}
-              <Link
-                href="/signup"
-                className="font-medium text-vitality-tertiary transition-colors hover:text-vitality-primary-dark hover:underline"
-              >
+              <Link href="/signup" className={authLinkInline}>
                 Regístrese aquí
               </Link>
             </p>
@@ -337,16 +346,14 @@ export default function Login() {
 
         <div className="mt-10 flex flex-col items-center gap-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-vitality-secondary text-vitality-primary ring-1 ring-vitality-tertiary/30">
+            <span className={authTrustBadge}>
               <ShieldCheck className="h-5 w-5" strokeWidth={2} />
             </span>
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-vitality-secondary text-vitality-primary ring-1 ring-vitality-tertiary/30">
+            <span className={authTrustBadge}>
               <BadgeCheck className="h-5 w-5" strokeWidth={2} />
             </span>
           </div>
-          <p className="text-center text-[10px] font-medium uppercase tracking-[0.2em] text-vitality-neutral/45">
-            Powered by Atmospheric Intelligence
-          </p>
+          <p className={authTrustCaption}>Powered by Atmospheric Intelligence</p>
         </div>
       </motion.div>
     </section>

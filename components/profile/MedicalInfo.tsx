@@ -84,35 +84,35 @@ const MedicalInfo = ({ userData }: MedicalInfoProps) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45 }}
-      className="border border-slate-200 p-5 sm:p-6"
+      className="profile-panel"
     >
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>
-          <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-            <Heart className="h-5 w-5 text-rose-500" />
+          <h3 className="dash-title flex items-center gap-2 text-lg">
+            <Heart className="h-5 w-5 text-rose-500 dark:text-rose-400" />
             Informacion medica personalizada
           </h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="dash-muted mt-1">
             Contexto rapido para tomar mejores decisiones cada dia.
           </p>
         </div>
-        <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+        <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
           Perfil {profileScore}%
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="profile-card-muted">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-emerald-300/80">
             Tipo de diabetes
           </p>
-          <p className="mt-1 text-lg font-semibold text-slate-900">{diabetesType}</p>
+          <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">{diabetesType}</p>
           <p className="mt-1 text-xs text-slate-500">
             Estos datos no reemplazan orientacion medica profesional.
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="profile-card">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-emerald-300/80">
             Checklist de hoy
           </p>
           <p className="mt-1 text-lg font-semibold text-vitality-primary">
@@ -122,13 +122,13 @@ const MedicalInfo = ({ userData }: MedicalInfoProps) => {
         </div>
       </div>
 
-      <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <div className="profile-card mt-5">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-emerald-300/80">
           Recomendaciones clave
         </p>
         <ul className="space-y-2">
           {recommendations.map((rec) => (
-            <li key={rec} className="flex items-start gap-2 text-sm text-slate-700">
+            <li key={rec} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-200">
               <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
               <span>{rec}</span>
             </li>
@@ -136,8 +136,8 @@ const MedicalInfo = ({ userData }: MedicalInfoProps) => {
         </ul>
       </div>
 
-      <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <div className="profile-card-muted mt-5">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-emerald-300/80">
           Rutina rapida
         </p>
         {[
@@ -152,14 +152,14 @@ const MedicalInfo = ({ userData }: MedicalInfoProps) => {
               onChange={() =>
                 setChecks((prev) => ({ ...prev, [task.id]: !prev[task.id as keyof typeof prev] }))
               }
-              className="h-4 w-4 rounded border-slate-300 text-vitality-primary focus:ring-vitality-primary/30"
+              className="h-4 w-4 rounded border-slate-300 text-vitality-primary focus:ring-vitality-primary/30 dark:border-emerald-700 dark:bg-emerald-950/40"
             />
-            <span className="text-sm text-slate-700">{task.label}</span>
+            <span className="text-sm text-slate-700 dark:text-slate-200">{task.label}</span>
           </label>
         ))}
       </div>
 
-      <div className="mt-5 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-sm text-amber-800">
+      <div className="mt-5 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-sm text-amber-800 dark:border-amber-700/55 dark:bg-amber-950/40 dark:text-amber-200">
         {completedChecks === 3 ? (
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
         ) : completedChecks === 0 ? (

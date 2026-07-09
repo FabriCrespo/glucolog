@@ -81,18 +81,18 @@ const AppEngagement = ({ userId }: AppEngagementProps) => {
       <p className="dash-eyebrow">Seguimiento</p>
       <h3 className="dash-title mt-2 text-lg">Uso de la app</h3>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="dash-stat-cell border border-slate-200 px-4 py-4">
+        <div className="dash-stat-cell border border-slate-200 px-4 py-4 dark:border-emerald-800/40">
           <p className="dash-stat-label">Último acceso</p>
           <p className="dash-stat-value mt-1 text-base">
             {lastLogin || "Hoy"}
           </p>
         </div>
-        <div className="dash-stat-cell border border-slate-200 px-4 py-4">
+        <div className="dash-stat-cell border border-slate-200 px-4 py-4 dark:border-emerald-800/40">
           <p className="dash-stat-label">Perfil completo</p>
           <p className="dash-stat-value mt-1 text-base tabular-nums">
             {profileCompletion}%
           </p>
-          <div className="mt-2 h-1 w-full bg-slate-200">
+          <div className="mt-2 h-1 w-full bg-slate-200 dark:bg-emerald-950/50">
             <div
               className="h-1 bg-vitality-primary transition-all"
               style={{ width: `${profileCompletion}%` }}

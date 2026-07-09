@@ -26,10 +26,10 @@ export default function MyProfilePage() {
 
   if (profile.loadError) {
     return (
-      <section className="min-h-[calc(100vh-5rem)] w-full bg-white">
+      <section className="profile-page">
         <div className="max-container px-4 py-4 md:padding-container md:py-12">
-          <div className="border border-red-200/90 bg-red-50/30 px-6 py-8 text-center">
-            <p className="dash-body text-red-700">{profile.loadError}</p>
+          <div className="border border-red-200/90 bg-red-50/30 px-6 py-8 text-center dark:border-red-800/60 dark:bg-red-950/40">
+            <p className="dash-body text-red-700 dark:text-red-300">{profile.loadError}</p>
           </div>
         </div>
       </section>
@@ -38,9 +38,9 @@ export default function MyProfilePage() {
 
   if (!profile.userData) {
     return (
-      <section className="min-h-[calc(100vh-5rem)] w-full bg-white">
+      <section className="profile-page">
         <div className="max-container px-4 py-4 md:padding-container md:py-12">
-          <div className="border border-slate-200 px-6 py-8 text-center">
+          <div className="profile-panel px-6 py-8 text-center">
             <p className="dash-body">
               No hay datos de perfil guardados. Completa el registro o contacta
               soporte si el problema continúa.
@@ -63,9 +63,9 @@ export default function MyProfilePage() {
   }
 
   return (
-    <section className="min-h-[calc(100vh-5rem)] w-full bg-white">
+    <section className="profile-page">
       <div className="max-container px-4 py-4 md:padding-container md:py-12 lg:py-16">
-        <header className="mb-8 border-b border-slate-200/90 pb-6">
+        <header className="mb-8 border-b border-slate-200/90 pb-6 dark:border-emerald-800/45">
           <p className="dash-eyebrow">Salud · Glucolog</p>
           <h1 className="dash-title mt-2 text-2xl lg:text-3xl">
             Mi informe de diabetes

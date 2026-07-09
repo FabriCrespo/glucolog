@@ -134,7 +134,7 @@ export default function GlucoseTable({
               type="button"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-2 text-slate-400 transition-all duration-200 hover:bg-emerald-50 hover:text-vitality-primary disabled:opacity-30"
+              className="p-2 text-slate-400 transition-all duration-200 hover:bg-emerald-50 hover:text-vitality-primary disabled:opacity-30 dark:hover:text-emerald-400"
               aria-label="Página anterior"
             >
               <ChevronLeft className="h-4 w-4" strokeWidth={1.25} />
@@ -146,7 +146,7 @@ export default function GlucoseTable({
               type="button"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="p-2 text-slate-400 transition-all duration-200 hover:bg-emerald-50 hover:text-vitality-primary disabled:opacity-30"
+              className="p-2 text-slate-400 transition-all duration-200 hover:bg-emerald-50 hover:text-vitality-primary disabled:opacity-30 dark:hover:text-emerald-400"
               aria-label="Página siguiente"
             >
               <ChevronRight className="h-4 w-4" strokeWidth={1.25} />

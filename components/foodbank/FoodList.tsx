@@ -359,7 +359,7 @@ const FoodList = ({
                     <button
                       type="button"
                       onClick={() => setMobileVisible((n) => n + MOBILE_BATCH)}
-                      className="mt-4 w-full rounded-2xl border border-dashed border-emerald-300/80 bg-emerald-50/40 py-3.5 text-sm font-light text-emerald-800 transition-colors hover:bg-emerald-50 active:scale-[0.99]"
+                      className="mt-4 w-full rounded-2xl border border-dashed border-emerald-300/80 bg-emerald-50/40 py-3.5 text-sm font-light text-emerald-800 transition-colors hover:bg-emerald-50 active:scale-[0.99] dark:border-emerald-700/60 dark:text-emerald-300"
                     >
                       Ver {Math.min(MOBILE_BATCH, mobileFoods.length - mobileVisible)} más
                       <span className="text-emerald-600/70">

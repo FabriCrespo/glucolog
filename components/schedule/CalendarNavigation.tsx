@@ -54,7 +54,7 @@ const CalendarNavigation = ({
           <button
             type="button"
             onClick={handlePrevMonth}
-            className="flex h-10 w-10 items-center justify-center bg-white text-slate-600 transition-colors hover:bg-emerald-50 hover:text-vitality-primary lg:dash-btn-outline lg:border-0 lg:border-r lg:border-slate-200"
+            className="flex h-10 w-10 items-center justify-center bg-white text-slate-600 transition-colors hover:bg-emerald-50 hover:text-vitality-primary dark:hover:text-emerald-400 lg:dash-btn-outline lg:border-0 lg:border-r lg:border-slate-200"
             aria-label="Mes anterior"
           >
             <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
@@ -62,7 +62,7 @@ const CalendarNavigation = ({
           <button
             type="button"
             onClick={handleNextMonth}
-            className="flex h-10 w-10 items-center justify-center border-l border-slate-200 bg-white text-slate-600 transition-colors hover:bg-emerald-50 hover:text-vitality-primary lg:dash-btn-outline lg:border-0"
+            className="flex h-10 w-10 items-center justify-center border-l border-slate-200 bg-white text-slate-600 transition-colors hover:bg-emerald-50 hover:text-vitality-primary dark:hover:text-emerald-400 lg:dash-btn-outline lg:border-0"
             aria-label="Mes siguiente"
           >
             <ChevronRight className="h-4 w-4" strokeWidth={1.5} />

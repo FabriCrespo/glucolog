@@ -18,15 +18,15 @@ export default function GoogleSignInButton({
       type="button"
       onClick={onClick}
       disabled={disabled || isLoading}
-      className={`flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-vitality-neutral shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-vitality-primary/30 focus:ring-offset-2 ${
+      className={`flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-vitality-neutral shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-vitality-primary/30 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-900/70 dark:text-slate-100 dark:shadow-none dark:focus:ring-emerald-500/35 dark:focus:ring-offset-slate-800 ${
         disabled || isLoading
           ? "cursor-not-allowed opacity-60"
-          : "hover:bg-vitality-secondary/40 active:scale-[0.99]"
+          : "hover:bg-vitality-secondary/40 active:scale-[0.99] dark:hover:border-slate-500 dark:hover:bg-slate-700"
       }`}
     >
       {isLoading ? (
         <svg
-          className="h-4 w-4 animate-spin text-vitality-neutral/70"
+          className="h-4 w-4 animate-spin text-vitality-neutral/70 dark:text-slate-400"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"

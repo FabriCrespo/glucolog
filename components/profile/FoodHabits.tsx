@@ -101,7 +101,7 @@ const FoodHabits = ({ userId }: FoodHabitsProps) => {
 
   if (loading) {
     return (
-      <div className="animate-pulse border border-slate-200 p-6">
+      <div className="profile-skeleton">
         <div className="mb-4 h-5 w-1/3 rounded bg-slate-200" />
         <div className="space-y-3">
           <div className="h-16 rounded-xl bg-slate-100" />
@@ -114,12 +114,12 @@ const FoodHabits = ({ userId }: FoodHabitsProps) => {
 
   if (!eatenRecords.length) {
     return (
-      <div className="border border-slate-200 p-6">
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-          <Utensils className="h-5 w-5 text-emerald-600" />
+      <div className="profile-panel">
+        <h3 className="dash-title flex items-center gap-2 text-lg">
+          <Utensils className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           Habitos alimenticios
         </h3>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="dash-body mt-2">
           Aun no hay comidas registradas para analizar en los ultimos {selectedRange} dias.
         </p>
       </div>
@@ -131,11 +131,11 @@ const FoodHabits = ({ userId }: FoodHabitsProps) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45 }}
-      className="border border-slate-200 p-5 sm:p-6"
+      className="profile-panel"
     >
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-          <Utensils className="h-5 w-5 text-emerald-600" />
+        <h3 className="dash-title flex items-center gap-2 text-lg">
+          <Utensils className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           Habitos alimenticios reales
         </h3>
         <div className="flex gap-2">
@@ -153,22 +153,22 @@ const FoodHabits = ({ userId }: FoodHabitsProps) => {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="profile-card-muted">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-emerald-300/80">
             Comidas registradas
           </p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">{eatenRecords.length}</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-50">{eatenRecords.length}</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="profile-card-muted">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-emerald-300/80">
             Dias con registros
           </p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">
+          <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-50">
             {new Set(eatenRecords.map((r) => r.date)).size}
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="profile-card-muted">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-emerald-300/80">
             Consistencia
           </p>
           <p className="mt-1 text-2xl font-bold text-vitality-primary">{mealConsistency}%</p>
@@ -176,21 +176,21 @@ const FoodHabits = ({ userId }: FoodHabitsProps) => {
       </div>
 
       {lastMeal && (
-        <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50/80 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
+        <div className="profile-card-highlight mt-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-300">
             Ultima comida registrada
           </p>
           <div className="mt-2 flex items-center justify-between gap-3">
             <div>
-              <p className="text-base font-semibold text-slate-900">{lastMeal.foodEaten}</p>
-              <div className="mt-1 flex items-center gap-2 text-sm text-slate-600">
+              <p className="text-base font-semibold text-slate-900 dark:text-slate-50">{lastMeal.foodEaten}</p>
+              <div className="mt-1 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                 {getMealIcon(lastMeal.foodMeal)}
                 <span className="capitalize">
                   {lastMeal.foodMeal ?? "Sin tipo"} · {lastMeal.date} · {lastMeal.time.slice(0, 5)}
                 </span>
               </div>
             </div>
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-emerald-950/50 dark:text-emerald-200">
               {lastMeal.glucoseLevel} mg/dL
             </span>
           </div>
@@ -198,18 +198,18 @@ const FoodHabits = ({ userId }: FoodHabitsProps) => {
       )}
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="profile-card">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-emerald-300/80">
             Alimentos mas frecuentes
           </p>
           <div className="space-y-2">
             {frequentFoods.map((food) => (
               <div
                 key={food.name}
-                className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
+                className="profile-list-row"
               >
-                <span className="text-sm font-medium text-slate-800">{food.name}</span>
-                <span className="rounded-full bg-slate-200 px-2 py-1 text-xs font-semibold text-slate-700">
+                <span className="text-sm font-medium text-slate-800 dark:text-slate-100">{food.name}</span>
+                <span className="rounded-full bg-slate-200 px-2 py-1 text-xs font-semibold text-slate-700 dark:bg-emerald-900/50 dark:text-emerald-200">
                   {food.count} veces
                 </span>
               </div>
@@ -217,8 +217,8 @@ const FoodHabits = ({ userId }: FoodHabitsProps) => {
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="profile-card">
+          <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-emerald-300/80">
             <TrendingUp className="h-4 w-4 text-red-500" />
             Mayor impacto glucemico
           </p>
@@ -226,7 +226,7 @@ const FoodHabits = ({ userId }: FoodHabitsProps) => {
             {highImpactFoods.map((food) => (
               <div
                 key={food.name}
-                className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
+                className="profile-list-row"
               >
                 <span className="text-sm font-medium text-slate-800">{food.name}</span>
                 <span
@@ -239,7 +239,7 @@ const FoodHabits = ({ userId }: FoodHabitsProps) => {
               </div>
             ))}
           </div>
-          <div className="mt-3 flex items-start gap-2 text-sm text-slate-600">
+          <div className="mt-3 flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
             <p>
               Esto es orientativo: compara estos patrones con tu contexto clinico y tus horarios.
