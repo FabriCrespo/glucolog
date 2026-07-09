@@ -1,5 +1,8 @@
-import type { ChartOptions } from "chart.js";
+import type { ChartData, ChartOptions } from "chart.js";
 import type { GlucoseRecord } from "@/types/glucose";
+
+export type BarChartWithCounts = ChartData<"bar"> & { counts: number[] };
+export type GlucoseChartDataBundle = ReturnType<typeof prepareChartData>;
 
 const EMERALD = "#10b981";
 const EMERALD_SOFT = "rgba(16, 185, 129, 0.12)";
@@ -25,8 +28,8 @@ const BASE_TOOLTIP = {
   borderWidth: 1,
   padding: 12,
   cornerRadius: 0,
-  titleFont: { size: 10, weight: "500" as const },
-  bodyFont: { size: 13, weight: "300" as const },
+  titleFont: { size: 10, weight: 500 },
+  bodyFont: { size: 13, weight: 300 },
   displayColors: false,
 };
 
@@ -35,7 +38,7 @@ const BASE_SCALE = {
   border: { display: false },
   ticks: {
     color: "#94a3b8",
-    font: { size: 10, weight: "300" as const },
+    font: { size: 10, weight: 300 },
     maxRotation: 0,
   },
 };
@@ -91,7 +94,7 @@ export function prepareChartData(records: GlucoseRecord[]) {
       : 0;
   });
 
-  const mealImpactData = {
+  const mealImpactData: BarChartWithCounts = {
     labels: ["Desayuno", "Almuerzo", "Cena", "Otro"],
     counts: mealCounts,
     datasets: [
@@ -139,7 +142,7 @@ export function prepareChartData(records: GlucoseRecord[]) {
   );
   const timeCounts = Object.values(timeGroups).map((g) => g.length);
 
-  const patternData = {
+  const patternData: BarChartWithCounts = {
     labels: Object.keys(timeGroups),
     counts: timeCounts,
     datasets: [
@@ -301,9 +304,9 @@ export function prepareChartOptions() {
 }
 
 export function applyTimelineSelection(
-  timelineData: ReturnType<typeof prepareChartData>["timelineData"],
+  timelineData: ChartData<"line">,
   selectedIndex: number | null
-) {
+): ChartData<"line"> {
   const dataset = timelineData.datasets?.[0];
   if (!dataset?.data?.length) {
     return timelineData;
@@ -323,24 +326,22 @@ export function applyTimelineSelection(
 }
 
 export function applyBarSelection(
-  data: { labels: string[]; datasets: object[] },
+  data: ChartData<"bar">,
   selectedIndex: number | null
-) {
+): ChartData<"bar"> {
   if (selectedIndex == null) return data;
 
-  const dataset = data.datasets?.[0] as {
-    backgroundColor: string | string[];
-    borderWidth?: number | number[];
-    [key: string]: unknown;
-  } | undefined;
-
+  const dataset = data.datasets[0];
   if (!dataset) return data;
+
   const bg = Array.isArray(dataset.backgroundColor)
     ? [...dataset.backgroundColor]
-    : [dataset.backgroundColor];
+    : dataset.backgroundColor != null
+      ? [dataset.backgroundColor]
+      : [];
 
   return {
-    ...data,
+    labels: data.labels,
     datasets: [
       {
         ...dataset,

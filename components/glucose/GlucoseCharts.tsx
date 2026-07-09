@@ -70,12 +70,26 @@ export default function GlucoseCharts({
   );
 
   const mealChartData = useMemo(
-    () => applyBarSelection(data.mealImpactData, selectedIndex),
+    () =>
+      applyBarSelection(
+        {
+          labels: data.mealImpactData.labels,
+          datasets: data.mealImpactData.datasets,
+        },
+        selectedIndex
+      ),
     [data.mealImpactData, selectedIndex]
   );
 
   const patternChartData = useMemo(
-    () => applyBarSelection(data.patternData, selectedIndex),
+    () =>
+      applyBarSelection(
+        {
+          labels: data.patternData.labels,
+          datasets: data.patternData.datasets,
+        },
+        selectedIndex
+      ),
     [data.patternData, selectedIndex]
   );
 
@@ -116,6 +130,13 @@ export default function GlucoseCharts({
     setSelectedIndex(null);
   };
 
+  const labelAt = (labels: unknown[] | undefined, index: number) => {
+    const label = labels?.[index];
+    if (label == null) return "";
+    if (Array.isArray(label)) return label.join(", ");
+    return String(label);
+  };
+
   const selectionDetail = useMemo(() => {
     if (selectedIndex == null) return null;
 
@@ -124,7 +145,7 @@ export default function GlucoseCharts({
       if (!record) return null;
       const { label } = getGlucoseStatus(record.glucoseLevel);
       return {
-        title: timelineChartData.labels[selectedIndex] as string,
+        title: labelAt(timelineChartData.labels, selectedIndex),
         value: record.glucoseLevel,
         meta: `${label} · ${CONTEXT_LABELS[record.measurementContext] ?? "—"}`,
         sub:
@@ -138,7 +159,7 @@ export default function GlucoseCharts({
       const val = data.mealImpactData.datasets[0].data[selectedIndex] as number;
       const count = data.mealImpactData.counts[selectedIndex];
       return {
-        title: data.mealImpactData.labels[selectedIndex] as string,
+        title: labelAt(data.mealImpactData.labels, selectedIndex),
         value: val ? Math.round(val) : null,
         meta: count ? `${count} lectura${count === 1 ? "" : "s"}` : "Sin datos",
         sub: "Promedio por tipo de comida",
@@ -149,7 +170,7 @@ export default function GlucoseCharts({
       const val = data.patternData.datasets[0].data[selectedIndex] as number;
       const count = data.patternData.counts[selectedIndex];
       return {
-        title: data.patternData.labels[selectedIndex] as string,
+        title: labelAt(data.patternData.labels, selectedIndex),
         value: val ? Math.round(val) : null,
         meta: count ? `${count} lectura${count === 1 ? "" : "s"}` : "Sin datos",
         sub: "Promedio por franja horaria",
@@ -164,9 +185,14 @@ export default function GlucoseCharts({
     timelineChartData.labels,
   ]);
 
+  const hasPositiveBarValue = (v: number | [number, number] | null) =>
+    typeof v === "number" && v > 0;
+
   const hasTimeline = (data.timelineData.datasets[0]?.data?.length ?? 0) > 0;
-  const hasMeals = data.mealImpactData.datasets[0]?.data?.some((v) => v > 0) ?? false;
-  const hasPatterns = data.patternData.datasets[0]?.data?.some((v) => v > 0) ?? false;
+  const hasMeals =
+    data.mealImpactData.datasets[0]?.data?.some(hasPositiveBarValue) ?? false;
+  const hasPatterns =
+    data.patternData.datasets[0]?.data?.some(hasPositiveBarValue) ?? false;
 
   return (
     <section aria-label="Análisis gráfico" className="w-full border-t border-slate-200 pt-10 lg:pt-14">

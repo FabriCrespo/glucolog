@@ -1,18 +1,22 @@
 "use client";
 
 import { useMemo } from "react";
-import type { GlucoseChartDatasets, GlucoseChartOptionsBundle } from "@/types/dashboard-glucose";
+import type { GlucoseChartOptionsBundle } from "@/types/dashboard-glucose";
 import type { GlucoseRecord } from "@/types/glucose";
-import { prepareChartData, prepareChartOptions } from "@/utils/chartHelpers";
+import {
+  prepareChartData,
+  prepareChartOptions,
+  type GlucoseChartDataBundle,
+} from "@/utils/chartHelpers";
 
-const EMPTY_DATASETS = {
-  sortedRecords: [] as GlucoseRecord[],
+const EMPTY_DATASETS: GlucoseChartDataBundle = {
+  sortedRecords: [],
   timelineData: { labels: [], datasets: [] },
   mealImpactData: { labels: [], counts: [], datasets: [] },
   patternData: { labels: [], counts: [], datasets: [] },
 };
 
-export type GlucoseChartBundle = ReturnType<typeof prepareChartData>;
+export type GlucoseChartBundle = GlucoseChartDataBundle;
 
 /**
  * Deriva datos y opciones de Chart.js a partir de los registros (sin duplicar estado en la página).
