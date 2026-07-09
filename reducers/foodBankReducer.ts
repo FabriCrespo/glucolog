@@ -15,6 +15,7 @@ export type FoodBankAction =
   | { type: "SET_SEARCH"; payload: string }
   | { type: "TOGGLE_GI_FILTER" }
   | { type: "SELECT_FOOD"; payload: FoodItem }
+  | { type: "CLEAR_FOOD" }
   | { type: "SET_PORTION"; payload: number }
   | { type: "GLYCEMIC_CALCULATED"; payload: GlycemicLoadInfo }
   | { type: "CLOSE_GLYCEMIC_MODAL" };
@@ -43,6 +44,14 @@ export function foodBankReducer(
       return {
         ...state,
         selectedFood: action.payload,
+        glycemicLoadSummary: null,
+        glycemicModalOpen: false,
+      };
+
+    case "CLEAR_FOOD":
+      return {
+        ...state,
+        selectedFood: null,
         glycemicLoadSummary: null,
         glycemicModalOpen: false,
       };

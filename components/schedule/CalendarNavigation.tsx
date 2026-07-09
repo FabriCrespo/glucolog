@@ -1,8 +1,6 @@
-import React from 'react';
-import { Dayjs } from 'dayjs';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faChevronRight, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
-import { motion } from 'framer-motion';
+import React from "react";
+import { Dayjs } from "dayjs";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface CalendarNavigationProps {
   currentDate: Dayjs;
@@ -11,65 +9,68 @@ interface CalendarNavigationProps {
   handleToday: () => void;
 }
 
-const CalendarNavigation = ({ 
-  currentDate, 
-  handlePrevMonth, 
+const CalendarNavigation = ({
+  currentDate,
+  handlePrevMonth,
   handleNextMonth,
-  handleToday
+  handleToday,
 }: CalendarNavigationProps) => {
-  const isCurrentMonth = currentDate.format("MM YYYY") === new Date().toLocaleDateString('es', { month: '2-digit', year: 'numeric' }).replace('/', ' ');
-  
+  const now = new Date();
+  const isCurrentMonth =
+    currentDate.month() === now.getMonth() &&
+    currentDate.year() === now.getFullYear();
+
+  const monthLabel =
+    currentDate.format("MMMM").charAt(0).toUpperCase() +
+    currentDate.format("MMMM").slice(1);
+
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4"
-    >
-      <div className="flex items-center gap-3">
-        <div className="bg-green-50 p-3 rounded-full">
-          <FontAwesomeIcon icon={faCalendarAlt} className="text-white text-xl" />
-        </div>
-        <h2 className="text-2xl font-bold text-gray-800">
-          {currentDate.format("MMMM").charAt(0).toUpperCase() + currentDate.format("MMMM").slice(1)} <span className="text-green-50">{currentDate.format("YYYY")}</span>
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p className="dash-eyebrow">Mes actual</p>
+        <h2 className="dash-title mt-2 text-xl lg:text-2xl">
+          {monthLabel}{" "}
+          <span className="font-extralight text-slate-500">
+            {currentDate.format("YYYY")}
+          </span>
         </h2>
       </div>
-      
-      <div className="flex items-center gap-2">
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
           onClick={handleToday}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-            ${isCurrentMonth ? 'bg-gray-200 text-gray-600' : 'bg-green-50 text-white hover:bg-green-600'}`}
           disabled={isCurrentMonth}
+          className={`rounded-full px-5 py-2.5 text-sm font-light transition-all lg:rounded-none ${
+            isCurrentMonth
+              ? "border border-slate-200 bg-slate-50 text-slate-400 opacity-70"
+              : "border border-emerald-200 bg-emerald-50 text-emerald-800 hover:border-vitality-primary/40 active:scale-[0.98]"
+          }`}
         >
           Hoy
-        </motion.button>
-        
-        <div className="flex rounded-lg overflow-hidden border border-gray-200">
-          <motion.button
-            whileHover={{ backgroundColor: '#e5e7eb' }}
-            whileTap={{ scale: 0.95 }}
+        </button>
+
+        <div className="flex overflow-hidden rounded-full border border-slate-200 lg:rounded-none">
+          <button
+            type="button"
             onClick={handlePrevMonth}
-            className="p-2 bg-white text-gray-700 hover:bg-gray-100 border-r border-gray-200 flex items-center justify-center w-10 h-10"
+            className="flex h-10 w-10 items-center justify-center bg-white text-slate-600 transition-colors hover:bg-emerald-50 hover:text-vitality-primary lg:dash-btn-outline lg:border-0 lg:border-r lg:border-slate-200"
+            aria-label="Mes anterior"
           >
-            <FontAwesomeIcon icon={faChevronLeft} />
-          </motion.button>
-          
-          <motion.button
-            whileHover={{ backgroundColor: '#e5e7eb' }}
-            whileTap={{ scale: 0.95 }}
+            <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
+          </button>
+          <button
+            type="button"
             onClick={handleNextMonth}
-            className="p-2 bg-white text-gray-700 hover:bg-gray-100 flex items-center justify-center w-10 h-10"
+            className="flex h-10 w-10 items-center justify-center border-l border-slate-200 bg-white text-slate-600 transition-colors hover:bg-emerald-50 hover:text-vitality-primary lg:dash-btn-outline lg:border-0"
+            aria-label="Mes siguiente"
           >
-            <FontAwesomeIcon icon={faChevronRight} />
-          </motion.button>
+            <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
+          </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
 export default CalendarNavigation;
-

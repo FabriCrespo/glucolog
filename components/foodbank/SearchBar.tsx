@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+"use client";
+
+import React from "react";
+import { Search, X } from "lucide-react";
 
 interface SearchBarProps {
   searchTerm: string;
@@ -14,80 +16,91 @@ const SearchBar = ({
   handleSearch,
   showWithGlycemicIndex,
   handleCheckboxChange,
-  isEmailVerified
+  isEmailVerified,
 }: SearchBarProps) => {
-  const [isFocused, setIsFocused] = useState(false);
-  
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="mb-6 rounded-xl border border-slate-200/90 bg-slate-50/40 p-4 shadow-sm"
-    >
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1">
-          <div className={`relative transition-all duration-300 ${isFocused ? 'scale-105' : ''}`}>
-            <motion.input
-              type="text"
-              placeholder="Buscar alimento..."
-              value={searchTerm}
-              onChange={handleSearch}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              className={`h-12 w-full rounded-xl border-2 pl-12 pr-4 text-slate-900 transition-all duration-300 placeholder:text-slate-400
-                ${isFocused ? "border-vitality-primary shadow-md shadow-emerald-900/5" : "border-slate-200"}
-                focus:outline-none focus:ring-2 focus:ring-vitality-primary/25`}
-              disabled={!isEmailVerified}
-            />
-            <motion.svg 
-              className={`absolute left-4 top-3.5 h-5 w-5 transition-colors duration-300 ${isFocused ? "text-vitality-primary" : "text-slate-400"}`} 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-              animate={{ rotate: isFocused ? [0, -10, 10, -10, 0] : 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </motion.svg>
-            {searchTerm && (
-              <button 
-                onClick={() => handleSearch({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
-                className="absolute right-4 top-3.5 text-slate-400 hover:text-slate-600"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
-          </div>
-          {!isEmailVerified && (
-            <p className="text-xs text-amber-600 mt-1 ml-1">
-              Verifica tu email para buscar alimentos
-            </p>
-          )}
+    <div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="dash-eyebrow">Explorar</p>
+          <h2 className="dash-title mt-2 text-xl lg:text-2xl">Buscar alimentos</h2>
         </div>
-        
-        <motion.div 
-          className="flex items-center space-x-3 rounded-lg bg-emerald-50/40 p-3"
-          whileHover={{ scale: 1.03 }}
+        <span
+          className={`rounded-full px-3 py-1 text-[10px] font-medium uppercase tracking-wider ${
+            isEmailVerified
+              ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/80"
+              : "bg-amber-100 text-amber-800 ring-1 ring-amber-200/80"
+          }`}
         >
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showWithGlycemicIndex}
-              onChange={handleCheckboxChange}
-              className="sr-only peer"
-              disabled={!isEmailVerified}
-            />
-            <div className={`relative h-6 w-11 rounded-full bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-vitality-primary/30 
-              ${isEmailVerified ? "peer-checked:bg-vitality-primary peer-checked:after:translate-x-full peer-checked:after:border-white" : "opacity-60"} 
-              after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-['']`}></div>
-            <span className="ml-3 text-sm font-medium text-slate-700">Solo con índice glucémico</span>
-          </label>
-        </motion.div>
+          {isEmailVerified ? "Activo" : "Verificar email"}
+        </span>
       </div>
-    </motion.div>
+
+      <div className="mt-6">
+        <label htmlFor="food-search" className="dash-input-label">
+          Nombre del alimento
+        </label>
+        <div className="relative mt-2">
+          <input
+            id="food-search"
+            type="text"
+            placeholder="Ej. arroz, manzana, pollo…"
+            value={searchTerm}
+            onChange={handleSearch}
+            className="dash-input rounded-xl border border-slate-200/90 bg-gradient-to-r from-white to-emerald-50/20 py-3.5 pl-11 pr-11 transition-colors focus:border-vitality-primary lg:rounded-none lg:border-0 lg:border-b lg:bg-transparent lg:py-3 lg:pl-10 lg:pr-10"
+            disabled={!isEmailVerified}
+          />
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-600/70 lg:left-0"
+            strokeWidth={1.5}
+            aria-hidden
+          />
+          {searchTerm ? (
+            <button
+              type="button"
+              onClick={() =>
+                handleSearch({
+                  target: { value: "" },
+                } as React.ChangeEvent<HTMLInputElement>)
+              }
+              className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-emerald-100 hover:text-vitality-primary lg:right-0 lg:rounded-none lg:bg-transparent"
+              aria-label="Limpiar búsqueda"
+            >
+              <X className="h-3.5 w-3.5" strokeWidth={2} />
+            </button>
+          ) : null}
+        </div>
+        {!isEmailVerified && (
+          <p className="dash-muted mt-2 text-amber-700">
+            Verifica tu email para buscar alimentos
+          </p>
+        )}
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={!isEmailVerified}
+          onClick={() =>
+            handleCheckboxChange({
+              target: { checked: !showWithGlycemicIndex },
+            } as React.ChangeEvent<HTMLInputElement>)
+          }
+          className={`rounded-full px-4 py-2 text-xs font-light tracking-wide transition-all active:scale-[0.97] disabled:opacity-50 ${
+            showWithGlycemicIndex
+              ? "bg-vitality-primary text-white shadow-sm shadow-emerald-900/15"
+              : "border border-slate-200 bg-white text-slate-600 hover:border-emerald-300 hover:bg-emerald-50/50"
+          }`}
+        >
+          Solo con índice glucémico
+        </button>
+        {searchTerm ? (
+          <span className="inline-flex items-center rounded-full bg-sky-50 px-3 py-2 text-xs font-light text-sky-800 ring-1 ring-sky-200/80">
+            Buscando: {searchTerm.trim()}
+          </span>
+        ) : null}
+      </div>
+    </div>
   );
 };
 

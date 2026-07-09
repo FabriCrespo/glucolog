@@ -183,7 +183,7 @@ const GlucoseRecent = ({ userId }: GlucoseRecentProps) => {
 
   if (loading) {
     return (
-      <div className="animate-pulse rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+      <div className="animate-pulse border border-slate-200 p-6">
         <div className="mb-3 h-4 w-1/3 rounded bg-slate-200" />
         <div className="mb-6 h-10 w-1/2 rounded bg-slate-200" />
         <div className="grid gap-3 sm:grid-cols-3">
@@ -197,7 +197,7 @@ const GlucoseRecent = ({ userId }: GlucoseRecentProps) => {
 
   if (records.length === 0) {
     return (
-      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+      <div className="border border-slate-200 p-6">
         <div className="mb-2 flex items-center">
           <AlertCircle className="mr-2 h-5 w-5 text-yellow-500" />
           <h3 className="text-lg font-semibold text-slate-900">Sin datos recientes</h3>
@@ -211,11 +211,7 @@ const GlucoseRecent = ({ userId }: GlucoseRecentProps) => {
               key={days}
               type="button"
               onClick={() => setSelectedRange(days as RangeDays)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                selectedRange === days
-                  ? "bg-vitality-primary text-white"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
+              className={`dash-pill ${selectedRange === days ? "dash-pill-active" : "dash-pill-idle"}`}
             >
               {days} dias
             </button>
@@ -230,14 +226,12 @@ const GlucoseRecent = ({ userId }: GlucoseRecentProps) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6"
+      className="border border-slate-200 p-5 sm:p-6"
     >
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
-            Salud en tus ultimos dias
-          </h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <h3 className="dash-title text-lg">Salud en tus últimos días</h3>
+          <p className="dash-body mt-1">
             Panorama dinamico de tu glucosa reciente.
           </p>
         </div>
@@ -247,11 +241,7 @@ const GlucoseRecent = ({ userId }: GlucoseRecentProps) => {
               key={days}
               type="button"
               onClick={() => setSelectedRange(days as RangeDays)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                selectedRange === days
-                  ? "bg-vitality-primary text-white"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
+              className={`dash-pill ${selectedRange === days ? "dash-pill-active" : "dash-pill-idle"}`}
             >
               {days} dias
             </button>

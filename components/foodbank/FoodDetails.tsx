@@ -1,5 +1,8 @@
-import React from "react";
+"use client";
+
+import React, { useMemo, useState } from "react";
 import type { FoodItem, GlycemicLoadInfo } from "@/types/food";
+import { ChevronDown, ArrowLeft } from "lucide-react";
 
 interface FoodDetailsProps {
   selectedFood: FoodItem | null;
@@ -8,6 +11,61 @@ interface FoodDetailsProps {
   glycemicLoad: GlycemicLoadInfo | null;
   calculateGlycemicLoad: () => void;
   isEmailVerified: boolean;
+  mobile?: boolean;
+  onBack?: () => void;
+}
+
+function igVerdict(ig: number | undefined) {
+  if (!ig) return null;
+  if (ig < 55) {
+    return {
+      label: "Bueno para glucosa",
+      tone: "text-emerald-700",
+      bg: "border-emerald-200 bg-emerald-50/40",
+      tip: "Sube la glucosa lentamente. Buena opción en porciones normales.",
+    };
+  }
+  if (ig <= 69) {
+    return {
+      label: "Moderado",
+      tone: "text-amber-700",
+      bg: "border-amber-200 bg-amber-50/40",
+      tip: "Puede subir la glucosa de forma media. Controla la porción.",
+    };
+  }
+  return {
+    label: "Ten cuidado",
+    tone: "text-red-700",
+    bg: "border-red-200 bg-red-50/40",
+    tip: "Puede subir la glucosa rápido. Porciones pequeñas y combina con proteína o fibra.",
+  };
+}
+
+function NutrientRow({
+  label,
+  value,
+  unit,
+  hint,
+}: {
+  label: string;
+  value: string;
+  unit: string;
+  hint?: string;
+}) {
+  return (
+    <div className="border-b border-slate-100 py-3 last:border-0">
+      <div className="flex justify-between gap-4">
+        <span className="dash-body text-slate-600">{label}</span>
+        <span className="font-extralight tabular-nums text-slate-800">
+          {value}{" "}
+          {unit ? (
+            <span className="font-light text-slate-400">{unit}</span>
+          ) : null}
+        </span>
+      </div>
+      {hint ? <p className="dash-muted mt-1">{hint}</p> : null}
+    </div>
+  );
 }
 
 const FoodDetails = ({
@@ -17,294 +75,271 @@ const FoodDetails = ({
   glycemicLoad,
   calculateGlycemicLoad,
   isEmailVerified,
+  mobile = false,
+  onBack,
 }: FoodDetailsProps) => {
+  const [showBasics, setShowBasics] = useState(false);
+  const [showMinerals, setShowMinerals] = useState(false);
+
+  const igMeta = useMemo(
+    () => (selectedFood ? igVerdict(selectedFood.IndiceGlucemico) : null),
+    [selectedFood]
+  );
+
+  if (!selectedFood) {
+    return (
+      <div className="hidden min-h-[280px] flex-col items-center justify-center border border-dashed border-slate-200 px-8 py-12 text-center lg:flex lg:col-span-2">
+        <p className="dash-title text-lg text-slate-700">Selecciona un alimento</p>
+        <p className="dash-body mt-2">
+          Toca uno de la lista para ver si conviene en tu dieta
+        </p>
+      </div>
+    );
+  }
+
+  const fiberHint =
+    selectedFood.Fibra >= 5
+      ? "Buena fibra: ayuda al control de glucosa."
+      : selectedFood.Fibra >= 2
+        ? "Fibra moderada."
+        : "Poca fibra. Combina con verduras o legumbres.";
+
+  const carbHint =
+    selectedFood.Carbohidratos > 30
+      ? "Alto en carbohidratos: cuida la porción."
+      : selectedFood.Carbohidratos > 15
+        ? "Carbohidratos moderados."
+        : "Bajo en carbohidratos.";
+
   return (
-    <div className="rounded-2xl border border-slate-200/90 bg-white shadow-sm lg:col-span-2">
-      {selectedFood ? (
-        <div className="p-5 sm:p-6">
-          <h2 className="border-b border-slate-100 pb-3 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">
-            {selectedFood.Nombre}
-          </h2>
+    <div className={`min-w-0 lg:col-span-2 ${mobile ? "pb-8" : ""}`}>
+      {mobile && onBack ? (
+        <button
+          type="button"
+          onClick={onBack}
+          className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-sm font-light text-vitality-primary ring-1 ring-emerald-200/80 transition-colors active:scale-[0.98]"
+        >
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
+          Volver al listado
+        </button>
+      ) : null}
 
-          <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2">
-            <div className="space-y-4">
-              <h3 className="mb-3 flex items-center text-base font-semibold text-slate-800">
-                <svg
-                  className="mr-2 h-5 w-5 text-vitality-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
-                Información básica
-              </h3>
-              <div className="space-y-0 rounded-xl border border-slate-100 bg-slate-50/80 p-4">
-                {[
-                  {
-                    label: "Calorías",
-                    value: selectedFood.Calorias.toFixed(1),
-                    unit: "kcal",
-                  },
-                  {
-                    label: "Proteína",
-                    value: selectedFood.Proteina.toFixed(1),
-                    unit: "g",
-                  },
-                  {
-                    label: "Grasa",
-                    value: selectedFood.Grasa.toFixed(1),
-                    unit: "g",
-                  },
-                  {
-                    label: "Carbohidratos",
-                    value: selectedFood.Carbohidratos.toFixed(1),
-                    unit: "g",
-                  },
-                  {
-                    label: "Fibra",
-                    value: selectedFood.Fibra.toFixed(1),
-                    unit: "g",
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex justify-between gap-4 border-b border-slate-100 py-2.5 text-sm last:border-0 last:pb-0 first:pt-0"
-                  >
-                    <span className="text-slate-600">{item.label}</span>
-                    <span className="font-semibold tabular-nums text-slate-900">
-                      {item.value}{" "}
-                      <span className="font-normal text-slate-500">{item.unit}</span>
-                    </span>
-                  </div>
-                ))}
+      <div className="border-b border-slate-200 pb-4">
+        <p className="dash-eyebrow">Detalle</p>
+        <h2 className="dash-title mt-2 text-xl sm:text-2xl">{selectedFood.Nombre}</h2>
+      </div>
+
+      {igMeta ? (
+        <div className={`mt-5 rounded-2xl border px-4 py-4 lg:mt-6 lg:rounded-none ${igMeta.bg}`}>
+          <p className={`dash-stat-label ${igMeta.tone}`}>{igMeta.label}</p>
+          <p className="dash-body mt-1">
+            Índice glucémico:{" "}
+            <strong className="font-medium tabular-nums">
+              {selectedFood.IndiceGlucemico}
+            </strong>
+          </p>
+          <p className="dash-accent-quote mt-3 text-sm">{igMeta.tip}</p>
+        </div>
+      ) : null}
+
+      <div
+        className={`mt-5 gap-3 ${
+          mobile
+            ? "flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 scrollbar-none"
+            : "grid sm:grid-cols-3"
+        }`}
+      >
+        <div
+          className={`dash-stat-cell shrink-0 border border-slate-100 px-4 py-3 ${
+            mobile ? "min-w-[140px] snap-start rounded-2xl bg-gradient-to-br from-white to-emerald-50/30" : ""
+          }`}
+        >
+          <p className="dash-stat-label">Calorías</p>
+          <p className="dash-stat-value mt-1 text-2xl">
+            {selectedFood.Calorias.toFixed(0)}
+            <span className="ml-1 text-sm text-slate-400">kcal</span>
+          </p>
+          <p className="dash-muted mt-1">por 100 g</p>
+        </div>
+        <div
+          className={`dash-stat-cell shrink-0 border border-slate-100 px-4 py-3 ${
+            mobile ? "min-w-[140px] snap-start rounded-2xl bg-gradient-to-br from-white to-amber-50/30" : ""
+          }`}
+        >
+          <p className="dash-stat-label">Carbohidratos</p>
+          <p className="dash-stat-value mt-1 text-2xl">
+            {selectedFood.Carbohidratos.toFixed(0)}
+            <span className="ml-1 text-sm text-slate-400">g</span>
+          </p>
+          <p className="dash-muted mt-1">{carbHint}</p>
+        </div>
+        <div
+          className={`dash-stat-cell shrink-0 border border-slate-100 px-4 py-3 ${
+            mobile ? "min-w-[140px] snap-start rounded-2xl bg-gradient-to-br from-white to-sky-50/30" : ""
+          }`}
+        >
+          <p className="dash-stat-label">Fibra</p>
+          <p className="dash-stat-value mt-1 text-2xl">
+            {selectedFood.Fibra.toFixed(1)}
+            <span className="ml-1 text-sm text-slate-400">g</span>
+          </p>
+          <p className="dash-muted mt-1">{fiberHint}</p>
+        </div>
+      </div>
+
+      <div className="mt-6 space-y-2 lg:mt-8">
+        <button
+          type="button"
+          onClick={() => setShowBasics((v) => !v)}
+          className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-left transition-colors hover:border-emerald-300 lg:rounded-none"
+        >
+          <span className="dash-stat-label">Información básica</span>
+          <ChevronDown
+            className={`h-4 w-4 text-slate-400 transition-transform ${showBasics ? "rotate-180" : ""}`}
+            strokeWidth={1.5}
+          />
+        </button>
+        {showBasics ? (
+          <div className="border border-t-0 border-slate-200 px-4 pb-2">
+            <NutrientRow
+              label="Proteína"
+              value={selectedFood.Proteina.toFixed(1)}
+              unit="g"
+              hint={
+                selectedFood.Proteina >= 10
+                  ? "Buen aporte proteico."
+                  : "Proteína baja. Combina con otros alimentos."
+              }
+            />
+            <NutrientRow
+              label="Grasa"
+              value={selectedFood.Grasa.toFixed(1)}
+              unit="g"
+            />
+            <NutrientRow
+              label="Carbohidratos"
+              value={selectedFood.Carbohidratos.toFixed(1)}
+              unit="g"
+              hint={carbHint}
+            />
+            <NutrientRow
+              label="Fibra"
+              value={selectedFood.Fibra.toFixed(1)}
+              unit="g"
+              hint={fiberHint}
+            />
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={() => setShowMinerals((v) => !v)}
+          className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-left transition-colors hover:border-emerald-300 lg:rounded-none"
+        >
+          <span className="dash-stat-label">Minerales</span>
+          <ChevronDown
+            className={`h-4 w-4 text-slate-400 transition-transform ${showMinerals ? "rotate-180" : ""}`}
+            strokeWidth={1.5}
+          />
+        </button>
+        {showMinerals ? (
+          <div className="border border-t-0 border-slate-200 px-4 pb-2">
+            <NutrientRow
+              label="Calcio"
+              value={selectedFood.Calcio.toFixed(1)}
+              unit="mg"
+            />
+            <NutrientRow
+              label="Potasio"
+              value={selectedFood.Potasio.toFixed(1)}
+              unit="mg"
+            />
+            <NutrientRow
+              label="Zinc"
+              value={selectedFood.Zinc.toFixed(2)}
+              unit="mg"
+            />
+            <NutrientRow
+              label="Magnesio"
+              value={selectedFood.Magnesio.toFixed(1)}
+              unit="mg"
+            />
+          </div>
+        ) : null}
+      </div>
+
+      {selectedFood.IndiceGlucemico ? (
+        <div className="mt-10 border-t border-slate-200 pt-8">
+          <p className="dash-stat-label">Calculadora de carga glucémica</p>
+          <p className="dash-body mt-2">
+            Indica cuántos gramos vas a comer y te decimos el impacto real en tu
+            glucosa.
+          </p>
+
+          <div className="mt-6 flex flex-col items-end gap-4 md:flex-row">
+            <div className="min-w-0 flex-1">
+              <label htmlFor="portionSize" className="dash-input-label">
+                ¿Cuántos gramos comerás?
+              </label>
+              <div className="relative mt-2">
+                <input
+                  id="portionSize"
+                  type="number"
+                  value={portionSize}
+                  onChange={(e) =>
+                    setPortionSize(Math.max(0, Number(e.target.value)))
+                  }
+                  className="dash-input pr-8"
+                  min={0}
+                  disabled={!isEmailVerified}
+                />
+                <span className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-sm font-light text-slate-400">
+                  g
+                </span>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h3 className="mb-3 flex items-center text-base font-semibold text-slate-800">
-                <svg
-                  className="mr-2 h-5 w-5 text-vitality-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
-                  />
-                </svg>
-                Minerales y vitaminas
-              </h3>
-              <div className="space-y-0 rounded-xl border border-slate-100 bg-slate-50/80 p-4">
-                {[
-                  {
-                    label: "Calcio",
-                    value: selectedFood.Calcio.toFixed(1),
-                    unit: "mg",
-                  },
-                  {
-                    label: "Potasio",
-                    value: selectedFood.Potasio.toFixed(1),
-                    unit: "mg",
-                  },
-                  {
-                    label: "Zinc",
-                    value: selectedFood.Zinc.toFixed(2),
-                    unit: "mg",
-                  },
-                  {
-                    label: "Magnesio",
-                    value: selectedFood.Magnesio.toFixed(1),
-                    unit: "mg",
-                  },
-                  {
-                    label: "Índice glucémico",
-                    value:
-                      selectedFood.IndiceGlucemico?.toFixed(1) ?? "No disponible",
-                    unit: "",
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex justify-between gap-4 border-b border-slate-100 py-2.5 text-sm last:border-0 last:pb-0 first:pt-0"
-                  >
-                    <span className="text-slate-600">{item.label}</span>
-                    <span className="font-semibold tabular-nums text-slate-900">
-                      {item.value}{" "}
-                      {item.unit ? (
-                        <span className="font-normal text-slate-500">{item.unit}</span>
-                      ) : null}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <button
+              type="button"
+              onClick={calculateGlycemicLoad}
+              className="dash-btn-outline-active w-full px-6 py-3.5 text-sm font-light md:w-auto"
+              disabled={!isEmailVerified || portionSize <= 0}
+            >
+              Calcular impacto
+            </button>
           </div>
 
-          {selectedFood.IndiceGlucemico ? (
-            <div className="mt-8 rounded-2xl border border-emerald-100/90 bg-gradient-to-r from-emerald-50/90 to-sky-50/60 p-5 shadow-sm sm:p-6">
-              <h3 className="mb-4 flex items-center text-base font-semibold text-slate-900">
-                <svg
-                  className="mr-2 h-5 w-5 text-emerald-700"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-                Cálculo de carga glucémica
-              </h3>
+          {!isEmailVerified ? (
+            <p className="dash-muted mt-4 text-amber-700">
+              Verifica tu correo para usar la calculadora.
+            </p>
+          ) : null}
 
-              <div className="flex flex-col items-end gap-4 md:flex-row">
-                <div className="min-w-0 flex-1">
-                  <label
-                    htmlFor="portionSize"
-                    className="mb-2 block text-sm font-medium text-slate-700"
-                  >
-                    Tamaño de porción
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="portionSize"
-                      type="number"
-                      value={portionSize}
-                      onChange={(e) =>
-                        setPortionSize(Math.max(0, Number(e.target.value)))
-                      }
-                      className="h-12 w-full rounded-xl border border-slate-200 px-4 pr-10 text-slate-900 shadow-sm transition-all focus:border-vitality-primary focus:outline-none focus:ring-2 focus:ring-vitality-primary/25 disabled:opacity-60"
-                      min={0}
-                      disabled={!isEmailVerified}
-                    />
-                    <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-500">
-                      g
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={calculateGlycemicLoad}
-                  className="flex h-12 w-full shrink-0 items-center justify-center rounded-xl bg-vitality-primary px-6 text-[15px] font-semibold text-white shadow-md shadow-emerald-900/10 transition-all hover:bg-vitality-primary-dark disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
-                  disabled={!isEmailVerified || portionSize <= 0}
-                >
-                  <svg
-                    className="mr-2 h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                    />
-                  </svg>
-                  Calcular
-                </button>
-              </div>
-
-              {!isEmailVerified && (
-                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-950">
-                  Verifica tu correo electrónico para usar esta función.
-                </div>
-              )}
-
-              {glycemicLoad && (
-                <div className="mt-4 rounded-xl border border-emerald-200/80 bg-white p-4 shadow-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-[15px] font-semibold text-slate-900">
-                        Carga glucémica:{" "}
-                        <span className="text-emerald-700">
-                          {glycemicLoad.value.toFixed(1)}
-                        </span>
-                      </p>
-                      <p className="mt-1 text-sm text-slate-600">
-                        Clasificación:{" "}
-                        <span
-                          className={`font-semibold ${
-                            glycemicLoad.category === "Baja"
-                              ? "text-emerald-700"
-                              : glycemicLoad.category === "Media"
-                                ? "text-amber-700"
-                                : "text-red-700"
-                          }`}
-                        >
-                          {glycemicLoad.category}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`h-3.5 w-3.5 rounded-full ${
-                          glycemicLoad.category === "Baja"
-                            ? "bg-emerald-500"
-                            : glycemicLoad.category === "Media"
-                              ? "bg-amber-500"
-                              : "bg-red-500"
-                        }`}
-                        aria-hidden
-                      />
-                      <span
-                        className={`text-sm font-semibold ${
-                          glycemicLoad.category === "Baja"
-                            ? "text-emerald-700"
-                            : glycemicLoad.category === "Media"
-                              ? "text-amber-700"
-                              : "text-red-700"
-                        }`}
-                      >
-                        {glycemicLoad.category}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
+          {glycemicLoad ? (
+            <div
+              className={`mt-6 border px-4 py-4 ${
+                glycemicLoad.category === "Baja"
+                  ? "border-emerald-200 bg-emerald-50/40"
+                  : glycemicLoad.category === "Media"
+                    ? "border-amber-200 bg-amber-50/40"
+                    : "border-red-200 bg-red-50/40"
+              }`}
+            >
+              <p className="dash-stat-label">Resultado para tu porción</p>
+              <p className="dash-stat-value mt-1 text-3xl text-vitality-primary">
+                {glycemicLoad.value.toFixed(1)}
+              </p>
+              <p className="dash-body mt-2">
+                {glycemicLoad.category === "Baja"
+                  ? "Bueno: impacto bajo en glucosa con esta porción."
+                  : glycemicLoad.category === "Media"
+                    ? "Moderado: puedes comerlo, pero controla la cantidad."
+                    : "Alto impacto: porción pequeña o combínalo con proteína/fibra."}
+              </p>
             </div>
           ) : null}
         </div>
-      ) : (
-        <div className="flex h-full min-h-[280px] flex-col items-center justify-center p-8 text-center text-slate-500">
-          <svg
-            className="mb-4 h-16 w-16 text-emerald-200"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <p className="text-lg font-medium text-slate-700">
-            Selecciona un alimento para ver sus detalles
-          </p>
-          <p className="mt-2 text-sm text-slate-500">
-            Haz clic en cualquier alimento de la lista
-          </p>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 };

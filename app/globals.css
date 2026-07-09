@@ -8,10 +8,58 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
 }
 
 body {
   font-family: Inter;
+  @apply text-slate-800;
+}
+
+/* Legibilidad — base un poco más grande; escalado global vía rem */
+html {
+  font-size: 17px;
+}
+
+html[data-text-size="large"] {
+  font-size: 19px;
+}
+
+html[data-text-size="xlarge"] {
+  font-size: 21px;
+}
+
+html[data-text-contrast="strong"] body {
+  @apply font-normal text-slate-900;
+}
+
+html[data-text-contrast="strong"] .dash-body {
+  @apply font-normal text-slate-900;
+}
+
+html[data-text-contrast="strong"] .dash-muted {
+  @apply font-normal text-slate-700;
+}
+
+html[data-text-contrast="strong"] .dash-title {
+  @apply font-medium text-slate-900;
+}
+
+html[data-text-contrast="strong"] .dash-tab-idle {
+  @apply font-normal text-slate-600;
+}
+
+html[data-text-contrast="strong"] .dash-stat-label {
+  @apply font-semibold text-teal-900/75;
+}
+
+html[data-text-contrast="strong"] .dash-eyebrow {
+  @apply font-semibold text-emerald-900/85;
 }
 
 @layer utilities {
@@ -40,8 +88,8 @@ body {
   }
 
   .scrollbar-none {
-    -ms-overflow-style: none;
     scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
   .scrollbar-none::-webkit-scrollbar {
@@ -50,23 +98,23 @@ body {
 
   /* Dashboard — tipografía y hovers con paleta Vitality */
   .dash-eyebrow {
-    @apply text-[10px] font-medium uppercase tracking-[0.22em] text-emerald-800/75;
+    @apply text-[11px] font-medium uppercase tracking-[0.2em] text-emerald-900/80;
   }
 
   .dash-title {
-    @apply font-light tracking-tight text-slate-800;
+    @apply font-normal tracking-tight text-slate-900;
   }
 
   .dash-body {
-    @apply text-sm font-light leading-relaxed text-slate-600;
+    @apply text-base font-normal leading-relaxed text-slate-700;
   }
 
   .dash-muted {
-    @apply text-xs font-light text-slate-500;
+    @apply text-sm font-normal text-slate-600;
   }
 
   .dash-stat-label {
-    @apply text-[10px] font-medium uppercase tracking-[0.22em] text-teal-800/60;
+    @apply text-[11px] font-medium uppercase tracking-[0.2em] text-teal-900/70;
   }
 
   .dash-stat-value {
@@ -94,7 +142,7 @@ body {
   }
 
   .dash-tab {
-    @apply shrink-0 border-b-2 px-4 py-3 text-xs font-light tracking-wide transition-all duration-200;
+    @apply shrink-0 border-b-2 px-4 py-3 text-sm font-normal tracking-wide transition-all duration-200;
   }
 
   .dash-tab-active {
@@ -110,7 +158,7 @@ body {
   }
 
   .dash-pill {
-    @apply shrink-0 border px-4 py-2.5 text-xs font-light tracking-wide transition-all duration-200 active:scale-[0.98];
+    @apply shrink-0 border px-4 py-2.5 text-sm font-normal tracking-wide transition-all duration-200 active:scale-[0.98];
   }
 
   .dash-pill-active {
@@ -126,7 +174,7 @@ body {
   }
 
   .dash-input-label {
-    @apply text-[10px] font-medium uppercase tracking-[0.22em] text-emerald-800/70;
+    @apply text-[11px] font-medium uppercase tracking-[0.2em] text-emerald-900/80;
   }
 
   .dash-stat-cell {
@@ -365,13 +413,400 @@ body {
   }
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
+/* ——— Modo oscuro (clase .dark en <html>) ——— */
+html.dark {
+  color-scheme: dark;
 }
 
-/* Hide scrollbar for IE, Edge and Firefox */
+/* Tipografía dash-* */
+html.dark .dash-eyebrow {
+  @apply text-emerald-300;
+}
+
+html.dark .dash-title {
+  @apply text-slate-50;
+}
+
+html.dark .dash-body {
+  @apply text-slate-200;
+}
+
+html.dark .dash-muted {
+  color: rgb(148 163 184); /* slate-400 */
+}
+
+html.dark .dash-stat-label {
+  @apply text-emerald-300;
+}
+
+html.dark .dash-stat-value {
+  @apply text-slate-50;
+}
+
+html.dark .dash-accent-quote {
+  @apply border-emerald-500/60 text-slate-200;
+}
+
+html.dark .dash-btn-outline {
+  @apply border-slate-500 bg-slate-800 text-slate-100 hover:border-emerald-500 hover:bg-slate-700 hover:text-emerald-200;
+}
+
+html.dark .dash-btn-outline-active {
+  @apply border-emerald-500 bg-emerald-600 text-white hover:bg-emerald-500;
+}
+
+html.dark .dash-tab-active {
+  @apply border-emerald-400 text-emerald-200;
+}
+
+html.dark .dash-tab-idle {
+  color: rgb(148 163 184);
+}
+
+html.dark .dash-tab-idle:hover {
+  @apply border-emerald-600 text-emerald-200;
+}
+
+html.dark .dash-pill-idle {
+  @apply border-slate-500 bg-slate-800 text-slate-200 hover:border-emerald-600 hover:bg-slate-700 hover:text-emerald-200;
+}
+
+html.dark .dash-pill-active {
+  @apply border-emerald-500 bg-emerald-600 text-white;
+}
+
+html.dark .dash-input {
+  @apply border-slate-500 text-slate-50 placeholder:text-slate-500 hover:border-emerald-500 focus:border-emerald-400;
+}
+
+html.dark .dash-input-label {
+  @apply text-emerald-300;
+}
+
+html.dark .dash-stat-cell {
+  @apply hover:bg-slate-700/50;
+}
+
+/* Verdes / marca — aclarar textos oscuros */
+html.dark .text-vitality-primary {
+  @apply text-emerald-400;
+}
+
+html.dark .text-emerald-950,
+html.dark .text-emerald-900,
+html.dark .text-emerald-800 {
+  @apply text-emerald-200;
+}
+
+html.dark .text-emerald-700 {
+  @apply text-emerald-300;
+}
+
+html.dark .text-emerald-600 {
+  @apply text-emerald-400;
+}
+
+html.dark .text-teal-800,
+html.dark .text-teal-900 {
+  @apply text-teal-300;
+}
+
+html.dark .text-sky-800,
+html.dark .text-sky-900,
+html.dark .text-sky-700 {
+  @apply text-sky-300;
+}
+
+html.dark .text-amber-950,
+html.dark .text-amber-900,
+html.dark .text-amber-800,
+html.dark .text-amber-700 {
+  @apply text-amber-200;
+}
+
+html.dark .text-violet-800,
+html.dark .text-violet-900,
+html.dark .text-violet-700 {
+  @apply text-violet-300;
+}
+
+html.dark .text-rose-800,
+html.dark .text-rose-900 {
+  @apply text-rose-300;
+}
+
+html.dark .text-red-900,
+html.dark .text-red-800,
+html.dark .text-red-700 {
+  @apply text-red-300;
+}
+
+/* Fondos claros → superficies oscuras con borde visible */
+html.dark .bg-white {
+  @apply bg-slate-800;
+}
+
+html.dark .bg-white\/80,
+html.dark .bg-white\/90,
+html.dark .bg-white\/75,
+html.dark .bg-white\/80 {
+  @apply bg-slate-800/95;
+}
+
+html.dark .bg-slate-50,
+html.dark .bg-slate-50\/50,
+html.dark .bg-slate-50\/60 {
+  @apply bg-slate-800;
+}
+
+html.dark .bg-vitality-secondary,
+html.dark .bg-vitality-secondary\/60,
+html.dark .bg-vitality-secondary\/50,
+html.dark .bg-vitality-secondary\/40 {
+  @apply bg-slate-800;
+}
+
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-50\/20,
+html.dark .bg-emerald-50\/30,
+html.dark .bg-emerald-50\/40,
+html.dark .bg-emerald-50\/50,
+html.dark .bg-emerald-50\/60,
+html.dark .bg-emerald-50\/70,
+html.dark .bg-emerald-50\/80 {
+  @apply bg-emerald-950/50;
+}
+
+html.dark .bg-emerald-100 {
+  @apply bg-emerald-900/45;
+}
+
+html.dark .bg-sky-50,
+html.dark .bg-sky-50\/30,
+html.dark .bg-sky-50\/50,
+html.dark .bg-sky-50\/60,
+html.dark .bg-sky-100 {
+  @apply bg-sky-950/45;
+}
+
+html.dark .bg-amber-50,
+html.dark .bg-amber-50\/30,
+html.dark .bg-amber-50\/40,
+html.dark .bg-amber-100 {
+  @apply bg-amber-950/40;
+}
+
+html.dark .bg-violet-50,
+html.dark .bg-violet-50\/80,
+html.dark .bg-violet-100 {
+  @apply bg-violet-950/40;
+}
+
+html.dark .bg-rose-50,
+html.dark .bg-rose-100 {
+  @apply bg-rose-950/40;
+}
+
+html.dark .bg-red-50,
+html.dark .bg-red-100 {
+  @apply bg-red-950/40;
+}
+
+/* Bordes */
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-200\/90,
+html.dark .border-slate-300 {
+  @apply border-slate-600;
+}
+
+html.dark .border-vitality-secondary {
+  @apply border-slate-600;
+}
+
+html.dark .border-emerald-100,
+html.dark .border-emerald-200,
+html.dark .border-emerald-200\/80,
+html.dark .border-emerald-300 {
+  @apply border-emerald-700/70;
+}
+
+html.dark .border-sky-200,
+html.dark .border-sky-200\/80 {
+  @apply border-sky-700/70;
+}
+
+html.dark .border-amber-200,
+html.dark .border-amber-200\/90 {
+  @apply border-amber-700/70;
+}
+
+html.dark .border-violet-200,
+html.dark .border-violet-200\/80 {
+  @apply border-violet-700/70;
+}
+
+html.dark .border-red-200 {
+  @apply border-red-700/70;
+}
+
+html.dark .border-dashed {
+  @apply border-slate-600;
+}
+
+html.dark .text-emerald-800\/40 {
+  color: rgb(167 243 208 / 0.55);
+}
+
+html.dark .text-emerald-800\/75,
+html.dark .text-emerald-900\/80 {
+  @apply text-emerald-300;
+}
+
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  @apply divide-slate-600;
+}
+
+/* Textos slate */
+html.dark .text-slate-900,
+html.dark .text-slate-800 {
+  @apply text-slate-50;
+}
+
+html.dark .text-slate-700 {
+  @apply text-slate-200;
+}
+
+html.dark .text-slate-600 {
+  @apply text-slate-300;
+}
+
+html.dark .text-slate-500 {
+  color: rgb(148 163 184); /* slate-400 */
+}
+
+html.dark .text-slate-400 {
+  color: rgb(203 213 225); /* slate-300 — un poco más claro en fondos oscuros */
+}
+
+html.dark .text-vitality-neutral {
+  @apply text-slate-100;
+}
+
+html.dark .text-vitality-neutral\/75,
+html.dark .text-vitality-neutral\/85,
+html.dark .text-vitality-neutral\/65 {
+  @apply text-slate-300;
+}
+
+/* Navbar — pills de navegación */
+html.dark header.bg-white\/80 {
+  @apply border-slate-700 bg-slate-900/95;
+}
+
+html.dark header nav .rounded-full.border {
+  @apply border-slate-600 bg-slate-800;
+}
+
+html.dark header nav button.rounded-full.bg-white {
+  @apply bg-slate-700 text-white ring-emerald-500/40;
+}
+
+html.dark header nav button.rounded-full:not(.bg-white) {
+  @apply text-slate-300 hover:bg-slate-700 hover:text-white;
+}
+
+/* Badges / rings con texto */
+html.dark .ring-emerald-200,
+html.dark .ring-emerald-200\/80 {
+  @apply ring-emerald-600/60;
+}
+
+html.dark .ring-sky-200,
+html.dark .ring-sky-200\/80 {
+  @apply ring-sky-600/60;
+}
+
+html.dark .ring-amber-200,
+html.dark .ring-amber-200\/80 {
+  @apply ring-amber-600/60;
+}
+
+html.dark .ring-violet-200,
+html.dark .ring-violet-200\/80 {
+  @apply ring-violet-600/60;
+}
+
+html.dark .ring-red-200,
+html.dark .ring-red-200\/80 {
+  @apply ring-red-600/60;
+}
+
+/* Gradientes suaves de cards (foodbank / schedule) */
+html.dark .from-emerald-500\/10,
+html.dark .via-sky-500\/5,
+html.dark .to-violet-500\/10 {
+  --tw-gradient-from: rgb(16 185 129 / 0.15);
+  --tw-gradient-to: rgb(139 92 246 / 0.1);
+}
+
+html.dark .ring-emerald-200\/50 {
+  @apply ring-emerald-600/50;
+}
+
+html.dark .schedule-day-cell:hover {
+  background-color: rgb(6 78 59 / 0.35);
+}
+
+html.dark .schedule-event-pill {
+  @apply border-slate-600;
+}
+
+html.dark .hero-photo {
+  background-color: #0f172a;
+}
+
+html.dark .hero-photo-scrim {
+  background: linear-gradient(
+    105deg,
+    rgba(15, 23, 42, 0.97) 0%,
+    rgba(15, 23, 42, 0.88) 38%,
+    rgba(15, 23, 42, 0.5) 62%,
+    transparent 82%
+  );
+}
+
+html.dark .services-photo {
+  background-color: #0f172a;
+}
+
+html.dark .services-photo-scrim {
+  background: radial-gradient(
+    ellipse 92% 78% at 50% 42%,
+    rgba(15, 23, 42, 0.92) 0%,
+    rgba(15, 23, 42, 0.55) 52%,
+    transparent 76%
+  );
+}
+
+html.dark[data-text-contrast="strong"] .dash-body {
+  @apply text-white;
+}
+
+html.dark[data-text-contrast="strong"] .dash-muted {
+  @apply text-slate-200;
+}
+
+html.dark[data-text-contrast="strong"] .dash-title {
+  @apply text-white;
+}
+
+/* Scrollbars ocultos globalmente vía * { … } arriba; utilidades alias */
 .hide-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }

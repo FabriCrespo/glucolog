@@ -22,14 +22,10 @@ interface EventsListProps {
   setSelectedEvent: (event: Event) => void;
 }
 
-function statusBadgeClass(statusText: string): string {
-  if (statusText === "Completado") {
-    return "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/80";
-  }
-  if (statusText === "Vencido") {
-    return "bg-red-100 text-red-900 ring-1 ring-red-200/80";
-  }
-  return "bg-sky-100 text-sky-900 ring-1 ring-sky-200/80";
+function statusClass(statusText: string): string {
+  if (statusText === "Completado") return "text-emerald-700 bg-emerald-50 border-emerald-200";
+  if (statusText === "Vencido") return "text-red-700 bg-red-50 border-red-200";
+  return "text-sky-700 bg-sky-50 border-sky-200";
 }
 
 const EventsList: React.FC<EventsListProps> = ({
@@ -49,17 +45,16 @@ const EventsList: React.FC<EventsListProps> = ({
           onClose={onClose}
           stackOrder={56}
           maxWidthClass="max-w-[520px]"
+          fullScreenMobile
         >
-          <div className="flex max-h-[min(90vh,720px)] flex-col">
-            <div className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-100 p-5 sm:p-6">
+          <div className="flex min-h-full flex-col lg:max-h-[min(90vh,720px)]">
+            <div className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 bg-gradient-to-r from-emerald-50/50 to-sky-50/30 px-5 py-5 sm:px-6">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-800/90">
-                  Día seleccionado
-                </p>
-                <h3 className="mt-1 text-xl font-semibold text-slate-900">
+                <p className="dash-eyebrow">Día seleccionado</p>
+                <h3 className="dash-title mt-1 text-xl">
                   {selectedDate?.format("DD/MM/YYYY")}
                 </h3>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="dash-muted mt-1 tabular-nums">
                   {selectedDayEvents.length}{" "}
                   {selectedDayEvents.length === 1 ? "evento" : "eventos"}
                 </p>
@@ -67,7 +62,7 @@ const EventsList: React.FC<EventsListProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-xl p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                className="p-2 text-slate-400 transition-colors hover:text-vitality-primary"
                 aria-label="Cerrar"
               >
                 <FontAwesomeIcon icon={faTimes} className="h-5 w-5" />
@@ -78,14 +73,14 @@ const EventsList: React.FC<EventsListProps> = ({
               <button
                 type="button"
                 onClick={handleAddNewEvent}
-                className="mb-6 flex w-full items-center justify-center gap-2 rounded-xl bg-vitality-primary py-3.5 text-[15px] font-semibold text-white shadow-md shadow-emerald-900/10 transition-colors hover:bg-vitality-primary-dark"
+                className="mb-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-vitality-primary py-3.5 text-sm font-medium text-white shadow-md shadow-vitality-primary/20 transition-all active:scale-[0.98] hover:bg-vitality-primary-dark"
               >
                 <FontAwesomeIcon icon={faPlus} className="h-4 w-4" />
                 Agregar evento
               </button>
 
               {selectedDayEvents.length > 0 ? (
-                <ul className="space-y-3">
+                <ul className="space-y-2">
                   {selectedDayEvents.map((event) => {
                     const statusText = getEventStatusText(event);
                     return (
@@ -98,13 +93,13 @@ const EventsList: React.FC<EventsListProps> = ({
                               setSelectedEvent(event)
                             );
                           }}
-                          className="flex w-full cursor-pointer items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/50 p-4 text-left transition-all hover:border-slate-200 hover:bg-white hover:shadow-sm"
+                          className="flex w-full items-center gap-4 rounded-2xl border border-slate-200/90 bg-white p-4 text-left transition-all active:scale-[0.98] hover:border-emerald-300/70"
                         >
                           <div
                             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
                               event.type === "medication"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-sky-100 text-sky-700"
+                                ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200/80"
+                                : "bg-sky-100 text-sky-700 ring-1 ring-sky-200/80"
                             }`}
                           >
                             <FontAwesomeIcon
@@ -113,17 +108,16 @@ const EventsList: React.FC<EventsListProps> = ({
                                   ? faPills
                                   : faDumbbell
                               }
-                              className="text-lg"
                             />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-slate-900">
+                            <p className="text-sm font-light text-slate-900">
                               {event.title}
                             </p>
-                            <p className="text-sm text-slate-500">{event.time}</p>
+                            <p className="dash-muted">{event.time}</p>
                           </div>
                           <span
-                            className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${statusBadgeClass(statusText)}`}
+                            className={`shrink-0 border px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider ${statusClass(statusText)}`}
                           >
                             {statusText}
                           </span>
@@ -133,11 +127,11 @@ const EventsList: React.FC<EventsListProps> = ({
                   })}
                 </ul>
               ) : (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 py-12 text-center">
-                  <p className="font-medium text-slate-700">
+                <div className="rounded-2xl border border-dashed border-slate-200 px-6 py-12 text-center">
+                  <p className="dash-title text-base text-slate-700">
                     No hay eventos este día
                   </p>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="dash-body mt-2">
                     Pulsa “Agregar evento” para crear uno.
                   </p>
                 </div>

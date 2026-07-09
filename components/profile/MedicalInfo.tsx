@@ -84,7 +84,7 @@ const MedicalInfo = ({ userData }: MedicalInfoProps) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45 }}
-      className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6"
+      className="border border-slate-200 p-5 sm:p-6"
     >
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>

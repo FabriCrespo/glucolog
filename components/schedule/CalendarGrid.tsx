@@ -1,131 +1,174 @@
-import React from 'react';
-import { Dayjs } from 'dayjs';
-import dayjs from 'dayjs';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPills, faDumbbell, faCircle } from '@fortawesome/free-solid-svg-icons';
-import { Event } from '@/types/events';
-
-interface CalendarGridProps {
-  days: Dayjs[];
-  currentDate: Dayjs;
-  newEventDate: Dayjs | null;
-  handleDateClick: (date: Dayjs) => void;
-  getEventsForDay: (date: Dayjs) => Event[];
-  handleEventClick: (event: Event, e: React.MouseEvent) => void;
-}
-
-const CalendarGrid = ({
-  days,
-  currentDate,
-  newEventDate,
-  handleDateClick,
-  getEventsForDay,
-  handleEventClick
-}: CalendarGridProps) => {
-  
-  // Función para obtener el estado de los eventos del día
-  const getDayStatus = (events: Event[]) => {
-    if (events.length === 0) return null;
-    
-    const hasIncomplete = events.some(event => !event.completed);
-    const allCompleted = events.length > 0 && events.every(event => event.completed);
-    
-    if (hasIncomplete) return "pending";
-    if (allCompleted) return "completed";
-    return null;
-  };
-
-  return (
-    <div className="rounded-xl overflow-hidden shadow-lg border border-gray-200">
-      {/* Encabezado de días de la semana */}
-      <div className="grid grid-cols-7 bg-green-50">
-        {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map(
-          (day, index) => (
-            <div key={index} className="text-lg font-semibold text-white py-3 text-center border-b border-green-100">
-              {day}
-            </div>
-          )
-        )}
-      </div>
-      
-      {/* Cuadrícula de días */}
-      <div className="grid grid-cols-7">
-        {days.map((dayItem, index) => {
-          const isToday = dayItem.isSame(dayjs(), "day");
-          const isPast = dayItem.isBefore(dayjs(), "day");
-          const eventsForDay = getEventsForDay(dayItem);
-          const dayStatus = getDayStatus(eventsForDay);
-          const isCurrentMonth = dayItem.isSame(currentDate, "month");
-          
-          return (
-            <div
-              key={index}
-              onClick={() => handleDateClick(dayItem)}
-              className={`border-b border-r p-2 min-h-[120px] flex flex-col relative cursor-pointer transition-all duration-300 
-                ${isCurrentMonth ? "bg-white" : "bg-gray-50 text-white"}
-                ${newEventDate && dayItem.isSame(newEventDate, "day") ? "ring-2 ring-green-500 ring-inset" : ""}
-                ${isToday ? "bg-green-50" : ""}
-                ${isPast && !isCurrentMonth ? "bg-gray-100" : ""}
-                hover:bg-green-50 hover:shadow-inner`}
-            >
-              {/* Indicador de día actual */}
-              <div className="flex justify-between items-center mb-1">
-                <span className={`font-semibold text-lg ${isToday ? "text-green-600 bg-green-100 w-7 h-7 rounded-full flex items-center justify-center" : ""}`}>
-                  {dayItem.date()}
-                </span>
-                
-                {/* Indicador de estado del día */}
-                {dayStatus && (
-                  <span className={`w-2 h-2 rounded-full ${dayStatus === "completed" ? "bg-green-500" : "bg-yellow-500"}`}></span>
-                )}
-              </div>
-              
-              {/* Lista de eventos */}
-              <div className="mt-1 space-y-1 flex flex-col overflow-hidden">
-                {eventsForDay.slice(0, 3).map((event, idx) => (
-                  <div
-                    key={idx}
-                    onClick={(e) => handleEventClick(event, e)}
-                    className={`cursor-pointer flex items-center text-xs p-1 rounded-md transition-all
-                      ${event.completed 
-                        ? "bg-green-600 text-white" 
-                        : isPast 
-                          ? "bg-red-600 text-white" 
-                          : "bg-blue-600 text-white"}`}
-                  >
-                    {event.type === "medication" ? (
-                      <FontAwesomeIcon
-                        icon={faPills}
-                        className="text-white mr-1"
-                      />
-                    ) : (
-                      <FontAwesomeIcon
-                        icon={faDumbbell}
-                        className="text-white mr-1"
-                      />
-                    )}
-                    <span className="truncate">
-                      {event.time} {event.title}
-                    </span>
-                  </div>
-                ))}
-                
-                {/* Indicador de más eventos */}
-                {eventsForDay.length > 3 && (
-                  <div className="text-xs text-gray-500 flex items-center">
-                    <FontAwesomeIcon icon={faCircle} className="text-gray-400 text-[8px] mr-1" />
-                    <span>{eventsForDay.length - 3} más</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-export default CalendarGrid;
-
-
+import React from "react";
+import { Dayjs } from "dayjs";
+import dayjs from "dayjs";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPills, faDumbbell } from "@fortawesome/free-solid-svg-icons";
+import { Event } from "@/types/events";
+
+interface CalendarGridProps {
+  days: Dayjs[];
+  currentDate: Dayjs;
+  newEventDate: Dayjs | null;
+  handleDateClick: (date: Dayjs) => void;
+  getEventsForDay: (date: Dayjs) => Event[];
+  handleEventClick: (event: Event, e: React.MouseEvent) => void;
+  compact?: boolean;
+}
+
+const WEEKDAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+const WEEKDAYS_SHORT = ["D", "L", "M", "X", "J", "V", "S"];
+
+function getDayStatus(events: Event[]) {
+  if (events.length === 0) return null;
+  if (events.some((event) => !event.completed)) return "pending";
+  if (events.every((event) => event.completed)) return "completed";
+  return null;
+}
+
+const CalendarGrid = ({
+  days,
+  currentDate,
+  newEventDate,
+  handleDateClick,
+  getEventsForDay,
+  handleEventClick,
+  compact = false,
+}: CalendarGridProps) => {
+  const weekdayLabels = compact ? WEEKDAYS_SHORT : WEEKDAYS;
+
+  return (
+    <div
+      className={`overflow-hidden border border-slate-200 ${
+        compact ? "rounded-2xl shadow-sm shadow-slate-900/5" : ""
+      }`}
+    >
+      <div
+        className={`grid grid-cols-7 border-b border-slate-200 ${
+          compact ? "bg-gradient-to-r from-emerald-50/80 to-sky-50/50" : "bg-slate-50/60"
+        }`}
+      >
+        {weekdayLabels.map((day) => (
+          <div
+            key={day}
+            className={`text-center ${compact ? "py-2.5 text-[10px] font-medium uppercase tracking-wide text-slate-500" : "dash-stat-label py-3"}`}
+          >
+            {day}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7">
+        {days.map((dayItem, index) => {
+          const isToday = dayItem.isSame(dayjs(), "day");
+          const isPast = dayItem.isBefore(dayjs(), "day");
+          const eventsForDay = getEventsForDay(dayItem);
+          const dayStatus = getDayStatus(eventsForDay);
+          const isCurrentMonth = dayItem.isSame(currentDate, "month");
+          const isSelected =
+            newEventDate != null && dayItem.isSame(newEventDate, "day");
+
+          return (
+            <div
+              key={index}
+              onClick={() => handleDateClick(dayItem)}
+              className={`schedule-day-cell relative flex cursor-pointer flex-col border-b border-r border-slate-100 transition-all active:scale-[0.98]
+                ${compact ? "min-h-[72px] p-1.5 sm:min-h-[80px]" : "min-h-[108px] p-2 sm:min-h-[120px] sm:p-2.5"}
+                ${isCurrentMonth ? "bg-white" : "bg-slate-50/50"}
+                ${isSelected ? "ring-2 ring-inset ring-vitality-primary" : ""}
+                ${isToday ? "bg-emerald-50/40" : ""}
+                ${isPast && isCurrentMonth ? "opacity-75" : ""}`}
+            >
+              <div className="mb-1 flex items-center justify-between">
+                <span
+                  className={`font-light tabular-nums ${
+                    compact ? "text-xs" : "text-sm"
+                  } ${
+                    isToday
+                      ? compact
+                        ? "flex h-6 w-6 items-center justify-center rounded-full bg-vitality-primary text-[11px] text-white"
+                        : "flex h-7 w-7 items-center justify-center bg-vitality-primary text-white"
+                      : isCurrentMonth
+                        ? "text-slate-800"
+                        : "text-slate-400"
+                  }`}
+                >
+                  {dayItem.date()}
+                </span>
+                {dayStatus ? (
+                  <span
+                    className={`rounded-full ${
+                      compact ? "h-1.5 w-1.5" : "h-2 w-2"
+                    } ${
+                      dayStatus === "completed" ? "bg-emerald-500" : "bg-amber-500"
+                    }`}
+                    title={
+                      dayStatus === "completed" ? "Todo completado" : "Pendiente"
+                    }
+                  />
+                ) : null}
+              </div>
+
+              {compact ? (
+                <div className="mt-auto flex flex-wrap items-center justify-center gap-1 px-0.5 pb-0.5">
+                  {eventsForDay.length === 0 ? null : eventsForDay.length > 3 ? (
+                    <span className="rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-medium text-violet-700">
+                      +{eventsForDay.length}
+                    </span>
+                  ) : (
+                    eventsForDay.slice(0, 3).map((event, idx) => (
+                      <span
+                        key={idx}
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          event.completed
+                            ? "bg-emerald-500"
+                            : event.type === "medication"
+                              ? "bg-emerald-400"
+                              : "bg-sky-500"
+                        }`}
+                      />
+                    ))
+                  )}
+                </div>
+              ) : (
+                <div className="mt-1 flex flex-col gap-1 overflow-hidden">
+                  {eventsForDay.slice(0, 3).map((event, idx) => (
+                    <div
+                      key={idx}
+                      onClick={(e) => handleEventClick(event, e)}
+                      className={`schedule-event-pill flex cursor-pointer items-center gap-1 border px-1.5 py-1 text-[10px] font-light leading-tight sm:text-xs
+                        ${
+                          event.completed
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                            : isPast
+                              ? "border-red-200 bg-red-50 text-red-900"
+                              : event.type === "medication"
+                                ? "border-emerald-200/80 bg-white text-emerald-800"
+                                : "border-sky-200/80 bg-white text-sky-800"
+                        }`}
+                    >
+                      <FontAwesomeIcon
+                        icon={event.type === "medication" ? faPills : faDumbbell}
+                        className="shrink-0 text-[9px] opacity-70"
+                      />
+                      <span className="truncate">
+                        {event.time} {event.title}
+                      </span>
+                    </div>
+                  ))}
+
+                  {eventsForDay.length > 3 ? (
+                    <span className="dash-muted px-0.5">
+                      +{eventsForDay.length - 3} más
+                    </span>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+export default CalendarGrid;

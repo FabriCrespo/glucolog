@@ -10,15 +10,15 @@ export default function ScheduleSuccessToast({ open }: { open: boolean }) {
           role="status"
           aria-live="polite"
           className="pointer-events-none fixed bottom-6 left-0 right-0 z-[70] flex justify-center px-4"
-          initial={{ opacity: 0, y: 16, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 12, scale: 0.98 }}
-          transition={{ type: "spring", damping: 24, stiffness: 320 }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 8 }}
+          transition={{ duration: 0.2 }}
         >
-          <div className="pointer-events-auto flex max-w-md items-center gap-3 rounded-2xl border border-emerald-200/90 bg-white px-5 py-4 shadow-lg shadow-slate-900/10 ring-1 ring-slate-200/80">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+          <div className="animate-fadeIn pointer-events-auto flex max-w-md items-center gap-3 border border-emerald-200/90 bg-white px-5 py-4 shadow-md shadow-slate-900/5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
               <svg
-                className="h-5 w-5"
+                className="h-4 w-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -32,7 +32,7 @@ export default function ScheduleSuccessToast({ open }: { open: boolean }) {
                 />
               </svg>
             </div>
-            <p className="text-[15px] font-semibold text-slate-900">
+            <p className="dash-body font-light text-slate-800">
               Cambio guardado correctamente
             </p>
           </div>

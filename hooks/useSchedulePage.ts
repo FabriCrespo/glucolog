@@ -58,6 +58,7 @@ export interface UseSchedulePageResult {
   handleCompleteEvent: (event: Event) => Promise<void>;
   handleDateClick: (date: dayjs.Dayjs) => void;
   handleAddNewEvent: () => void;
+  openNewEventForDate: (date: dayjs.Dayjs) => void;
   handleCloseAlertModal: () => void;
   handleCloseEventModal: () => void;
   handleSaveEvent: () => Promise<void>;
@@ -224,6 +225,16 @@ export function useSchedulePage(
     });
   }, [selectedDate]);
 
+  const openNewEventForDate = useCallback((date: dayjs.Dayjs) => {
+    if (date.isBefore(dayjs(), "day")) {
+      setIsAlertVisible(true);
+      return;
+    }
+    setSelectedDate(date);
+    setNewEventDate(date);
+    setIsAddingEvent(true);
+  }, []);
+
   const handleCloseAlertModal = useCallback(() => {
     setIsAlertVisible(false);
   }, []);
@@ -314,6 +325,7 @@ export function useSchedulePage(
     handleCompleteEvent,
     handleDateClick,
     handleAddNewEvent,
+    openNewEventForDate,
     handleCloseAlertModal,
     handleCloseEventModal,
     handleSaveEvent,

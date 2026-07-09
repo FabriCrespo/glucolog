@@ -20,7 +20,10 @@ import {
 import ScheduleModalShell from "@/components/schedule/ScheduleModalShell";
 
 const fieldClass =
-  "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[15px] text-slate-900 placeholder:text-slate-400 transition-colors focus:border-vitality-primary focus:outline-none focus:ring-2 focus:ring-vitality-primary/25 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-600";
+  "dash-input disabled:cursor-not-allowed disabled:opacity-60";
+
+const selectClass =
+  "w-full border-0 border-b border-slate-200/90 bg-transparent py-3 text-sm font-light text-slate-800 transition-colors duration-200 focus:border-vitality-primary focus:outline-none focus:ring-0 hover:border-emerald-300/80 disabled:cursor-not-allowed disabled:opacity-60";
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
@@ -81,25 +84,23 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
           stackOrder={57}
         >
           <div className={shellPadding}>
-            <div className="mb-6 flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+            <div className="mb-6 flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
               <div className="flex min-w-0 items-center gap-3">
                 <div
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center border ${
                     isMedication
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-sky-100 text-sky-700"
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                      : "border-sky-200 bg-sky-50 text-sky-700"
                   }`}
                 >
                   <FontAwesomeIcon
                     icon={isMedication ? faPills : faDumbbell}
-                    className="text-xl"
+                    className="text-lg"
                   />
                 </div>
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-800/90">
-                    Nuevo evento
-                  </p>
-                  <h3 className="text-xl font-semibold tracking-tight text-slate-900">
+                  <p className="dash-eyebrow">Nuevo evento</p>
+                  <h3 className="dash-title mt-1 text-xl">
                     {isMedication ? "Medicación" : "Actividad física"}
                   </h3>
                 </div>
@@ -107,7 +108,7 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-xl p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                className="p-2 text-slate-400 transition-colors hover:text-vitality-primary"
                 aria-label="Cerrar"
               >
                 <FontAwesomeIcon icon={faTimes} className="h-5 w-5" />
@@ -127,10 +128,8 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <button
                   type="button"
-                  className={`rounded-xl border-2 px-4 py-3.5 text-[15px] font-semibold transition-all ${
-                    isMedication
-                      ? "border-vitality-primary bg-emerald-50 text-emerald-900 shadow-sm ring-1 ring-emerald-200/80"
-                      : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300"
+                  className={`dash-pill py-3.5 ${
+                    isMedication ? "dash-pill-active" : "dash-pill-idle"
                   }`}
                   onClick={() =>
                     setNewEventData({ ...newEventData, type: "medication" })
@@ -143,10 +142,8 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                 </button>
                 <button
                   type="button"
-                  className={`rounded-xl border-2 px-4 py-3.5 text-[15px] font-semibold transition-all ${
-                    !isMedication
-                      ? "border-vitality-primary bg-sky-50 text-sky-900 shadow-sm ring-1 ring-sky-200/80"
-                      : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300"
+                  className={`dash-pill py-3.5 ${
+                    !isMedication ? "dash-pill-active" : "dash-pill-idle"
                   }`}
                   onClick={() =>
                     setNewEventData({ ...newEventData, type: "exercise" })
@@ -160,7 +157,7 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
+                <label className="dash-input-label mb-2 block">
                   Título
                 </label>
                 <div className="relative">
@@ -184,14 +181,14 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
               </div>
 
               {isMedication ? (
-                <div className="space-y-4 rounded-2xl border border-emerald-100/90 bg-emerald-50/40 p-4 sm:p-5">
+                <div className="space-y-4 border border-slate-200 p-4 sm:p-5">
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                      <label className="dash-input-label mb-2 block">
                         Tipo de medicamento
                       </label>
                       <select
-                        className={fieldClass}
+                        className={selectClass}
                         value={newEventData.medicationType}
                         onChange={(e) => {
                           setNewEventData({
@@ -212,7 +209,7 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                       <FieldError message={errors.medicationType} />
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                      <label className="dash-input-label mb-2 block">
                         Dosis
                       </label>
                       <input
@@ -230,11 +227,11 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                    <label className="dash-input-label mb-2 block">
                       Frecuencia
                     </label>
                     <select
-                      className={fieldClass}
+                      className={selectClass}
                       value={newEventData.frequency}
                       onChange={(e) => {
                         setNewEventData({
@@ -255,7 +252,7 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                    <label className="dash-input-label mb-2 block">
                       Instrucciones
                     </label>
                     <textarea
@@ -273,13 +270,13 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4 rounded-2xl border border-sky-100/90 bg-sky-50/40 p-4 sm:p-5">
+                <div className="space-y-4 border border-slate-200 p-4 sm:p-5">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                    <label className="dash-input-label mb-2 block">
                       Tipo de actividad
                     </label>
                     <select
-                      className={fieldClass}
+                      className={selectClass}
                       value={newEventData.activityType}
                       onChange={(e) => {
                         setNewEventData({
@@ -304,7 +301,7 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                      <label className="dash-input-label mb-2 block">
                         Duración (min)
                       </label>
                       <input
@@ -323,11 +320,11 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                      <label className="dash-input-label mb-2 block">
                         Intensidad
                       </label>
                       <select
-                        className={fieldClass}
+                        className={selectClass}
                         value={newEventData.intensity}
                         onChange={(e) =>
                           setNewEventData({
@@ -347,7 +344,7 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                  <label className="dash-input-label mb-2 block">
                     Fecha
                   </label>
                   <div className="relative">
@@ -366,7 +363,7 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                   </div>
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                  <label className="dash-input-label mb-2 block">
                     Hora
                   </label>
                   <div className="relative">
@@ -388,7 +385,7 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
+                <label className="dash-input-label mb-2 block">
                   Notas adicionales
                 </label>
                 <div className="relative">
@@ -407,18 +404,18 @@ const NewEventModal: React.FC<NewEventModalProps> = ({
                 </div>
               </div>
 
-              <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-end">
+              <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-[15px] font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                  className="dash-btn-outline px-6 py-3 text-sm font-light"
                 >
                   Cancelar
                 </button>
                 <button
                   type="button"
                   onClick={() => void handleSubmit()}
-                  className="rounded-xl bg-vitality-primary px-8 py-3 text-[15px] font-semibold text-white shadow-md shadow-emerald-900/10 transition-colors hover:bg-vitality-primary-dark"
+                  className="dash-btn-outline-active px-8 py-3 text-sm font-light"
                 >
                   Guardar
                 </button>

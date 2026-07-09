@@ -101,7 +101,7 @@ const FoodHabits = ({ userId }: FoodHabitsProps) => {
 
   if (loading) {
     return (
-      <div className="animate-pulse rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+      <div className="animate-pulse border border-slate-200 p-6">
         <div className="mb-4 h-5 w-1/3 rounded bg-slate-200" />
         <div className="space-y-3">
           <div className="h-16 rounded-xl bg-slate-100" />
@@ -114,7 +114,7 @@ const FoodHabits = ({ userId }: FoodHabitsProps) => {
 
   if (!eatenRecords.length) {
     return (
-      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+      <div className="border border-slate-200 p-6">
         <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
           <Utensils className="h-5 w-5 text-emerald-600" />
           Habitos alimenticios
@@ -131,7 +131,7 @@ const FoodHabits = ({ userId }: FoodHabitsProps) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45 }}
-      className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6"
+      className="border border-slate-200 p-5 sm:p-6"
     >
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
@@ -144,11 +144,7 @@ const FoodHabits = ({ userId }: FoodHabitsProps) => {
               key={days}
               type="button"
               onClick={() => setSelectedRange(days as RangeDays)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                selectedRange === days
-                  ? "bg-vitality-primary text-white"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
+              className={`dash-pill ${selectedRange === days ? "dash-pill-active" : "dash-pill-idle"}`}
             >
               {days} dias
             </button>

@@ -1,297 +1,214 @@
 import "@/components/schedule/registerChartJs";
 import React, { useState } from "react";
-import { Bar, Doughnut } from 'react-chartjs-2';
-import { MonthlyStatsType } from '@/types/events';
-import { FaMedkit, FaRunning, FaClock, FaChartBar, FaChartPie } from 'react-icons/fa';
+import { Bar, Doughnut } from "react-chartjs-2";
+import { MonthlyStatsType } from "@/types/events";
 
 interface MonthlyStatsProps {
   monthlyStats: MonthlyStatsType;
-  exerciseChartData: any;
-  medicationChartData: any;
+  exerciseChartData: Record<string, unknown>;
+  medicationChartData: Record<string, unknown>;
 }
 
-const MonthlyStats = ({ monthlyStats, exerciseChartData, medicationChartData }: MonthlyStatsProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'details'>('overview');
-  const [chartType, setChartType] = useState<'bar' | 'doughnut'>('bar');
-  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { position: "bottom" as const },
+    tooltip: {
+      backgroundColor: "#0f172a",
+      padding: 12,
+    },
+  },
+};
 
-  // Verificar que los datos existen
+const MonthlyStats = ({
+  monthlyStats,
+  exerciseChartData,
+  medicationChartData,
+}: MonthlyStatsProps) => {
+  const [activeTab, setActiveTab] = useState<"overview" | "details">(
+    "overview"
+  );
+  const [chartType, setChartType] = useState<"bar" | "doughnut">("bar");
+
   if (!monthlyStats) {
-    console.warn("MonthlyStats: No se recibieron datos de estadísticas mensuales");
-    return <div className="p-4 bg-yellow-50 rounded-lg">Cargando estadísticas...</div>;
+    return (
+      <p className="dash-body py-6 text-center text-slate-500">
+        Cargando estadísticas…
+      </p>
+    );
   }
 
-  // Verificar que los datos de gráficos existen
-  const hasExerciseData = exerciseChartData && 
-    exerciseChartData.datasets && 
-    exerciseChartData.datasets.length > 0;
-    
-  const hasMedicationData = medicationChartData && 
-    medicationChartData.datasets && 
-    medicationChartData.datasets.length > 0;
+  const exerciseData = exerciseChartData as {
+    labels?: string[];
+    datasets?: { data: number[]; backgroundColor: string | string[] }[];
+    options?: Record<string, unknown>;
+  };
+  const medicationData = medicationChartData as {
+    labels?: string[];
+    datasets?: { data: number[]; backgroundColor: string | string[] }[];
+    options?: Record<string, unknown>;
+  };
 
-  if (!hasExerciseData || !hasMedicationData) {
-    console.warn("MonthlyStats: Datos de gráficos incompletos", { 
-      hasExerciseData, 
-      hasMedicationData 
-    });
-  }
+  const hasExerciseData = Boolean(exerciseData?.datasets?.length);
+  const hasMedicationData = Boolean(medicationData?.datasets?.length);
+
+  const stats = [
+    {
+      id: "medications",
+      label: "Medicaciones",
+      value: monthlyStats.completedMedications,
+      hint: "completadas este mes",
+      tone: "text-emerald-700",
+    },
+    {
+      id: "exercises",
+      label: "Ejercicios",
+      value: monthlyStats.completedExercises,
+      hint: "completados este mes",
+      tone: "text-sky-700",
+    },
+    {
+      id: "duration",
+      label: "Tiempo activo",
+      value: monthlyStats.totalDuration,
+      hint: "minutos de ejercicio",
+      tone: "text-slate-700",
+    },
+  ];
 
   return (
-    <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-        <h2 className="text-2xl font-bold text-green-800 flex items-center">
-          <span className="bg-green-100 p-2 rounded-full mr-3">
-            <FaChartBar className="text-green-600" />
-          </span>
-          Estadísticas del Mes
-        </h2>
-        
-        <div className="flex space-x-2 mt-4 md:mt-0">
-          <button 
-            onClick={() => setActiveTab('overview')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              activeTab === 'overview' 
-                ? 'bg-green-500 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+    <div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="dash-eyebrow">Resumen</p>
+          <h2 className="dash-title mt-2 text-xl lg:text-2xl">
+            Estadísticas del mes
+          </h2>
+        </div>
+        <div className="flex border-b border-slate-200">
+          <button
+            type="button"
+            onClick={() => setActiveTab("overview")}
+            className={`dash-tab ${activeTab === "overview" ? "dash-tab-active" : "dash-tab-idle"}`}
           >
             Resumen
           </button>
-          <button 
-            onClick={() => setActiveTab('details')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              activeTab === 'details' 
-                ? 'bg-green-500 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+          <button
+            type="button"
+            onClick={() => setActiveTab("details")}
+            className={`dash-tab ${activeTab === "details" ? "dash-tab-active" : "dash-tab-idle"}`}
           >
-            Detalles
+            Gráficos
           </button>
         </div>
       </div>
 
-      {activeTab === 'overview' && (
-        <div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div 
-              onMouseEnter={() => setHoveredCard('medications')}
-              onMouseLeave={() => setHoveredCard(null)}
-              className="bg-white p-6 rounded-xl border border-green-200 shadow-sm"
+      {activeTab === "overview" ? (
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {stats.map((stat) => (
+            <div
+              key={stat.id}
+              className="dash-stat-cell border border-slate-200 px-5 py-5"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium text-green-800 mb-1">
-                    Medicaciones
-                  </h3>
-                  <div className="text-4xl font-bold text-green-600">
-                    {monthlyStats.completedMedications}
-                  </div>
-                  <p className="text-sm text-green-700 mt-1">completadas este mes</p>
-                </div>
-                <div className="p-4 rounded-full bg-green-50 text-green-500">
-                  <FaMedkit size={24} />
-                </div>
-              </div>
-              {hoveredCard === 'medications' && (
-                <div className="mt-4 pt-4 border-t border-green-200">
-                  <p className="text-sm text-green-700">
-                    Has completado el {Math.round((monthlyStats.completedMedications / (monthlyStats.completedMedications + 5)) * 100)}% de tus medicaciones programadas.
-                  </p>
-                </div>
-              )}
+              <p className="dash-stat-label">{stat.label}</p>
+              <p className={`dash-stat-value mt-2 text-4xl ${stat.tone}`}>
+                {stat.value}
+              </p>
+              <p className="dash-muted mt-1">{stat.hint}</p>
             </div>
-
-            <div 
-              onMouseEnter={() => setHoveredCard('exercises')}
-              onMouseLeave={() => setHoveredCard(null)}
-              className="bg-white p-6 rounded-xl border border-blue-200 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium text-blue-800 mb-1">
-                    Ejercicios
-                  </h3>
-                  <div className="text-4xl font-bold text-blue-600">
-                    {monthlyStats.completedExercises}
-                  </div>
-                  <p className="text-sm text-blue-700 mt-1">completados este mes</p>
-                </div>
-                <div className="p-4 rounded-full bg-blue-50 text-blue-500">
-                  <FaRunning size={24} />
-                </div>
-              </div>
-              {hoveredCard === 'exercises' && (
-                <div className="mt-4 pt-4 border-t border-blue-200">
-                  <p className="text-sm text-blue-700">
-                    Has aumentado un 15% respecto al mes anterior. ¡Sigue así!
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div 
-              onMouseEnter={() => setHoveredCard('duration')}
-              onMouseLeave={() => setHoveredCard(null)}
-              className="bg-white p-6 rounded-xl border border-purple-200 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium text-purple-800 mb-1">
-                    Tiempo Total
-                  </h3>
-                  <div className="text-4xl font-bold text-purple-600">
-                    {monthlyStats.totalDuration}
-                  </div>
-                  <p className="text-sm text-purple-700 mt-1">minutos de ejercicio</p>
-                </div>
-                <div className="p-4 rounded-full bg-purple-50 text-purple-500">
-                  <FaClock size={24} />
-                </div>
-              </div>
-              {hoveredCard === 'duration' && (
-                <div className="mt-4 pt-4 border-t border-purple-200">
-                  <p className="text-sm text-purple-700">
-                    Promedio diario: {Math.round(monthlyStats.totalDuration / 30)} minutos
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+          ))}
         </div>
-      )}
-
-      {activeTab === 'details' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-xl border border-blue-100 shadow-sm">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-blue-800 flex items-center">
-                <span className="bg-blue-100 p-2 rounded-full mr-2">
-                  <FaRunning className="text-blue-600" />
-                </span>
-                Ejercicios por Tipo
-              </h3>
-              <div className="flex space-x-2">
-                <button 
-                  onClick={() => setChartType('bar')}
-                  className={`p-2 rounded-lg ${chartType === 'bar' ? 'bg-blue-100 text-blue-600' : 'text-gray-400'}`}
-                >
-                  <FaChartBar />
-                </button>
-                <button 
-                  onClick={() => setChartType('doughnut')}
-                  className={`p-2 rounded-lg ${chartType === 'doughnut' ? 'bg-blue-100 text-blue-600' : 'text-gray-400'}`}
-                >
-                  <FaChartPie />
-                </button>
-              </div>
-            </div>
-            <div className="h-[300px] flex items-center justify-center">
-              {!hasExerciseData ? (
-                <p className="text-gray-500">No hay datos suficientes para mostrar el gráfico</p>
-              ) : chartType === 'bar' ? (
-                <Bar
-                  data={exerciseChartData}
-                  options={{
-                    ...exerciseChartData.options,
-                    plugins: {
-                      legend: {
-                        position: 'bottom'
-                      },
-                      tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        padding: 12
-                      }
-                    }
-                  }}
-                />
-              ) : (
-                <Doughnut
-                  data={{
-                    labels: exerciseChartData.labels,
-                    datasets: [{
-                      data: exerciseChartData.datasets[0].data,
-                      backgroundColor: exerciseChartData.datasets[0].backgroundColor,
-                      borderWidth: 2,
-                      borderColor: '#fff'
-                    }]
-                  }}
-                  options={{
-                    cutout: '60%',
-                    plugins: {
-                      legend: {
-                        position: 'bottom'
-                      }
-                    }
-                  }}
-                />
-              )}
+      ) : (
+        <div className="mt-6 space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="dash-muted">Tipo de gráfico</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setChartType("bar")}
+                className={`dash-pill ${chartType === "bar" ? "dash-pill-active" : "dash-pill-idle"}`}
+              >
+                Barras
+              </button>
+              <button
+                type="button"
+                onClick={() => setChartType("doughnut")}
+                className={`dash-pill ${chartType === "doughnut" ? "dash-pill-active" : "dash-pill-idle"}`}
+              >
+                Dona
+              </button>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-xl border border-green-100 shadow-sm">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-green-800 flex items-center">
-                <span className="bg-green-100 p-2 rounded-full mr-2">
-                  <FaMedkit className="text-green-600" />
-                </span>
-                Medicamentos por Tipo
-              </h3>
-              <div className="flex space-x-2">
-                <button 
-                  onClick={() => setChartType('bar')}
-                  className={`p-2 rounded-lg ${chartType === 'bar' ? 'bg-green-100 text-green-600' : 'text-gray-400'}`}
-                >
-                  <FaChartBar />
-                </button>
-                <button 
-                  onClick={() => setChartType('doughnut')}
-                  className={`p-2 rounded-lg ${chartType === 'doughnut' ? 'bg-green-100 text-green-600' : 'text-gray-400'}`}
-                >
-                  <FaChartPie />
-                </button>
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <div className="border border-slate-200 p-4 sm:p-5">
+              <p className="dash-stat-label text-sky-800">Ejercicios por tipo</p>
+              <div className="mt-4 h-[280px]">
+                {!hasExerciseData ? (
+                  <p className="dash-body flex h-full items-center justify-center text-slate-500">
+                    Sin datos suficientes
+                  </p>
+                ) : chartType === "bar" ? (
+                  <Bar
+                    data={exerciseData as never}
+                    options={{ ...chartOptions, ...(exerciseData.options ?? {}) }}
+                  />
+                ) : (
+                  <Doughnut
+                    data={{
+                      labels: exerciseData.labels,
+                      datasets: [
+                        {
+                          data: exerciseData.datasets![0].data,
+                          backgroundColor:
+                            exerciseData.datasets![0].backgroundColor,
+                          borderWidth: 1,
+                          borderColor: "#fff",
+                        },
+                      ],
+                    }}
+                    options={{ ...chartOptions, cutout: "60%" }}
+                  />
+                )}
               </div>
             </div>
-            <div className="h-[300px] flex items-center justify-center">
-              {!hasMedicationData ? (
-                <p className="text-gray-500">No hay datos suficientes para mostrar el gráfico</p>
-              ) : chartType === 'bar' ? (
-                <Bar
-                  data={medicationChartData}
-                  options={{
-                    ...medicationChartData.options,
-                    plugins: {
-                      legend: {
-                        position: 'bottom'
-                      },
-                      tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        padding: 12
-                      }
-                    }
-                  }}
-                />
-              ) : (
-                <Doughnut
-                  data={{
-                    labels: medicationChartData.labels,
-                    datasets: [{
-                      data: medicationChartData.datasets[0].data,
-                      backgroundColor: medicationChartData.datasets[0].backgroundColor,
-                      borderWidth: 2,
-                      borderColor: '#fff'
-                    }]
-                  }}
-                  options={{
-                    cutout: '60%',
-                    plugins: {
-                      legend: {
-                        position: 'bottom'
-                      }
-                    }
-                  }}
-                />
-              )}
+
+            <div className="border border-slate-200 p-4 sm:p-5">
+              <p className="dash-stat-label text-emerald-800">
+                Medicamentos por tipo
+              </p>
+              <div className="mt-4 h-[280px]">
+                {!hasMedicationData ? (
+                  <p className="dash-body flex h-full items-center justify-center text-slate-500">
+                    Sin datos suficientes
+                  </p>
+                ) : chartType === "bar" ? (
+                  <Bar
+                    data={medicationData as never}
+                    options={{
+                      ...chartOptions,
+                      ...(medicationData.options ?? {}),
+                    }}
+                  />
+                ) : (
+                  <Doughnut
+                    data={{
+                      labels: medicationData.labels,
+                      datasets: [
+                        {
+                          data: medicationData.datasets![0].data,
+                          backgroundColor:
+                            medicationData.datasets![0].backgroundColor,
+                          borderWidth: 1,
+                          borderColor: "#fff",
+                        },
+                      ],
+                    }}
+                    options={{ ...chartOptions, cutout: "60%" }}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -301,4 +218,3 @@ const MonthlyStats = ({ monthlyStats, exerciseChartData, medicationChartData }: 
 };
 
 export default MonthlyStats;
-

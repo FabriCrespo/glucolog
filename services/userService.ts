@@ -1,7 +1,8 @@
-import { auth, db, storage } from "@/app/firebase/config";
+import { db } from "@/app/firebase/config";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { User } from "firebase/auth";
+
+/** Firestore doc ~1 MB; dejamos margen para el resto del perfil. */
+const MAX_PROFILE_PHOTO_DATA_URL_LENGTH = 450_000;
 
 export interface UserData {
   firstName: string;
@@ -14,8 +15,9 @@ export interface UserData {
   height?: number;
   phone?: string;
   address?: string;
+  /** URL https (p. ej. Google) o data URL base64 guardada en Firestore. */
   photoURL?: string;
-  uid?: string; // Añadimos la propiedad uid como opcional
+  uid?: string;
 }
 
 export async function getUserData(userId: string): Promise<UserData | null> {
@@ -42,13 +44,24 @@ export async function updateUserData(userId: string, userData: UserData): Promis
   }
 }
 
-export async function uploadProfilePhoto(user: User, file: File): Promise<string> {
-  try {
-    const photoRef = ref(storage, `profilePictures/${user.uid}`);
-    await uploadBytes(photoRef, file);
-    return await getDownloadURL(photoRef);
-  } catch (error) {
-    console.error("Error uploading profile photo:", error);
-    throw error;
+/** Guarda la foto como data URL (base64) en Firestore, sin usar Storage. */
+export async function encodeProfilePhotoAsDataUrl(file: File): Promise<string> {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("No se pudo leer la imagen."));
+    reader.readAsDataURL(file);
+  });
+
+  if (!dataUrl.startsWith("data:image/")) {
+    throw new Error("Selecciona una imagen válida para tu foto de perfil.");
   }
+
+  if (dataUrl.length > MAX_PROFILE_PHOTO_DATA_URL_LENGTH) {
+    throw new Error(
+      "La foto comprimida sigue siendo muy grande. Prueba con otra imagen."
+    );
+  }
+
+  return dataUrl;
 }

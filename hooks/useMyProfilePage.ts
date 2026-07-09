@@ -11,7 +11,7 @@ import {
   type UserData,
   getUserData,
   updateUserData,
-  uploadProfilePhoto,
+  encodeProfilePhotoAsDataUrl,
 } from "@/services/userService";
 
 export interface VerificationFeedback {
@@ -75,7 +75,7 @@ export function useMyProfilePage(
         img.src = imageDataURL;
       });
 
-      const maxSide = 720;
+      const maxSide = 512;
       const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
       const width = Math.max(1, Math.round(image.width * scale));
       const height = Math.max(1, Math.round(image.height * scale));
@@ -101,7 +101,7 @@ export function useMyProfilePage(
             resolve(blob);
           },
           "image/jpeg",
-          0.78
+          0.72
         );
       });
 
@@ -248,7 +248,7 @@ export function useMyProfilePage(
       let payload = userData;
 
       if (photoFile) {
-        const photoURL = await uploadProfilePhoto(user, photoFile);
+        const photoURL = await encodeProfilePhotoAsDataUrl(photoFile);
         payload = { ...userData, photoURL };
         setUserData(payload);
         revokeBlobIfNeeded();
@@ -271,15 +271,10 @@ export function useMyProfilePage(
       return true;
     } catch (e) {
       console.error("[useMyProfilePage] save", e);
-      if (e instanceof FirebaseError && e.code === "storage/quota-exceeded") {
-        toast.error("Bucket de Firebase Storage sin cuota", {
-          description:
-            "Se alcanzo el limite del plan actual. Libera espacio en Firebase Storage o habilita facturacion en Firebase para seguir subiendo fotos.",
-        });
-        return false;
-      }
+      const message =
+        e instanceof Error ? e.message : "Revisa tu conexión e inténtalo de nuevo.";
       toast.error("No se pudo guardar", {
-        description: "Revisa tu conexión e inténtalo de nuevo.",
+        description: message,
       });
       return false;
     } finally {

@@ -46,6 +46,7 @@ export interface UseFoodBankPageResult {
   handleSearch: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleCheckboxChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleFoodClick: (food: FoodItem) => void;
+  handleClearFood: () => void;
   calculateGlycemicLoadAction: () => void;
   closeGlycemicModal: () => void;
 }
@@ -116,6 +117,10 @@ export function useFoodBankPage(
     dispatch({ type: "SELECT_FOOD", payload: food });
   }, []);
 
+  const handleClearFood = useCallback(() => {
+    dispatch({ type: "CLEAR_FOOD" });
+  }, []);
+
   const closeGlycemicModal = useCallback(() => {
     if (modalTimer.current) {
       clearTimeout(modalTimer.current);
@@ -153,6 +158,7 @@ export function useFoodBankPage(
     handleSearch,
     handleCheckboxChange,
     handleFoodClick,
+    handleClearFood,
     calculateGlycemicLoadAction,
     closeGlycemicModal,
   };
