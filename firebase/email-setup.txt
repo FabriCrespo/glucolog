@@ -1,0 +1,55 @@
+Glucolog — configuración de emails en Firebase Console (gratis, plan Spark)
+================================================================================
+
+1) Dominios autorizados
+   Firebase Console → Authentication → Settings → Authorized domains
+
+   Asegúrate de tener:
+   - localhost
+   - glucolog-f2a0a.firebaseapp.com
+   - glucolog-f2a0a.web.app
+   - fabricrespo.github.io
+
+2) Plantilla: Email address verification (bienvenida + verificación)
+   Firebase Console → Authentication → Templates → Email address verification
+
+   Asunto sugerido:
+   ¡Bienvenido a Glucolog! Confirma tu correo
+
+   Cuerpo sugerido:
+   Hola,
+
+   ¡Gracias por unirte a Glucolog! Tu asistente para el control de la diabetes.
+
+   Confirma tu correo haciendo clic en el enlace que te enviamos. Así podrás usar
+   todas las funciones: perfil, tabla de alimentos, agenda y más.
+
+   Si no creaste esta cuenta, ignora este mensaje.
+
+   — El equipo de Glucolog
+
+3) Plantilla: Password reset (recuperación de contraseña)
+   Firebase Console → Authentication → Templates → Password reset
+
+   Asunto sugerido:
+   Restablece tu contraseña de Glucolog
+
+   Cuerpo sugerido:
+   Hola,
+
+   Recibimos una solicitud para restablecer la contraseña de tu cuenta en Glucolog.
+
+   Haz clic en el enlace del correo para elegir una nueva contraseña. El enlace
+   caduca en breve por seguridad.
+
+   Si no solicitaste este cambio, puedes ignorar este correo.
+
+   — El equipo de Glucolog
+
+4) Remitente (opcional)
+   En Templates puedes personalizar el nombre del remitente (p. ej. "Glucolog").
+
+5) Notas
+   - Los emails los envía Firebase Auth sin costo en el plan Spark.
+   - La app usa sendEmailVerification y sendPasswordResetEmail desde el cliente.
+   - Tras verificar o resetear, el usuario vuelve a /login (con basePath en Pages).

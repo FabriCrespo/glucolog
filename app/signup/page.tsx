@@ -74,7 +74,7 @@ export default function SignUpPage() {
     });
 
     setSuccessMessage(
-      "¡Registro exitoso! Te enviamos un correo de verificación. Revisa tu bandeja antes de iniciar sesión."
+      "¡Bienvenido a Glucolog! Te enviamos un correo de verificación. Revisa tu bandeja (y spam) antes de iniciar sesión."
     );
 
     setTimeout(() => {

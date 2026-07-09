@@ -6,6 +6,7 @@ import { sendEmailVerification } from "firebase/auth";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { auth } from "@/app/firebase/config";
+import { getEmailVerificationSettings } from "@/lib/auth/action-code-settings";
 import {
   type UserData,
   getUserData,
@@ -204,7 +205,7 @@ export function useMyProfilePage(
     setVerificationFeedback(null);
 
     try {
-      await sendEmailVerification(user);
+      await sendEmailVerification(user, getEmailVerificationSettings());
       setVerificationFeedback({
         tone: "success",
         message:

@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/app/firebase/config";
+import { getEmailVerificationSettings } from "@/lib/auth/action-code-settings";
 import { signupSchema, zodErrorMessage } from "@/lib/validations/auth";
 import { mapSignupError } from "@/lib/auth/firebase-auth-errors";
 
@@ -38,7 +39,7 @@ export function useSignup() {
       });
 
       try {
-        await sendEmailVerification(user);
+        await sendEmailVerification(user, getEmailVerificationSettings());
       } catch (emailErr) {
         console.error("Error al enviar verificación:", emailErr);
       }

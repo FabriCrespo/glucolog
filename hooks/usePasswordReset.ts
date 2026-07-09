@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { api } from "@/lib/api/client";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@/app/firebase/config";
+import { getPasswordResetSettings } from "@/lib/auth/action-code-settings";
+import { mapPasswordResetError } from "@/lib/auth/firebase-auth-errors";
 import {
   passwordResetRequestSchema,
   zodErrorMessage,
 } from "@/lib/validations/auth";
 
-/**
- * Restablecimiento vía Identity Toolkit (axios → `/api/auth/request-password-reset`).
- */
+/** Restablecimiento vía Firebase Auth (gratis, compatible con GitHub Pages). */
 export function usePasswordReset() {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,12 +25,14 @@ export function usePasswordReset() {
 
     setIsLoading(true);
     try {
-      await api.post("/auth/request-password-reset", parsed.data);
+      await sendPasswordResetEmail(
+        auth,
+        parsed.data.email,
+        getPasswordResetSettings()
+      );
       return { ok: true as const };
     } catch (e) {
-      const msg =
-        e instanceof Error ? e.message : "Error al enviar el correo";
-      return { ok: false as const, error: msg };
+      return { ok: false as const, error: mapPasswordResetError(e) };
     } finally {
       setIsLoading(false);
     }

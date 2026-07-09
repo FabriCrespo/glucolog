@@ -49,3 +49,6 @@ ml/artifacts/
 
 # GitHub Pages static build temp
 .github-pages-build/
+
+# Cloud Functions (no usado; plantillas Firebase nativas)
+/functions/
