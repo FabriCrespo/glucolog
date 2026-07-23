@@ -1,15 +1,16 @@
-"use client";
+﻿"use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useDashboardGlucose } from "@/hooks/useDashboardGlucose";
+import { useGlucosePrediction } from "@/hooks/useGlucosePrediction";
 import GlucoseCharts from "@/components/glucose/GlucoseCharts";
-import LivePredictionPanel from "@/components/glucose/LivePredictionPanel";
 import GlucoseRecordsSection from "@/components/glucose/GlucoseRecordsSection";
 import DashboardDesktopHero from "@/components/glucose/DashboardDesktopHero";
+import DashboardServicesAccordion from "@/components/glucose/DashboardServicesAccordion";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { getCoachTip, getGreeting } from "@/lib/dashboard/metrics";
+import { getGreeting } from "@/lib/dashboard/metrics";
 import "@/utils/chartConfig";
 
 export default function DashboardPage() {
@@ -34,6 +35,8 @@ export default function DashboardPage() {
     handleDateRangeChange,
   } = useDashboardGlucose({ userId });
 
+  const prediction = useGlucosePrediction(records, form);
+
   useEffect(() => {
     if (authLoading) return;
     if (!sessionUser) {
@@ -45,21 +48,23 @@ export default function DashboardPage() {
     return <LoadingSpinner />;
   }
 
-  const coachTip = getCoachTip(records, records[0] ?? null);
-
   return (
     <section className="min-h-[calc(100vh-5rem)] w-full bg-white">
       <div className="max-container px-4 py-4 md:padding-container md:py-12 lg:py-16">
+        {/* Resumen compacto */}
         <DashboardDesktopHero records={records} userName={userName} />
 
         <header className="mb-8 border-b border-slate-200/90 pb-6 md:hidden">
           <p className="dash-eyebrow">Glucolog</p>
           <h1 className="dash-title mt-2 text-xl">{getGreeting(userName)}</h1>
-          <p className="dash-accent-quote mt-3 text-sm">{coachTip}</p>
+          <p className="dash-muted mt-2">
+            {records[0]
+              ? `Última lectura: ${records[0].glucoseLevel} mg/dL`
+              : "Registra tu glucosa para activar predicción y servicios."}
+          </p>
         </header>
 
-        <LivePredictionPanel records={records} form={form} />
-
+        {/* 1. Formulario + registros */}
         <GlucoseRecordsSection
           records={records}
           fetchingRecords={fetchingRecords}
@@ -72,6 +77,7 @@ export default function DashboardPage() {
           handleDateRangeChange={handleDateRangeChange}
         />
 
+        {/* 2. Gráficos */}
         <section aria-label="Gráficos" className="mt-10 lg:mt-14">
           <GlucoseCharts
             chartData={chartData}
@@ -80,6 +86,13 @@ export default function DashboardPage() {
             records={records}
           />
         </section>
+
+        {/* 3. Servicios IA / coaching (desplegables) */}
+        <DashboardServicesAccordion
+          records={records}
+          userId={sessionUser.uid}
+          prediction={prediction}
+        />
       </div>
     </section>
   );

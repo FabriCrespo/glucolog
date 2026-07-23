@@ -307,6 +307,7 @@ html[data-text-contrast="strong"] .dash-eyebrow {
   .hero-photo {
     @apply pointer-events-none absolute inset-0 -z-10 bg-no-repeat;
     background-color: #fafcfb;
+    background-image: var(--hero-bg-image);
     background-size: cover;
     /* narrow: muestra zona derecha (comida/medidor); evita que el texto caiga solo sobre blanco vacío */
     background-position: 88% center;
@@ -385,6 +386,7 @@ html[data-text-contrast="strong"] .dash-eyebrow {
   .services-photo {
     @apply pointer-events-none absolute inset-0 -z-10 bg-no-repeat;
     background-color: #fcfdfc;
+    background-image: var(--services-bg-image);
     background-size: cover;
     background-position: center center;
   }
@@ -814,21 +816,9 @@ html.dark .text-vitality-neutral\/65 {
   @apply text-slate-300;
 }
 
-/* Navbar — pills de navegación */
-html.dark header.bg-white\/80 {
-  @apply border-slate-700 bg-slate-900/95;
-}
-
-html.dark header nav .rounded-full.border {
-  @apply border-slate-600 bg-slate-800;
-}
-
-html.dark header nav button.rounded-full.bg-white {
-  @apply bg-slate-700 text-white ring-emerald-500/40;
-}
-
-html.dark header nav button.rounded-full:not(.bg-white) {
-  @apply text-slate-300 hover:bg-emerald-950/50 hover:text-emerald-200;
+/* Navbar — barra plana */
+html.dark header.border-b {
+  @apply border-slate-800 bg-slate-950;
 }
 
 /* Badges / rings con texto */

@@ -1,8 +1,7 @@
-"use client";
+﻿"use client";
 
 import type { GlucoseRecord } from "@/types/glucose";
 import {
-  getCoachTip,
   getGlucoseStatus,
   getGreeting,
   getInRangePercent,
@@ -38,7 +37,6 @@ export default function DashboardDesktopHero({
   userName,
 }: DashboardDesktopHeroProps) {
   const latest = records[0] ?? null;
-  const coachTip = getCoachTip(records, latest);
   const status = latest ? getGlucoseStatus(latest.glucoseLevel) : null;
   const trend = getTrend(records);
   const inRange = getInRangePercent(records);
@@ -49,7 +47,7 @@ export default function DashboardDesktopHero({
       ? "Estable"
       : trend.direction === "up"
         ? `+${trend.delta}`
-        : `−${trend.delta}`;
+        : `-${trend.delta}`;
 
   const trendColor =
     trend.direction === "up"
@@ -65,7 +63,10 @@ export default function DashboardDesktopHero({
       <div className="mt-3 flex items-end justify-between gap-10 border-b border-slate-200/90 pb-10">
         <div className="max-w-lg">
           <h1 className="dash-title text-2xl lg:text-3xl">{getGreeting(userName)}</h1>
-          <p className="dash-accent-quote mt-5 text-sm">{coachTip}</p>
+          <p className="dash-body mt-4 text-sm">
+            Registra, revisa tus gráficas y abre los servicios inteligentes cuando
+            quieras una lectura más profunda.
+          </p>
         </div>
 
         <dl className="group shrink-0 text-right">
@@ -83,7 +84,9 @@ export default function DashboardDesktopHero({
             ) : null}
           </dd>
           {latest ? (
-            <dd className="mt-1 text-xs font-light text-slate-500">{formatLastReading(latest)}</dd>
+            <dd className="mt-1 text-xs font-light text-slate-500">
+              {formatLastReading(latest)}
+            </dd>
           ) : null}
         </dl>
       </div>
@@ -91,7 +94,9 @@ export default function DashboardDesktopHero({
       <dl className="mt-8 grid grid-cols-2 gap-y-6 sm:grid-cols-4 sm:divide-x sm:divide-slate-200/90">
         <div className="dash-stat-cell sm:px-6 sm:first:pl-0">
           <dt className="dash-stat-label">Racha</dt>
-          <dd className="dash-stat-value mt-2 text-2xl">{streak ? `${streak}d` : "—"}</dd>
+          <dd className="dash-stat-value mt-2 text-2xl">
+            {streak ? `${streak}d` : "—"}
+          </dd>
         </div>
         <div className="dash-stat-cell sm:px-6">
           <dt className="dash-stat-label">En rango</dt>
@@ -101,7 +106,9 @@ export default function DashboardDesktopHero({
         </div>
         <div className="dash-stat-cell sm:px-6">
           <dt className="dash-stat-label">Tendencia</dt>
-          <dd className={`mt-2 text-2xl font-extralight tabular-nums transition-colors duration-300 ${trendColor}`}>
+          <dd
+            className={`mt-2 text-2xl font-extralight tabular-nums transition-colors duration-300 ${trendColor}`}
+          >
             {records.length >= 2 ? trendLabel : "—"}
           </dd>
         </div>

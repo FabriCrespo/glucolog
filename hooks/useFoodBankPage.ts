@@ -15,6 +15,7 @@ import {
   computeGlycemicLoad,
   filterFoodBankItems,
   generateNutritionalRecommendations,
+  getFoodSearchInsight,
 } from "@/lib/food/nutritionCalculations";
 import {
   foodBankReducer,
@@ -28,14 +29,23 @@ import type {
   NutrientDensity,
   NutritionalRecommendation,
 } from "@/types/food";
+import type { FoodMatchReason } from "@/lib/food/smartFoodSearch";
 import { useFoodBankData } from "@/hooks/useFoodBankData";
 
 const GLYCEMIC_MODAL_MS = 5000;
+
+export type FoodBankSearchInsight = {
+  best: FoodItem | null;
+  score: number;
+  reason: FoodMatchReason | null;
+  alternatives: FoodItem[];
+} | null;
 
 export interface UseFoodBankPageResult {
   ui: FoodBankUiState;
   dispatch: Dispatch<FoodBankAction>;
   filteredFoodData: FoodItem[];
+  searchInsight: FoodBankSearchInsight;
   nutrientDensity: NutrientDensity | null;
   micronutrientStatus: MicronutrientStatus | null;
   recommendations: NutritionalRecommendation[];
@@ -59,30 +69,27 @@ export function useFoodBankPage(
     useFoodBankData(user, authLoading);
 
   const [ui, dispatch] = useReducer(foodBankReducer, initialFoodBankState);
-
   const modalTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
-      if (modalTimer.current) {
-        clearTimeout(modalTimer.current);
-      }
+      if (modalTimer.current) clearTimeout(modalTimer.current);
     };
   }, []);
 
   const filteredFoodData = useMemo(
     () =>
-      filterFoodBankItems(
-        foodData,
-        ui.searchTerm,
-        ui.showWithGlycemicIndex
-      ),
+      filterFoodBankItems(foodData, ui.searchTerm, ui.showWithGlycemicIndex),
     [foodData, ui.searchTerm, ui.showWithGlycemicIndex]
   );
 
+  const searchInsight = useMemo(
+    () => getFoodSearchInsight(foodData, ui.searchTerm),
+    [foodData, ui.searchTerm]
+  );
+
   const nutrientDensity = useMemo(
-    () =>
-      ui.selectedFood ? calculateNutrientDensity(ui.selectedFood) : null,
+    () => (ui.selectedFood ? calculateNutrientDensity(ui.selectedFood) : null),
     [ui.selectedFood]
   );
 
@@ -135,9 +142,7 @@ export function useFoodBankPage(
 
     dispatch({ type: "GLYCEMIC_CALCULATED", payload: load });
 
-    if (modalTimer.current) {
-      clearTimeout(modalTimer.current);
-    }
+    if (modalTimer.current) clearTimeout(modalTimer.current);
     modalTimer.current = setTimeout(() => {
       dispatch({ type: "CLOSE_GLYCEMIC_MODAL" });
       modalTimer.current = null;
@@ -148,6 +153,7 @@ export function useFoodBankPage(
     ui,
     dispatch,
     filteredFoodData,
+    searchInsight,
     nutrientDensity,
     micronutrientStatus,
     recommendations,

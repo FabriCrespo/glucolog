@@ -1,101 +1,36 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Loader2 } from "lucide-react";
-import {
-  requestPrediction,
-  type PredictionPayload,
-  type PredictionResult,
-} from "@/lib/prediction/clientFallback";
+import type { PredictionPayload, PredictionResult } from "@/lib/prediction/clientFallback";
 import {
   getPredictionCoachMessage,
   getPredictionRiskMeta,
   getRiskScore,
 } from "@/lib/dashboard/metrics";
-import type { GlucoseFormSnapshot } from "@/types/dashboard-glucose";
 import type { GlucoseRecord } from "@/types/glucose";
 
 interface LivePredictionPanelProps {
-  records: GlucoseRecord[];
-  form: GlucoseFormSnapshot;
-}
-
-function toDateFromRecord(record: GlucoseRecord): Date {
-  if (record.recordedAt) return record.recordedAt.toDate();
-  return new Date(`${record.date}T${record.time}`);
+  latestRecord: GlucoseRecord | null;
+  payload: PredictionPayload;
+  result: PredictionResult | null;
+  loading: boolean;
+  error: string | null;
+  onRefresh: () => void;
+  /** Dentro del acordeón de servicios: sin título de sección. */
+  embedded?: boolean;
 }
 
 export default function LivePredictionPanel({
-  records,
-  form,
+  latestRecord,
+  payload,
+  result,
+  loading,
+  error,
+  onRefresh,
+  embedded = false,
 }: LivePredictionPanelProps) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<PredictionResult | null>(null);
-  const lastAutoPredictedSignature = useRef<string | null>(null);
-
-  const latestRecord = useMemo(() => records[0] ?? null, [records]);
-
-  const payload = useMemo<PredictionPayload>(() => {
-    const now = latestRecord ? toDateFromRecord(latestRecord) : new Date();
-
-    return {
-      diabetes_type: "unknown" as const,
-      age: 40,
-      sex: "other" as const,
-      measurement_context: latestRecord?.measurementContext ?? form.measurementContext,
-      ate_something: latestRecord?.ateSomething ?? form.ateSomething,
-      food_meal:
-        latestRecord?.foodMeal ??
-        (form.foodMeal.trim() ? form.foodMeal.trim().toLowerCase() : "unknown"),
-      minutes_since_meal:
-        latestRecord?.minutesSinceMeal ??
-        (typeof form.minutesSinceMeal === "number" ? form.minutesSinceMeal : -1),
-      medication_taken_recently:
-        latestRecord?.medicationTakenRecently ?? form.medicationTakenRecently,
-      medication_type:
-        latestRecord?.medicationType ??
-        (form.medicationType.trim() ? form.medicationType.trim() : "unknown"),
-      activity_level_last_hours:
-        latestRecord?.activityLevelLastHours ?? form.activityLevelLastHours,
-      stress_level:
-        latestRecord?.stressLevel ??
-        (typeof form.stressLevel === "number" ? form.stressLevel : 3),
-      hour_of_day: now.getHours(),
-      day_of_week: now.getDay(),
-    };
-  }, [form, latestRecord]);
-
-  const handlePredict = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await requestPrediction(payload, latestRecord?.glucoseLevel);
-      setResult(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error inesperado");
-      setResult(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [latestRecord?.glucoseLevel, payload]);
-
-  const latestSignature = useMemo(
-    () =>
-      latestRecord
-        ? `${latestRecord.recordedAtIso}|${latestRecord.glucoseLevel}|${latestRecord.measurementContext}`
-        : null,
-    [latestRecord]
-  );
-
-  useEffect(() => {
-    if (!latestSignature) return;
-    if (lastAutoPredictedSignature.current === latestSignature) return;
-    lastAutoPredictedSignature.current = latestSignature;
-    void handlePredict();
-  }, [handlePredict, latestSignature]);
-
   const riskDrivers = useMemo(() => {
     if (!result) return [];
     const drivers: string[] = [];
@@ -131,38 +66,60 @@ export default function LivePredictionPanel({
   return (
     <section
       aria-label="Predicción en vivo"
-      className="border-t border-slate-200 pt-10 lg:pt-14"
+      className={
+        embedded ? "" : "border-t border-slate-200 pt-10 lg:pt-14"
+      }
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-4">
-        <div>
-          <p className="flex items-center gap-2 dash-eyebrow">
-            <span
-              className={`inline-block h-1.5 w-1.5 rounded-full ${loading ? "animate-pulse bg-vitality-primary" : "bg-emerald-500"}`}
-              aria-hidden
-            />
-            Predicción en vivo
-          </p>
-          <h2 className="dash-title mt-2 text-xl lg:text-2xl">
-            Próxima lectura estimada
-          </h2>
+      {embedded ? (
+        <div className="mb-4 flex flex-wrap items-center justify-end gap-4">
+          <button
+            type="button"
+            onClick={onRefresh}
+            disabled={loading || !latestRecord}
+            className="dash-btn-ghost"
+          >
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                Analizando
+              </span>
+            ) : (
+              "Actualizar"
+            )}
+          </button>
         </div>
+      ) : (
+        <div className="flex flex-wrap items-baseline justify-between gap-4">
+          <div>
+            <p className="flex items-center gap-2 dash-eyebrow">
+              <span
+                className={`inline-block h-1.5 w-1.5 rounded-full ${loading ? "animate-pulse bg-vitality-primary" : "bg-emerald-500"}`}
+                aria-hidden
+              />
+              Predicción en vivo
+            </p>
+            <h2 className="dash-title mt-2 text-xl lg:text-2xl">
+              Próxima lectura estimada
+            </h2>
+          </div>
 
-        <button
-          type="button"
-          onClick={handlePredict}
-          disabled={loading || !latestRecord}
-          className="dash-btn-ghost"
-        >
-          {loading ? (
-            <span className="inline-flex items-center gap-2">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-              Analizando
-            </span>
-          ) : (
-            "Actualizar"
-          )}
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={onRefresh}
+            disabled={loading || !latestRecord}
+            className="dash-btn-ghost"
+          >
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                Analizando
+              </span>
+            ) : (
+              "Actualizar"
+            )}
+          </button>
+        </div>
+      )}
 
       {error ? (
         <p className="mt-6 text-sm font-light text-red-600">{error}</p>

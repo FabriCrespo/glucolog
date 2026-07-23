@@ -1,38 +1,40 @@
-import type { Metadata } from 'next';
+﻿import type { Metadata } from "next";
+import type { CSSProperties, ReactNode } from "react";
 
-import './globals.css'
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import AppToaster from '@/components/AppToaster';
-import { assetPath } from '@/lib/basePath';
-import { TEXT_PREFERENCES_BOOT_SCRIPT } from '@/lib/accessibility/textPreferences';
+import "./globals.css";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import AppToaster from "@/components/AppToaster";
+import { assetPath } from "@/lib/basePath";
+import { TEXT_PREFERENCES_BOOT_SCRIPT } from "@/lib/accessibility/textPreferences";
 
 export const metadata: Metadata = {
-  title: 'Glucolog',
-  description: 'App Web para diabéticos',
+  title: "Glucolog",
+  description: "App Web para diabéticos",
   icons: {
-    icon: assetPath('/favicon.ico'),
+    icon: assetPath("/favicon.ico"),
   },
-}
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: ReactNode;
 }) {
-  const heroBg = assetPath('/images/backgrounds/HeroBG.png');
-  const servicesBg = assetPath('/images/backgrounds/OurBG.png');
+  const heroBg = assetPath("/images/backgrounds/HeroBG.png");
+  const servicesBg = assetPath("/images/backgrounds/OurBG.png");
+
+  const bgVars = {
+    ["--hero-bg-image"]: `url("${heroBg}")`,
+    ["--services-bg-image"]: `url("${servicesBg}")`,
+  } as CSSProperties;
 
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning style={bgVars}>
       <head>
         <script
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: TEXT_PREFERENCES_BOOT_SCRIPT }}
-        />
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `.hero-photo{background-image:url('${heroBg}')}.services-photo{background-image:url('${servicesBg}')}`,
-          }}
         />
       </head>
       <body
@@ -40,13 +42,10 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Navbar />
-        <main className="relative flex-1 overflow-hidden">
-          {children}
-        </main>
+        <main className="relative flex-1 overflow-hidden">{children}</main>
         <Footer />
         <AppToaster />
       </body>
     </html>
-  )
+  );
 }
-

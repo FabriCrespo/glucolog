@@ -25,7 +25,7 @@ export interface FoodItem {
 
 export interface GlycemicLoadInfo {
   value: number;
-  category: 'Baja' | 'Media' | 'Alta';
+  category: "Baja" | "Media" | "Alta";
 }
 
 export interface NutrientDensity {
@@ -37,13 +37,31 @@ export interface NutrientDensity {
 }
 
 export interface MicronutrientStatus {
-  magnesium: { value: number; status: 'low' | 'good' | 'high' };
-  zinc: { value: number; status: 'low' | 'good' | 'high' };
-  calcium: { value: number; status: 'low' | 'good' | 'high' };
-  potassium: { value: number; status: 'low' | 'good' | 'high' };
+  magnesium: { value: number; status: "low" | "good" | "high" };
+  zinc: { value: number; status: "low" | "good" | "high" };
+  calcium: { value: number; status: "low" | "good" | "high" };
+  potassium: { value: number; status: "low" | "good" | "high" };
 }
 
 export interface NutritionalRecommendation {
-  type: 'complement' | 'caution' | 'tip';
+  type: "complement" | "caution" | "tip";
   message: string;
+}
+
+/** Receta sugerida por GlucoLog AI según alimento + glucosa + perfil. */
+export interface FoodRecipeSuggestion {
+  title: string;
+  why: string;
+  servings: string;
+  prepMinutes: number;
+  ingredients: string[];
+  steps: string[];
+  tips: string[];
+  glycemicNote: string;
+}
+
+export interface FoodRecipeSuggestionsResult {
+  summary: string;
+  glucoseContext: string;
+  recipes: FoodRecipeSuggestion[];
 }

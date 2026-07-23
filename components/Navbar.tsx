@@ -14,7 +14,6 @@ import {
   Menu,
   X,
   LogOut,
-  Sparkles,
   Home,
   LayoutDashboard,
   Utensils,
@@ -31,7 +30,15 @@ const MOBILE_NAV: Record<
   dashboard: { icon: LayoutDashboard, shortLabel: "Panel" },
   food_bank: { icon: Utensils, shortLabel: "Alimentos" },
   Schedule: { icon: CalendarDays, shortLabel: "Horarios" },
-  my_profile: { icon: UserRound, shortLabel: "Mi perfil" },
+  my_profile: { icon: UserRound, shortLabel: "Perfil" },
+};
+
+const DESKTOP_LABEL: Record<string, string> = {
+  home: "Inicio",
+  dashboard: "Panel",
+  food_bank: "Alimentos",
+  Schedule: "Horarios",
+  my_profile: "Perfil",
 };
 
 const Navbar = () => {
@@ -107,60 +114,50 @@ const Navbar = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
-              className="fixed inset-0 z-[100] flex flex-col bg-white lg:hidden dark:bg-slate-900"
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[100] flex flex-col bg-white lg:hidden dark:bg-slate-950"
               role="dialog"
               aria-modal="true"
               aria-label="Menú de navegación"
             >
-              <div className="flex shrink-0 items-center justify-between border-b border-slate-200/90 px-4 py-3">
+              <div className="flex shrink-0 items-center justify-between border-b border-slate-200/90 px-5 py-4 dark:border-slate-800">
                 <Link
                   href="/"
                   onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2.5"
+                  className="flex items-center gap-3"
                 >
-                  <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-vitality-primary to-vitality-tertiary p-0.5 shadow-sm shadow-vitality-primary/20">
-                    <span className="flex h-full w-full items-center justify-center rounded-[0.65rem] bg-white">
-                      <PublicImage
-                        src="/images/branding/LogoOG.png"
-                        alt="Glucolog"
-                        width={48}
-                        height={20}
-                        className="h-5 w-auto object-contain"
-                      />
-                    </span>
-                  </span>
-                  <span className="flex flex-col">
-                    <span className="text-sm font-semibold leading-tight text-slate-800">
-                      Glucolog
-                    </span>
-                    <span className="text-[10px] font-medium uppercase tracking-wider text-vitality-primary">
-                      Control inteligente
-                    </span>
+                  <PublicImage
+                    src="/images/branding/LogoOG.png"
+                    alt="Glucolog"
+                    width={40}
+                    height={16}
+                    className="h-4 w-auto object-contain"
+                  />
+                  <span className="text-sm font-light tracking-wide text-slate-800 dark:text-slate-100">
+                    Glucolog
                   </span>
                 </Link>
                 <button
                   type="button"
                   onClick={() => setMenuOpen(false)}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:border-vitality-primary/30 hover:text-vitality-primary"
+                  className="flex h-10 w-10 items-center justify-center text-slate-500 transition-colors hover:text-vitality-primary dark:text-slate-400"
                   aria-label="Cerrar menú"
                 >
-                  <X className="h-5 w-5" strokeWidth={1.75} />
+                  <X className="h-5 w-5" strokeWidth={1.5} />
                 </button>
               </div>
 
               {user ? (
-                <div className="shrink-0 border-b border-slate-200/90 px-4 py-3">
-                  <p className="dash-stat-label">Conectado como</p>
-                  <p className="mt-1 truncate text-sm font-medium text-slate-800">
+                <div className="shrink-0 border-b border-slate-200/90 px-5 py-4 dark:border-slate-800">
+                  <p className="dash-eyebrow">Sesión</p>
+                  <p className="mt-2 truncate text-sm font-light text-slate-800 dark:text-slate-100">
                     {userLabel}
                   </p>
                 </div>
               ) : null}
 
-              <nav className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
-                <p className="dash-eyebrow px-3 pb-2 pt-1">Navegación</p>
-                <ul>
+              <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
+                <ul className="divide-y divide-slate-100 dark:divide-slate-800/80">
                   {NAV_LINKS.map((link) => {
                     const active = linkIsActive(link.href);
                     const meta = MOBILE_NAV[link.key];
@@ -172,20 +169,20 @@ const Navbar = () => {
                         <button
                           type="button"
                           onClick={() => handleLinkClick(link.href)}
-                          className={`relative flex w-full items-center gap-3 rounded-lg px-3 py-3.5 text-left transition-colors ${
+                          className={`relative flex w-full items-center gap-3 px-2 py-4 text-left transition-colors ${
                             active
-                              ? "bg-emerald-50/80 text-vitality-primary"
-                              : "text-slate-700 active:bg-slate-50"
+                              ? "text-vitality-primary"
+                              : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
                           }`}
                         >
                           {active ? (
                             <span
-                              className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-vitality-primary"
+                              className="absolute inset-y-3 left-0 w-px bg-vitality-primary"
                               aria-hidden
                             />
                           ) : null}
                           <Icon
-                            className={`h-[18px] w-[18px] shrink-0 ${
+                            className={`h-4 w-4 shrink-0 ${
                               active ? "text-vitality-primary" : "text-slate-400"
                             }`}
                             strokeWidth={1.5}
@@ -200,34 +197,33 @@ const Navbar = () => {
                 </ul>
               </nav>
 
-              <div className="shrink-0 px-4 pb-2">
+              <div className="shrink-0 px-5 pb-3">
                 <TextPreferencesControl variant="inline" />
               </div>
 
-              <div className="shrink-0 border-t border-slate-200/90 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+              <div className="shrink-0 border-t border-slate-200/90 px-5 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] dark:border-slate-800">
                 {user ? (
                   <button
                     type="button"
                     onClick={() => void handleSignOut()}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3.5 text-sm font-medium text-slate-700 transition-colors hover:border-vitality-primary/30 hover:bg-emerald-50/50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-emerald-600 dark:hover:bg-emerald-950/50"
+                    className="dash-btn-ghost inline-flex w-full items-center justify-center gap-2 py-2"
                   >
                     <LogOut className="h-4 w-4" strokeWidth={1.5} />
                     Cerrar sesión
                   </button>
                 ) : (
-                  <>
-                    <p className="dash-body mb-3 text-center text-slate-500">
-                      Inicia sesión para ver tu panel e informe de salud.
+                  <div className="space-y-3 text-center">
+                    <p className="dash-body text-slate-500">
+                      Inicia sesión para ver tu panel e informe.
                     </p>
                     <Link
                       href="/login"
                       onClick={() => setMenuOpen(false)}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-vitality-primary py-3.5 text-sm font-semibold text-white shadow-md shadow-vitality-primary/25 transition-colors hover:bg-vitality-primary-dark"
+                      className="dash-btn-ghost inline-flex items-center justify-center"
                     >
-                      <Sparkles className="h-4 w-4" strokeWidth={1.5} />
                       Iniciar sesión
                     </Link>
-                  </>
+                  </div>
                 )}
               </div>
             </motion.div>
@@ -238,94 +234,89 @@ const Navbar = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-vitality-secondary bg-white/80 shadow-[0_4px_30px_-12px_rgba(51,65,85,0.12)] backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95">
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-vitality-primary/40 to-transparent"
-          aria-hidden
-        />
-        <nav className="max-container padding-container relative flex items-center justify-between py-3 md:py-4">
+      <header className="sticky top-0 z-50 border-b border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-950">
+        <nav className="max-container padding-container flex h-14 items-center justify-between md:h-16">
           <Link
             href="/"
-            className="group flex shrink-0 items-center gap-2.5 transition-opacity hover:opacity-90"
+            className="group flex shrink-0 items-center gap-3 transition-opacity hover:opacity-80"
           >
-            <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-vitality-primary to-vitality-tertiary p-0.5 shadow-md shadow-vitality-primary/25">
-              <span className="flex h-full w-full items-center justify-center rounded-[0.85rem] bg-white">
-                <PublicImage
-                  src="/images/branding/LogoOG.png"
-                  alt="Glucolog"
-                  width={56}
-                  height={22}
-                  className="h-6 w-auto object-contain"
-                />
-              </span>
-            </span>
+            <PublicImage
+              src="/images/branding/LogoOG.png"
+              alt="Glucolog"
+              width={48}
+              height={18}
+              className="h-[18px] w-auto object-contain"
+            />
             <span className="hidden flex-col sm:flex">
-              <span className="text-sm font-bold leading-tight tracking-tight text-vitality-neutral">
+              <span className="text-sm font-light tracking-wide text-slate-900 dark:text-slate-50">
                 Glucolog
               </span>
-              <span className="text-[10px] font-medium uppercase tracking-wider text-vitality-primary">
-                Control inteligente
+              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-emerald-800/70 dark:text-emerald-400/80">
+                Diabetes
               </span>
             </span>
           </Link>
 
-          <ul className="hidden items-center gap-1 rounded-full border border-vitality-secondary bg-vitality-secondary/60 p-1 shadow-inner dark:border-slate-600 dark:bg-slate-800 lg:flex">
+          <ul className="hidden items-center gap-8 lg:flex">
             {NAV_LINKS.map((link) => {
               const active = linkIsActive(link.href);
+              const label = DESKTOP_LABEL[link.key] ?? link.label.trim();
               return (
                 <li key={link.key}>
                   <button
                     type="button"
                     onClick={() => handleLinkClick(link.href)}
-                    className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                    className={`relative pb-0.5 text-sm font-light tracking-wide transition-colors ${
                       active
-                        ? "bg-white text-vitality-neutral shadow-sm ring-1 ring-vitality-primary/20 dark:bg-slate-700 dark:text-white dark:ring-emerald-500/50"
-                        : "text-vitality-neutral/75 hover:bg-white/80 hover:text-vitality-neutral dark:text-slate-300 dark:hover:bg-emerald-950/50 dark:hover:text-emerald-200"
+                        ? "text-slate-900 dark:text-white"
+                        : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                     }`}
                   >
-                    {link.label.trim()}
+                    {label}
+                    {active ? (
+                      <span
+                        className="absolute inset-x-0 -bottom-0.5 h-px bg-vitality-primary"
+                        aria-hidden
+                      />
+                    ) : null}
                   </button>
                 </li>
               );
             })}
           </ul>
 
-          <div className="hidden items-center gap-2 lg:flex">
+          <div className="hidden items-center gap-5 lg:flex">
             <TextPreferencesControl />
             {user ? (
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="inline-flex items-center gap-2 rounded-full border border-vitality-secondary bg-white px-4 py-2.5 text-sm font-semibold text-vitality-neutral shadow-sm transition-all hover:border-vitality-primary/30 hover:bg-vitality-secondary/50"
+                className="dash-btn-ghost inline-flex items-center gap-1.5"
               >
-                <LogOut className="h-4 w-4 text-vitality-tertiary" aria-hidden />
-                Cerrar sesión
+                <LogOut className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden />
+                Salir
               </button>
             ) : (
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-2 rounded-full bg-vitality-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-vitality-primary/30 transition-all hover:bg-vitality-primary-dark hover:shadow-xl hover:shadow-vitality-primary/35 active:scale-[0.98]"
-              >
-                <Sparkles className="h-4 w-4 opacity-90" aria-hidden />
+              <Link href="/login" className="dash-btn-ghost">
                 Iniciar sesión
               </Link>
             )}
           </div>
 
-          <div className="flex items-center gap-2 lg:hidden">
+          <div className="flex items-center gap-1 lg:hidden">
             <TextPreferencesControl />
             <button
               type="button"
-              className="flex h-11 w-11 items-center justify-center rounded-xl border border-vitality-secondary bg-white text-vitality-neutral shadow-sm transition-colors hover:bg-vitality-secondary"
+              className="flex h-10 w-10 items-center justify-center text-slate-600 transition-colors hover:text-vitality-primary dark:text-slate-300"
               onClick={() => setMenuOpen((o) => !o)}
               aria-expanded={menuOpen}
               aria-controls="mobile-nav-menu"
               aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
             >
               {menuOpen ? (
-                <X className="h-6 w-6" strokeWidth={2} />
+                <X className="h-5 w-5" strokeWidth={1.5} />
               ) : (
-                <Menu className="h-6 w-6" strokeWidth={2} />
+                <Menu className="h-5 w-5" strokeWidth={1.5} />
               )}
             </button>
           </div>

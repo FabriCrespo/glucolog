@@ -70,6 +70,14 @@ function statusMeta(status: string) {
         dot: "bg-red-500",
         icon: "↑",
       };
+    case "unknown":
+      return {
+        label: "N/D",
+        tone: "text-slate-600",
+        bg: "bg-slate-50 border-slate-200",
+        dot: "bg-slate-400",
+        icon: "?",
+      };
     default:
       return {
         label: "—",

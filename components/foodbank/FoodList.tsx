@@ -48,8 +48,8 @@ const CATEGORY_PALETTE = [
   },
 ];
 
-function getIGMeta(ig: number | undefined) {
-  if (!ig) return null;
+function getIGMeta(ig: number | null | undefined) {
+  if (ig == null) return null;
   if (ig < 55) {
     return {
       label: "Bajo",

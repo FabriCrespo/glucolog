@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -6,10 +6,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, FlaskConical } from "lucide-react";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useFoodBankPage } from "@/hooks/useFoodBankPage";
+import { useFoodRecipeSuggestions } from "@/hooks/useFoodRecipeSuggestions";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import SearchBar from "@/components/foodbank/SearchBar";
 import FoodList from "@/components/foodbank/FoodList";
 import FoodDetails from "@/components/foodbank/FoodDetails";
+import FoodRecipeSuggestions from "@/components/foodbank/FoodRecipeSuggestions";
 import MicronutrientBalance from "@/components/foodbank/MicronutrientBalance";
 import NutrientDensityCalculator from "@/components/foodbank/NutrientDensityCalculator";
 import NutrientRecommendations from "@/components/foodbank/NutrientRecommendations";
@@ -37,6 +39,17 @@ export default function FoodBankPage() {
     calculateGlycemicLoadAction,
     closeGlycemicModal,
   } = useFoodBankPage(sessionUser, authLoading);
+
+  const {
+    loading: recipesLoading,
+    error: recipesError,
+    result: recipesResult,
+    refresh: refreshRecipes,
+  } = useFoodRecipeSuggestions(
+    sessionUser?.uid,
+    ui.selectedFood,
+    Boolean(emailVerified && ui.selectedFood)
+  );
 
   const setPortionSize = useCallback(
     (size: number) => dispatch({ type: "SET_PORTION", payload: size }),
@@ -98,13 +111,8 @@ export default function FoodBankPage() {
             Tabla nutricional
           </h1>
           <p className="dash-body mt-2 max-w-2xl lg:mt-3">
-            <span className="lg:hidden">
-              Explora por categorías, elige un alimento y revisa su impacto en tu glucosa.
-            </span>
-            <span className="hidden lg:inline">
-              Explora la base de datos, calcula carga glucémica por porción y revisa
-              micronutrientes con el mismo estilo que el panel principal.
-            </span>
+            Elige un alimento y GlucoLog AI te sugiere recetas según tu glucosa
+            reciente y tu perfil.
           </p>
         </header>
 
@@ -128,13 +136,12 @@ export default function FoodBankPage() {
               />
             </svg>
             <p className="dash-body text-amber-950">
-              Verifica tu correo electrónico para usar la búsqueda y el cálculo de carga
-              glucémica.
+              Verifica tu correo electrónico para usar la búsqueda, las recetas IA
+              y el cálculo de carga glucémica.
             </p>
           </div>
         )}
 
-        {/* Búsqueda — siempre visible en móvil salvo detalle a pantalla completa */}
         <section
           aria-label="Búsqueda"
           className={`border-t border-slate-200 pt-6 lg:pt-10 ${
@@ -150,7 +157,23 @@ export default function FoodBankPage() {
           />
         </section>
 
-        {/* Explorar — listado / categorías */}
+        {ui.selectedFood ? (
+          <section
+            aria-label="Recetas sugeridas"
+            className={`mt-6 border-t border-slate-200 pt-6 lg:mt-8 lg:pt-8 ${
+              mobileDetailOpen ? "hidden lg:block" : ""
+            }`}
+          >
+            <FoodRecipeSuggestions
+              food={ui.selectedFood}
+              loading={recipesLoading}
+              error={recipesError}
+              result={recipesResult}
+              onRefresh={refreshRecipes}
+            />
+          </section>
+        ) : null}
+
         <section
           aria-label="Explorar alimentos"
           className={`mt-6 grid grid-cols-1 gap-8 border-t border-slate-200 pt-6 lg:mt-10 lg:grid-cols-3 lg:gap-10 lg:pt-10 ${
@@ -175,7 +198,6 @@ export default function FoodBankPage() {
           />
         </section>
 
-        {/* Móvil: detalle a pantalla completa */}
         <AnimatePresence>
           {mobileDetailOpen && ui.selectedFood ? (
             <motion.div
@@ -197,61 +219,68 @@ export default function FoodBankPage() {
                 onBack={handleClearFood}
               />
 
-              {ui.selectedFood ? (
-                <div className="mt-6 border-t border-slate-200 pt-5">
-                  <button
-                    type="button"
-                    onClick={() => setShowMobileAnalysis((v) => !v)}
-                    className="flex w-full items-center justify-between rounded-2xl border border-violet-200/80 bg-gradient-to-r from-violet-50/80 to-sky-50/50 px-4 py-4 text-left transition-colors active:scale-[0.99] dark:border-emerald-700/60 dark:from-emerald-950/55 dark:to-emerald-900/35"
-                  >
-                    <span className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-700 dark:bg-emerald-900/50 dark:text-emerald-300">
-                        <FlaskConical className="h-5 w-5" strokeWidth={1.5} />
+              <div className="mt-5">
+                <FoodRecipeSuggestions
+                  food={ui.selectedFood}
+                  loading={recipesLoading}
+                  error={recipesError}
+                  result={recipesResult}
+                  onRefresh={refreshRecipes}
+                />
+              </div>
+
+              <div className="mt-6 border-t border-slate-200 pt-5">
+                <button
+                  type="button"
+                  onClick={() => setShowMobileAnalysis((v) => !v)}
+                  className="flex w-full items-center justify-between rounded-2xl border border-violet-200/80 bg-gradient-to-r from-violet-50/80 to-sky-50/50 px-4 py-4 text-left transition-colors active:scale-[0.99] dark:border-emerald-700/60 dark:from-emerald-950/55 dark:to-emerald-900/35"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                      <FlaskConical className="h-5 w-5" strokeWidth={1.5} />
+                    </span>
+                    <span>
+                      <span className="block text-sm font-medium text-slate-800">
+                        Análisis nutricional
                       </span>
-                      <span>
-                        <span className="block text-sm font-medium text-slate-800">
-                          Análisis nutricional
-                        </span>
-                        <span className="dash-muted mt-0.5 block">
-                          Micronutrientes, densidad y recomendaciones
-                        </span>
+                      <span className="dash-muted mt-0.5 block">
+                        Micronutrientes, densidad y recomendaciones
                       </span>
                     </span>
-                    <ChevronDown
-                      className={`h-5 w-5 text-violet-500 transition-transform ${
-                        showMobileAnalysis ? "rotate-180" : ""
-                      }`}
-                      strokeWidth={1.5}
-                    />
-                  </button>
+                  </span>
+                  <ChevronDown
+                    className={`h-5 w-5 text-violet-500 transition-transform ${
+                      showMobileAnalysis ? "rotate-180" : ""
+                    }`}
+                    strokeWidth={1.5}
+                  />
+                </button>
 
-                  <AnimatePresence>
-                    {showMobileAnalysis ? (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="mt-5 space-y-8">
-                          <MicronutrientBalance micronutrientStatus={micronutrientStatus} />
-                          <NutrientDensityCalculator nutrientDensity={nutrientDensity} />
-                          <NutrientRecommendations
-                            recommendations={recommendations}
-                            selectedFood={ui.selectedFood}
-                          />
-                        </div>
-                      </motion.div>
-                    ) : null}
-                  </AnimatePresence>
-                </div>
-              ) : null}
+                <AnimatePresence>
+                  {showMobileAnalysis ? (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-5 space-y-8">
+                        <MicronutrientBalance micronutrientStatus={micronutrientStatus} />
+                        <NutrientDensityCalculator nutrientDensity={nutrientDensity} />
+                        <NutrientRecommendations
+                          recommendations={recommendations}
+                          selectedFood={ui.selectedFood}
+                        />
+                      </div>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
+              </div>
             </motion.div>
           ) : null}
         </AnimatePresence>
 
-        {/* Escritorio: análisis siempre visible */}
         <section
           aria-label="Análisis nutricional"
           className="mt-10 hidden grid-cols-1 gap-10 border-t border-slate-200 pt-10 md:grid-cols-2 lg:mt-14 lg:grid lg:pt-14"

@@ -5,18 +5,59 @@ import type {
   NutrientDensity,
   NutritionalRecommendation,
 } from "@/types/food";
+import {
+  FOOD_SEARCH_SCORES,
+  rankFoodsByQuery,
+  type FoodMatchReason,
+} from "@/lib/food/smartFoodSearch";
 
 export function filterFoodBankItems(
   items: FoodItem[],
   searchTerm: string,
   onlyWithGlycemicIndex: boolean
 ): FoodItem[] {
-  const q = searchTerm.trim().toLowerCase();
-  return items.filter((item) => {
-    const matchesSearch = item.Nombre.toLowerCase().includes(q);
-    const matchesGi = onlyWithGlycemicIndex ? item.IndiceGlucemico != null : true;
-    return matchesSearch && matchesGi;
-  });
+  const q = searchTerm.trim();
+  const withGi = onlyWithGlycemicIndex
+    ? items.filter((item) => item.IndiceGlucemico != null)
+    : items;
+
+  if (!q) {
+    return withGi;
+  }
+
+  const ranked = rankFoodsByQuery(q, withGi).filter(
+    (hit) => hit.score >= FOOD_SEARCH_SCORES.levenshtein
+  );
+
+  return ranked.map((hit) => hit.item);
+}
+
+/** Mejor coincidencia + metadatos para la UI / panel IA. */
+export function getFoodSearchInsight(
+  items: FoodItem[],
+  searchTerm: string
+): {
+  best: FoodItem | null;
+  score: number;
+  reason: FoodMatchReason | null;
+  alternatives: FoodItem[];
+} | null {
+  const q = searchTerm.trim();
+  if (!q) return null;
+
+  const ranked = rankFoodsByQuery(q, items).filter(
+    (hit) => hit.score >= FOOD_SEARCH_SCORES.levenshtein
+  );
+  if (!ranked.length) {
+    return { best: null, score: 0, reason: null, alternatives: [] };
+  }
+
+  return {
+    best: ranked[0].item,
+    score: ranked[0].score,
+    reason: ranked[0].reason,
+    alternatives: ranked.slice(1, 4).map((h) => h.item),
+  };
 }
 
 export function computeGlycemicLoad(

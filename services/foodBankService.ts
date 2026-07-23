@@ -24,13 +24,17 @@ function mapRawFoodRecord(key: string, raw: Record<string, unknown>): FoodItem {
     FraccionComestible: parseFloat(String(raw["Fraccion Comestible (%)"])) || 0,
     Categoria: String(raw["Categoría"] ?? ""),
     CarbohidratosNetos: parseFloat(String(raw["Carbohidratos Netos"])) || 0,
-    ClasificacionCarbohidratos: String(raw["Clasificación Carbohidratos"] ?? ""),
+    ClasificacionCarbohidratos: String(
+      raw["Clasificación Carbohidratos"] ?? ""
+    ),
     IndiceGlucemico:
       raw.IndiceGlucemico === null || raw.IndiceGlucemico === undefined
         ? undefined
         : Number(raw.IndiceGlucemico),
     GramHCO:
-      raw.GramHCO === null || raw.GramHCO === undefined ? undefined : Number(raw.GramHCO),
+      raw.GramHCO === null || raw.GramHCO === undefined
+        ? undefined
+        : Number(raw.GramHCO),
   };
 }
 

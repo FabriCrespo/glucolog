@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { UserData } from "@/services/userService";
 import DailyHealthReport from "@/components/profile/DailyHealthReport";
+import WeeklyDoctorReportPanel from "@/components/profile/WeeklyDoctorReportPanel";
 import GlucoseRecent from "@/components/profile/GlucoseRecent";
 import FoodHabits from "@/components/profile/FoodHabits";
 import ActivityStats from "@/components/profile/ActivityStats";
@@ -130,6 +131,12 @@ const ProfileContent = ({
       {activeTab === "report" ? (
         <div className="space-y-10 pt-8">
           <DailyHealthReport
+            userId={userId}
+            patientName={patientName}
+            diabetesType={userData.diabetesType}
+          />
+
+          <WeeklyDoctorReportPanel
             userId={userId}
             patientName={patientName}
             diabetesType={userData.diabetesType}

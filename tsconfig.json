@@ -25,6 +25,12 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@/agent": [
+        "./src/agent"
+      ],
+      "@/agent/*": [
+        "./src/agent/*"
       ]
     },
     "target": "ES2017"

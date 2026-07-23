@@ -44,7 +44,7 @@ const SearchBar = ({
           <input
             id="food-search"
             type="text"
-            placeholder="Ej. arroz, manzana, pollo…"
+            placeholder="Ej. plátano, banana, arroz…"
             value={searchTerm}
             onChange={handleSearch}
             className="dash-input rounded-xl border border-slate-200/90 bg-gradient-to-r from-white to-emerald-50/20 py-3.5 pl-11 pr-11 transition-colors focus:border-vitality-primary dark:border-emerald-800/50 dark:from-emerald-950/70 dark:to-emerald-900/35 dark:focus:border-emerald-400 lg:rounded-none lg:border-0 lg:border-b lg:bg-transparent lg:py-3 lg:pl-10 lg:pr-10 dark:lg:border-emerald-800/60 dark:lg:bg-transparent"
@@ -100,7 +100,7 @@ const SearchBar = ({
         </button>
         {searchTerm ? (
           <span className="inline-flex items-center rounded-full bg-sky-50 px-3 py-2 text-xs font-light text-sky-800 ring-1 ring-sky-200/80 dark:bg-sky-950/45 dark:text-sky-300 dark:ring-sky-700/60">
-            Buscando: {searchTerm.trim()}
+            Búsqueda inteligente: {searchTerm.trim()}
           </span>
         ) : null}
       </div>

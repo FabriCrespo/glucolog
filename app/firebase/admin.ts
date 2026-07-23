@@ -17,8 +17,10 @@ function getAdminCredential() {
 
 export const initAdmin = () => {
   if (getApps().length === 0) {
+    const databaseURL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
     initializeApp({
       credential: getAdminCredential(),
+      ...(databaseURL ? { databaseURL } : {}),
     });
   }
 };
